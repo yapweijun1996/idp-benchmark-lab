@@ -78,6 +78,18 @@ Required:
 
 Assert no raw API key in IndexedDB, localStorage, service-worker Cache Storage, logs, or exports.
 
+## Browser smoke (TASK-052)
+
+`tests/e2e/smoke.spec.ts` (Playwright, Chromium) verifies against the production preview build: shell/title/navigation render, hash routing reaches Documents, Profiles, and Providers pages, and unknown hashes fall back to the dashboard.
+
+## Accessibility (TASK-053)
+
+`src/App.a11y.test.tsx` runs axe-core against the rendered shell and fails on serious/critical violations (color contrast disabled in jsdom).
+
+## Security audit (TASK-054)
+
+`src/security.audit.test.ts` asserts the service-worker precache whitelist is static app-shell extensions only (never pdf/json/txt/csv); key non-persistence and export/backup secret rejection are covered in `src/providers/keys.test.ts` and `src/export/backup.test.ts`.
+
 ## CI gates
 
 - install

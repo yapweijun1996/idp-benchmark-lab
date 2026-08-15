@@ -107,3 +107,12 @@ Implementation status: not started.
 - Import with strict validation before any write: JSON structure, string record ids, and secret-like fields (apiKey/authorization/x-api-key/key, case-insensitive) are rejected without touching existing data; replace and merge modes.
 - Golden Popular PO fixture committed (TS module + JSON example): 13 rows, leading-zero document number, exact "LOGITECH M650 M WL WHITE", null remarks and footer — enforced by an executable contract test.
 - 229 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — v0.1.0 (Phase 6 hardening, spike release)
+
+- Test coverage verified across layers: evaluation engine (38), provider adapter contracts (35), storage/persistence, stop/budget gates.
+- Browser smoke via Playwright against the production preview build: shell/navigation, hash routing (Documents/Profiles/Providers), unknown-hash fallback — 4/4 passing.
+- Accessibility gate: axe-core run against the rendered shell fails on serious/critical violations.
+- Security audit tests: service-worker precache whitelist limited to static app-shell extensions; key non-persistence and backup/export secret rejection enforced.
+- Docs reconciled: README project status, ARCHITECTURE modules (export/pwa), TESTING.md (smoke/a11y/audit chapters).
+- 221 unit/integration tests + 4 e2e specs passing; lint, typecheck, build green. Git tag v0.1.0.

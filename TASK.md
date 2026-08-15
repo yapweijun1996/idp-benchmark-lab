@@ -52,15 +52,15 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-045 | JSON/CSV export | done | TASK-036 |
 | TASK-046 | Project backup/import | done | TASK-006 |
 | TASK-047 | Golden Popular PO fixture metadata | done | TASK-013 |
-| TASK-048 | Unit tests for evaluation engine | todo | TASK-024-030 |
-| TASK-049 | Provider adapter contract tests | todo | TASK-014 |
-| TASK-050 | IndexedDB persistence tests | todo | TASK-006 |
-| TASK-051 | Stop/budget benchmark tests | todo | TASK-031-035 |
-| TASK-052 | Browser smoke tests | todo | TASK-039 |
-| TASK-053 | Accessibility checks | todo | TASK-003 |
-| TASK-054 | Security/cache audit | todo | TASK-004/018 |
-| TASK-055 | Docs/code reconciliation gate | todo | TASK-052 |
-| TASK-056 | Publish v0.1.0 spike release | todo | TASK-005/048-055 |
+| TASK-048 | Unit tests for evaluation engine | done | TASK-024-030 |
+| TASK-049 | Provider adapter contract tests | done | TASK-014 |
+| TASK-050 | IndexedDB persistence tests | done | TASK-006 |
+| TASK-051 | Stop/budget benchmark tests | done | TASK-031-035 |
+| TASK-052 | Browser smoke tests | done | TASK-039 |
+| TASK-053 | Accessibility checks | done | TASK-003 |
+| TASK-054 | Security/cache audit | done | TASK-004/018 |
+| TASK-055 | Docs/code reconciliation gate | done | TASK-052 |
+| TASK-056 | Publish v0.1.0 spike release | done | TASK-005/048-055 |
 
 ## Current blockers
 

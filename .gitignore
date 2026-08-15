@@ -6,6 +6,11 @@ dist/
 coverage/
 *.tsbuildinfo
 
+# Playwright browser binaries
+.browsers/
+test-results/
+playwright-report/
+
 # Environment files (BYOK keys must never be committed)
 .env
 .env.*

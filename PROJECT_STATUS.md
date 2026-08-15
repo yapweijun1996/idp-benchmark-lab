@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase 5 complete; Phase 6 (Spike Hardening) next.**  
-Project backup/import is done: full backup bundle (format version, app version, entities with document blobs as base64), strict import validation (JSON structure, record ids, secret-like fields rejected without touching data), replace/merge modes, and a Settings page for export/import. The Golden Popular PO fixture (13 rows, leading-zero document number, exact M650 M WL WHITE, null remarks/footer) is committed with an executable contract test. 229 tests passing; lint/typecheck/build green.  
+**v0.1.0 released (all 56 tasks complete).**  
+Phase 6 hardening delivered: evaluation/adapter/storage/stop-budget test coverage verified, Playwright browser smoke (4 specs against the production build), axe-core accessibility gate, security audit tests (app-shell-only SW whitelist, key non-persistence, backup secret rejection), and docs/code reconciliation (README status, ARCHITECTURE modules, TESTING additions). 221 unit/integration tests + 4 e2e specs passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-047. Next: Phase 6 — TASK-048..TASK-054 (remaining tests), TASK-055 (docs/code reconciliation), TASK-056 (v0.1.0 release).
+All tasks in `TASK.md` are done. Post-release follow-ups: push to GitHub and enable Pages, real-provider Golden PO validation run, canonical-image cross-provider comparison, interrupted-suite resume.
 
 ## Risks
 

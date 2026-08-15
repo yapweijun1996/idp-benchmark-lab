@@ -69,6 +69,12 @@ Pricing snapshots, usage, calculated/unknown cost.
 ### storage
 IndexedDB migrations and backup/export; no key persistence by default.
 
+### export
+Suite JSON/CSV export and full project backup/import with pre-write validation (RFC 4180 escaping, secret rejection).
+
+### pwa
+Manifest/service-worker policy constants; app-shell-only precache whitelist audited by tests.
+
 ## Benchmark identity
 
 A started benchmark is immutable and must include document hash, profile/prompt/schema/golden hashes, provider/model, thinking/reasoning, temperature, input mode, renderer settings, run count, concurrency, and app build.
