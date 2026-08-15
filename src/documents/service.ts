@@ -55,11 +55,25 @@ export class DocumentService {
     return record;
   }
 
-  /** All documents, session records first. */
+  /**
+   * All documents, deduplicated by id (session copy wins: it reflects the
+   * newest in-memory state) and sorted newest-first by createdAt, with name
+   * as a stable tiebreaker. Ordering is therefore identical across
+   * refreshes for persisted documents.
+   */
   async list(): Promise<DocumentRecord[]> {
     const persisted = await this.db.documents.toArray();
     const sessionRecords = [...this.session.values()].map((s) => s.record);
-    return [...sessionRecords, ...persisted];
+    const byId = new Map<string, DocumentRecord>();
+    for (const record of persisted) {
+      byId.set(record.id, record);
+    }
+    for (const record of sessionRecords) {
+      byId.set(record.id, record);
+    }
+    return [...byId.values()].sort(
+      (a, b) => b.createdAt.localeCompare(a.createdAt) || a.name.localeCompare(b.name),
+    );
   }
 
   async getBlob(id: string): Promise<Blob | undefined> {

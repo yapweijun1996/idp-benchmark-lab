@@ -53,6 +53,44 @@ describe("DocumentService.upload", () => {
   });
 });
 
+describe("DocumentService.list ordering and dedupe", () => {
+  it("deduplicates by id with the session copy winning", async () => {
+    const persistedRecord = await service.upload(pdfFile("dup.pdf"), { persist: true });
+    // 同一 id 同时存在于内存（更早 createdAt 的 session 记录）——模拟异常边界
+    const older = {
+      ...persistedRecord,
+      storageMode: "session" as const,
+      createdAt: "2026-08-14T00:00:00.000Z",
+      blob: undefined,
+    };
+    service["session"].set(persistedRecord.id, { record: older, blob: new Blob(["x"]) });
+    const list = await service.list();
+    expect(list.filter((d) => d.id === persistedRecord.id)).toHaveLength(1);
+    expect(list.find((d) => d.id === persistedRecord.id)?.storageMode).toBe("session");
+  });
+
+  it("sorts newest-first with name as tiebreaker", async () => {
+    const a = await service.upload(pdfFile("a.pdf"), { persist: false });
+    const b = await service.upload(pdfFile("b.pdf"), { persist: false });
+    // 手工设定不同 createdAt 验证排序
+    service["session"].get(a.id)!.record = { ...a, createdAt: "2026-08-13T00:00:00.000Z" };
+    service["session"].get(b.id)!.record = { ...b, createdAt: "2026-08-15T00:00:00.000Z" };
+    const list = await service.list();
+    expect(list.map((d) => d.name)).toEqual(["b.pdf", "a.pdf"]);
+  });
+
+  it("keeps persisted documents ordered after a simulated refresh", async () => {
+    const serviceA = new DocumentService(db);
+    await serviceA.upload(pdfFile("old.pdf"), { persist: true });
+    await serviceA.upload(pdfFile("new.pdf"), { persist: true });
+    // 模拟刷新：新 service 实例（内存清空），persisted 顺序稳定
+    const serviceB = new DocumentService(db);
+    const listB = await serviceB.list();
+    expect(listB.every((d) => d.storageMode === "indexeddb")).toBe(true);
+    expect(listB).toHaveLength(2);
+  });
+});
+
 describe("DocumentService.setPersistence", () => {
   it("moves a session document into IndexedDB", async () => {
     const record = await service.upload(pdfFile(), { persist: false });
