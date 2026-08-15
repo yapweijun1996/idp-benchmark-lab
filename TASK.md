@@ -48,8 +48,8 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-041 | JSON diff/run inspector | done | TASK-026 |
 | TASK-042 | Latency statistics | done | TASK-036 |
 | TASK-043 | Cost dashboard | done | TASK-021/036 |
-| TASK-044 | Compare screen | todo | TASK-039 |
-| TASK-045 | JSON/CSV export | todo | TASK-036 |
+| TASK-044 | Compare screen | done | TASK-039 |
+| TASK-045 | JSON/CSV export | done | TASK-036 |
 | TASK-046 | Project backup/import | todo | TASK-006 |
 | TASK-047 | Golden Popular PO fixture metadata | todo | TASK-013 |
 | TASK-048 | Unit tests for evaluation engine | todo | TASK-024-030 |

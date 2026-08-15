@@ -1,6 +1,14 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { SuiteDetail } from "./SuiteDetail";
+import { downloadText } from "../export/export";
+
+vi.mock("../export/export", () => ({
+  downloadText: vi.fn(),
+  buildSuiteExportJson: (b: unknown) => JSON.stringify(b),
+  buildSummaryCsv: () => "csv",
+  buildFieldCsv: () => "csv",
+}));
 import type { BenchmarkRun, BenchmarkSuite, GoldenAnswer } from "../storage/types";
 
 const suite: BenchmarkSuite = {
@@ -78,5 +86,14 @@ describe("SuiteDetail", () => {
   it("shows an empty heatmap state without mismatches", () => {
     render(<SuiteDetail suite={suite} runs={[run(1), run(2)]} />);
     expect(screen.getByText(/no evaluated mismatches/i)).toBeInTheDocument();
+  });
+
+  it("exports JSON, summary CSV, and field CSV", () => {
+    render(<SuiteDetail suite={suite} runs={[run(1)]} />);
+    fireEvent.click(screen.getByRole("button", { name: /export json/i }));
+    fireEvent.click(screen.getByRole("button", { name: /export summary csv/i }));
+    fireEvent.click(screen.getByRole("button", { name: /export field csv/i }));
+    expect(vi.mocked(downloadText)).toHaveBeenCalledTimes(3);
+    expect(vi.mocked(downloadText).mock.calls[0]?.[1]).toContain("Benchmark — PO");
   });
 });

@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { Layout } from "./app/Layout";
 import { useHashRoute } from "./app/useHashRoute";
 import { BenchmarksPage } from "./pages/BenchmarksPage";
+import { ComparePage } from "./pages/ComparePage";
 import { DocumentsPage } from "./pages/DocumentsPage";
 import { GoldenAnswersPage } from "./pages/GoldenAnswersPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
@@ -21,7 +22,8 @@ export default function App() {
       {route === "golden" ? <GoldenAnswersPage /> : null}
       {route === "providers" ? <ProvidersPage /> : null}
       {route === "benchmarks" ? <BenchmarksPage /> : null}
-      {route !== "documents" && route !== "profiles" && route !== "golden" && route !== "providers" && route !== "benchmarks" ? (
+      {route === "compare" ? <ComparePage /> : null}
+      {route !== "documents" && route !== "profiles" && route !== "golden" && route !== "providers" && route !== "benchmarks" && route !== "compare" ? (
         <PlaceholderPage routeId={route} />
       ) : null}
     </Layout>

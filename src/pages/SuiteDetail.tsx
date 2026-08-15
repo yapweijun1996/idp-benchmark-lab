@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { buildFieldHeatmap } from "../evaluation/heatmap";
+import { summarizeSuite } from "../benchmarks/summary";
+import { buildFieldCsv, buildSuiteExportJson, buildSummaryCsv, downloadText } from "../export/export";
 import type { BenchmarkRun, BenchmarkSuite, GoldenAnswer } from "../storage/types";
 
 export interface SuiteDetailProps {
@@ -12,8 +14,43 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
   const [selectedRunId, setSelectedRunId] = useState<string | undefined>(undefined);
   const selected = runs.find((r) => r.id === selectedRunId);
   const heatmap = buildFieldHeatmap(runs);
+  const summary = summarizeSuite(runs, suite.requestedRuns);
   const stateChip = (state: BenchmarkRun["state"]) =>
     "chip " + (state === "succeeded" ? "chip--ok" : state === "schema_invalid" ? "chip--warn" : "chip--bad");
+
+  const exportJson = () => {
+    const bundle = {
+      formatVersion: 1,
+      appBuild: typeof __APP_BUILD__ !== "undefined" ? __APP_BUILD__ : "0.1.0",
+      exportedAt: new Date().toISOString(),
+      suite,
+      runs,
+      summary,
+      fieldAccuracy: heatmap,
+    };
+    downloadText("suite-" + suite.id.slice(0, 8) + ".json", buildSuiteExportJson(bundle), "application/json");
+  };
+
+  const exportSummaryCsv = () => {
+    downloadText(
+      "suite-" + suite.id.slice(0, 8) + "-summary.csv",
+      buildSummaryCsv([
+        {
+          suiteId: suite.id,
+          suiteName: suite.name ?? suite.id.slice(0, 8),
+          status: suite.status,
+          model: suite.identity.model,
+          inputMode: suite.identity.inputMode,
+          summary,
+        },
+      ]),
+      "text/csv",
+    );
+  };
+
+  const exportFieldCsv = () => {
+    downloadText("suite-" + suite.id.slice(0, 8) + "-fields.csv", buildFieldCsv(heatmap), "text/csv");
+  };
 
   return (
     <div className="profile-form" role="region" aria-label="Suite detail">
@@ -23,6 +60,18 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
       <p className="doc-card__meta">
         {suite.identity.model} · {suite.identity.inputMode} · {runs.length}/{suite.requestedRuns} runs
       </p>
+
+      <div className="toolbar">
+        <button type="button" className="btn" onClick={exportJson}>
+          Export JSON
+        </button>
+        <button type="button" className="btn" onClick={exportSummaryCsv}>
+          Export summary CSV
+        </button>
+        <button type="button" className="btn" onClick={exportFieldCsv}>
+          Export field CSV
+        </button>
+      </div>
 
       <h3>Field accuracy heatmap</h3>
       {heatmap.length === 0 ? (

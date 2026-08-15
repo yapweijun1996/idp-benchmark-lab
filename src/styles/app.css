@@ -541,3 +541,7 @@ details summary {
   background: #fdf3e7;
   color: var(--accent-warn);
 }
+.compare-wrap {
+  overflow-x: auto;
+  margin-top: 14px;
+}

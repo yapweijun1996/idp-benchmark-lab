@@ -93,3 +93,10 @@ Implementation status: not started.
 - Suite detail view on the Benchmarks page: heatmap table, ordered run list, and a run inspector with mismatch table, parsed JSON, Golden Answer, and raw provider response.
 - Latency (avg/p50/p95/min/max) and cost (total/avg/per-correct) statistics verified as covered by the summary panel.
 - 199 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Compare & Export (Phase 4 complete)
+
+- Compare screen: multi-select suites, side-by-side metric table (status, attempted, exact pass, schema-valid, leaf/row accuracy, consistency, variants, latency, cost) with a runs-loader seam for tests.
+- Export per suite: full JSON bundle (format version, app build, suite, runs, summary, field accuracy — no secrets), summary CSV (documented columns), field-accuracy CSV with observed value pairs; RFC 4180 escaping; browser download helper.
+- Suite detail view gains Export JSON / summary CSV / field CSV buttons with download tests.
+- 213 tests passing; lint, typecheck, build green.

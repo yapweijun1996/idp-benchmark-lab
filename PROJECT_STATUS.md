@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase 4 (Evaluation Dashboard) nearly complete.**  
-Every suite is now fully inspectable: field accuracy heatmap (per-path mismatch rates + observed expected→actual value frequencies), run inspector (raw/parsed/golden JSON with mismatch tables), plus the existing summary panel with latency and cost statistics. Remaining Phase 4 work: compare screen and export. 199 tests passing; lint/typecheck/build green.  
+**Phase 4 complete; Phase 5 (Compare & Portability) in progress.**  
+Compare screen (side-by-side metric table across selected suites) and export (full JSON bundle with format version, summary CSV, field-accuracy CSV, RFC 4180 escaping, no secrets) are done. Remaining: project backup/import and Phase 6 hardening. 213 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-043. Next: TASK-044 (compare screen), TASK-045 (JSON/CSV export), TASK-046 (project backup/import).
+Everything in `TASK.md` except TASK-000..TASK-045. Next: TASK-046 (project backup/import), TASK-047 (Golden Popular PO fixture), then Phase 6 QA (TASK-048..TASK-056).
 
 ## Risks
 
