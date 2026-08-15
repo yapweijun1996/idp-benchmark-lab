@@ -3,13 +3,15 @@ import { Layout } from "./app/Layout";
 import { useHashRoute } from "./app/useHashRoute";
 import { BenchmarksPage } from "./pages/BenchmarksPage";
 import { ComparePage } from "./pages/ComparePage";
+import { DashboardPage } from "./pages/DashboardPage";
 import { DocumentsPage } from "./pages/DocumentsPage";
 import { GoldenAnswersPage } from "./pages/GoldenAnswersPage";
-import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { ProfilesPage } from "./pages/ProfilesPage";
-import { SettingsPage } from "./pages/SettingsPage";
 import { ProvidersPage } from "./pages/ProvidersPage";
+import { SettingsPage } from "./pages/SettingsPage";
 
+// Every declared route maps to a real page; unknown hashes fall back to the
+// dashboard inside useHashRoute (no placeholder fallback exists anymore).
 export default function App() {
   const route = useHashRoute();
   const [navOpen, setNavOpen] = useState(false);
@@ -18,6 +20,7 @@ export default function App() {
 
   return (
     <Layout route={route} navOpen={navOpen} onToggleNav={toggleNav} onNavigate={closeNav}>
+      {route === "dashboard" ? <DashboardPage /> : null}
       {route === "documents" ? <DocumentsPage /> : null}
       {route === "profiles" ? <ProfilesPage /> : null}
       {route === "golden" ? <GoldenAnswersPage /> : null}
@@ -25,9 +28,6 @@ export default function App() {
       {route === "benchmarks" ? <BenchmarksPage /> : null}
       {route === "compare" ? <ComparePage /> : null}
       {route === "settings" ? <SettingsPage /> : null}
-      {route !== "documents" && route !== "profiles" && route !== "golden" && route !== "providers" && route !== "benchmarks" && route !== "compare" && route !== "settings" ? (
-        <PlaceholderPage routeId={route} />
-      ) : null}
     </Layout>
   );
 }
