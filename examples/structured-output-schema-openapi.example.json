@@ -1,0 +1,40 @@
+{
+  "type": "object",
+  "properties": {
+    "doc_info": {
+      "type": "object",
+      "properties": {
+        "document_number": {"type": "string", "nullable": true},
+        "date_transaction": {"type": "string", "nullable": true}
+      },
+      "required": ["document_number", "date_transaction"]
+    },
+    "row_data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stock_code": {"type": "string", "nullable": true},
+          "stock_desc": {"type": "string", "nullable": true},
+          "remark": {"type": "string", "nullable": true},
+          "qty": {"type": "string", "nullable": true},
+          "unit_price": {"type": "string", "nullable": true},
+          "row_discount": {"type": "string", "nullable": true},
+          "row_subtotal": {"type": "string", "nullable": true}
+        },
+        "required": ["stock_code", "stock_desc", "remark", "qty", "unit_price", "row_discount", "row_subtotal"]
+      }
+    },
+    "footer": {
+      "type": "object",
+      "properties": {
+        "subtotal": {"type": "string", "nullable": true},
+        "discount": {"type": "string", "nullable": true},
+        "gst": {"type": "string", "nullable": true},
+        "grand_total": {"type": "string", "nullable": true}
+      },
+      "required": ["subtotal", "discount", "gst", "grand_total"]
+    }
+  },
+  "required": ["doc_info", "row_data", "footer"]
+}

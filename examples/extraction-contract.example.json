@@ -1,0 +1,21 @@
+{
+  "doc_info": [
+    "document_number",
+    "date_transaction"
+  ],
+  "row_data": [
+    "stock_code",
+    "stock_desc",
+    "remark",
+    "qty",
+    "unit_price",
+    "row_discount",
+    "row_subtotal"
+  ],
+  "footer": [
+    "subtotal",
+    "discount",
+    "gst",
+    "grand_total"
+  ]
+}

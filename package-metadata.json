@@ -1,0 +1,19 @@
+{
+  "project": "idp-benchmark-lab",
+  "generated_at": "2026-08-15T15:37:00+08:00",
+  "implementation_status": "not_started",
+  "hosting_target": "GitHub Pages",
+  "app_type": "static PWA demo/spike",
+  "providers": [
+    "OpenAI",
+    "Gemini",
+    "Custom OpenAI-compatible"
+  ],
+  "benchmark_runs": [
+    5,
+    10,
+    20,
+    50,
+    100
+  ]
+}

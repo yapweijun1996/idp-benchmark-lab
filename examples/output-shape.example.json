@@ -1,0 +1,23 @@
+{
+  "doc_info": {
+    "document_number": null,
+    "date_transaction": null
+  },
+  "row_data": [
+    {
+      "stock_code": null,
+      "stock_desc": null,
+      "remark": null,
+      "qty": null,
+      "unit_price": null,
+      "row_discount": null,
+      "row_subtotal": null
+    }
+  ],
+  "footer": {
+    "subtotal": null,
+    "discount": null,
+    "gst": null,
+    "grand_total": null
+  }
+}
