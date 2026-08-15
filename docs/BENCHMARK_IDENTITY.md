@@ -7,6 +7,7 @@ Identity must include:
 - extraction profile ID/version
 - prompt SHA-256
 - JSON schema SHA-256
+- normalization policy hash (when a policy is configured)
 - Golden Answer SHA-256/version
 - provider
 - model ID

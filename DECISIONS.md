@@ -41,3 +41,6 @@ Values from unrequested source columns must not be reassigned into requested fie
 
 ## ADR-014 No automatic calculation of missing document values
 Missing printed subtotal/GST/total remains `null` unless a profile explicitly requests calculation.
+
+## ADR-015 Canonical schema stores document values as strings
+Quantities, prices, and amounts are strings in the canonical schema to avoid `5` vs `5.00` drift and locale formatting differences. Comparison stays character-sensitive. Numeric output is allowed only when the profile schema explicitly declares number types.

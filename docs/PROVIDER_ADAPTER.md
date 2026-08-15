@@ -15,6 +15,18 @@ interface ProviderAdapter {
 }
 ```
 
+Supporting types:
+
+```ts
+type ProviderKind = "openai" | "gemini" | "openai_compatible";
+
+type ProviderContext = {
+  config: ProviderConfig;
+  apiKey: string; // memory-only; never persisted, logged, cached, or exported
+  signal?: AbortSignal;
+};
+```
+
 Normalized errors:
 
 ```ts

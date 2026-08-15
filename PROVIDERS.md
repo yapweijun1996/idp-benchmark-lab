@@ -12,12 +12,14 @@ Benchmark code must not contain provider API details outside adapters.
 
 ```ts
 interface ProviderAdapter {
-  kind: string;
-  getCapabilities(config: ProviderConfig): ProviderCapabilities;
+  kind: ProviderKind;
+  capabilities(config: ProviderConfig): ProviderCapabilities;
   testConnection(ctx: ProviderContext): Promise<ConnectionResult>;
-  runExtraction(request: NormalizedExtractionRequest, ctx: ProviderContext): Promise<NormalizedExtractionResponse>;
+  extract(request: NormalizedExtractionRequest, ctx: ProviderContext): Promise<NormalizedExtractionResponse>;
 }
 ```
+
+This is the single adapter contract; `docs/PROVIDER_ADAPTER.md` is the canonical reference.
 
 ## Capabilities
 

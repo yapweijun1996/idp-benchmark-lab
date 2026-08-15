@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+coverage/
+
+# Environment files (BYOK keys must never be committed)
+.env
+.env.*
+!.env.example
+
+# Editor / OS files
+.DS_Store
+*.local

@@ -7,6 +7,15 @@ Stability = does same configuration keep producing same result?
 
 Never collapse them into one score.
 
+## Denominator definitions
+
+- `requested_runs`: the user-selected preset (5/10/20/50/100), fixed at suite creation.
+- `attempted_runs`: runs the runner actually started. Stop/budget prevents new starts; an in-flight request finishes normally in MVP and records a terminal state.
+- `completed_runs`: runs that reached a terminal state (`succeeded`, `schema_invalid`, `provider_error`, `parse_error`, `cancelled`). Queued/running runs are not completed.
+- `parseable_runs`: runs whose response parsed to JSON (`succeeded` + `schema_invalid`).
+- `provider_calls`: real network calls, including retries. Retries never create new run numbers and never change `requested_runs`.
+- Any rate whose denominator is zero displays `—` (no number), never `0`.
+
 ## Canonical JSON
 
 - parse JSON
@@ -33,14 +42,14 @@ Flatten Golden JSON to leaf paths and count exact matches.
 MVP ordered-row exact comparison. Also report missing/extra/duplicate rows.
 
 ### Consistency Rate
-`frequency_of_modal_output_hash / completed_parseable_runs`
+`frequency_of_modal_output_hash / parseable_runs`
 
 A model may have 100% consistency and 0% accuracy.
 
 ### Golden Stability
-`exact_golden_matches / total_requested_runs`
+`exact_golden_matches / requested_runs`
 
-Includes provider/parse failures in denominator.
+Includes provider/parse failures in denominator. Runs never started after Stop or budget-stop also count toward the denominator (they are not exact matches).
 
 ### Unique Variants
 Count distinct canonical output hashes. Store count, percentage, representative run, diff vs Golden.

@@ -91,6 +91,8 @@ draft -> running -> completed | stopped | budget_stopped | failed
 
 Default concurrency = 1. Before every request, check stop flag, budget cap, requested count, and rate-limit state.
 
+Stop prevents new starts. In MVP an in-flight request finishes normally and its run records a terminal state; aborting in-flight requests is a documented future option, not a silent behavior.
+
 ## PDF modes
 
 **Native:** original PDF to provider.  

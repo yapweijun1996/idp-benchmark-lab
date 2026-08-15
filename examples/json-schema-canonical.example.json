@@ -1,0 +1,131 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Golden Popular PO — reduced extraction contract (canonical, draft-07)",
+  "type": "object",
+  "properties": {
+    "doc_info": {
+      "type": "object",
+      "properties": {
+        "document_number": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "date_transaction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "document_number",
+        "date_transaction"
+      ],
+      "additionalProperties": false
+    },
+    "row_data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stock_code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "stock_desc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "remark": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "qty": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unit_price": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "row_discount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "row_subtotal": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "stock_code",
+          "stock_desc",
+          "remark",
+          "qty",
+          "unit_price",
+          "row_discount",
+          "row_subtotal"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "footer": {
+      "type": "object",
+      "properties": {
+        "subtotal": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "discount": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "gst": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "grand_total": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "subtotal",
+        "discount",
+        "gst",
+        "grand_total"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "doc_info",
+    "row_data",
+    "footer"
+  ],
+  "additionalProperties": false
+}

@@ -73,6 +73,8 @@ If documentation conflicts with code, inspect the code and tests, determine inte
 - `PWA.md` — offline/static PWA behavior
 - `DEPLOYMENT.md` — GitHub Pages deployment
 - `DECISIONS.md` — architecture decisions
+- `CHANGELOG.md` — release notes
+- `MANIFEST.md` — documentation file inventory
 - `PROJECT_STATUS.md` — status, blockers, next steps
 - `AGENTS.md` — implementation rules for coding agents
 - `IMPLEMENTATION_PROMPT.md` — ready-to-use coding-agent prompt

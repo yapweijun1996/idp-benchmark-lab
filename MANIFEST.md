@@ -37,6 +37,7 @@ Files:
 - `docs/PROMPT_CONTRACT.md`
 - `docs/PROVIDER_ADAPTER.md`
 - `examples/extraction-contract.example.json`
+- `examples/json-schema-canonical.example.json`
 - `examples/output-shape.example.json`
 - `examples/structured-output-schema-openapi.example.json`
 - `package-metadata.json`

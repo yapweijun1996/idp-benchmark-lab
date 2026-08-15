@@ -31,12 +31,25 @@ type ExtractionProfile = {
   basePrompt: string;
   extractionContract: unknown;
   jsonSchema: unknown;
+  normalizationPolicy?: NormalizationPolicy;
+  normalizationPolicySha256?: string;
   promptSha256: string;
   schemaSha256: string;
   createdAt: string;
   updatedAt: string;
 };
 ```
+
+### NormalizationPolicy
+
+```ts
+type NormalizationPolicy = {
+  trimOuterWhitespace: boolean;
+  normalizeLineEndings: boolean;
+};
+```
+
+Only these documented conservative transformations are allowed. Normalization never rewrites identifiers, model numbers, amounts, or numeric types.
 
 ### GoldenAnswer
 
@@ -53,6 +66,8 @@ type GoldenAnswer = {
   createdAt: string;
 };
 ```
+
+When the bound profile version changes, the UI must re-validate the Golden Answer and require explicit re-approval before it can be selected for a new benchmark.
 
 ### ProviderConfig
 
@@ -94,6 +109,19 @@ Stores immutable benchmark identity, requested run count, concurrency, budget, m
 ### BenchmarkRun
 
 Stores run number, state, latency, safe raw response, parsed JSON, schema/exact/normalized status, leaf/row accuracy, hashes, usage, cost, and normalized error.
+
+### AppSettings
+
+```ts
+type AppSettings = {
+  id: "app";
+  defaultProviderId?: string;
+  defaultConcurrency: number;
+  theme: "light" | "dark" | "system";
+  showSecretsWarning: boolean;
+  updatedAt: string;
+};
+```
 
 ## Storage rules
 
