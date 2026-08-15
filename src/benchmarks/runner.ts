@@ -117,6 +117,7 @@ export class BenchmarkRunner {
         createdAt: new Date().toISOString(),
       };
       await db.benchmarkRuns.put(runBase);
+      await db.benchmarkRuns.put({ ...runBase, state: "running" });
 
       const base = {
         document,
@@ -172,9 +173,12 @@ export class BenchmarkRunner {
         }
       }
 
+      // 取消语义：runner 的优雅 Stop 不 abort in-flight；只有 AbortError
+      // （normalizeFailure 归一化为 "Run cancelled"）才产生 cancelled 终态。
+      const cancelled = lastError?.category === "provider" && lastError.message === "Run cancelled";
       const failedRun: BenchmarkRun = {
         ...runBase,
-        state: "provider_error",
+        state: cancelled ? "cancelled" : "provider_error",
         providerCalls: lastAttempt,
         error: lastError ?? { category: "unknown", message: "No attempts completed", retryable: false },
         finishedAt: new Date().toISOString(),

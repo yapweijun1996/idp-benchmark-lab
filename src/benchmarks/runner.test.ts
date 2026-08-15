@@ -131,6 +131,20 @@ describe("BenchmarkRunner queue", () => {
     expect(adapter.extract).toHaveBeenCalledTimes(3);
   });
 
+  it("transitions each run through the running state", async () => {
+    const adapter = fakeAdapter();
+    let observedRunning = false;
+    adapter.extract.mockImplementation(async () => {
+      // 执行期间 run 已写入 running 状态
+      const rows = await db.benchmarkRuns.toArray();
+      observedRunning = rows.some((r) => r.state === "running");
+      return okResponse();
+    });
+    const { profile } = await seed();
+    await runnerFor(adapter).run({ ...baseConfig, profileId: profile.id, requestedRuns: 1 });
+    expect(observedRunning).toBe(true);
+  });
+
   it("marks schema-invalid runs distinctly while the suite completes", async () => {
     const adapter = fakeAdapter();
     adapter.extract.mockResolvedValue({ ...okResponse(), json: { document_number: 42 }, raw: '{"document_number":42}' });

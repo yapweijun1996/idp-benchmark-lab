@@ -79,6 +79,7 @@ export class SingleRunService {
       createdAt: now,
     };
     await db.benchmarkRuns.put(runBase);
+    await db.benchmarkRuns.put({ ...runBase, state: "running" });
 
     try {
       const outcome = await executeExtraction(this.deps, {
@@ -125,9 +126,10 @@ export class SingleRunService {
       return { suite: finalSuite, run, response: outcome.response };
     } catch (e) {
       const err = normalizeFailure(e);
+      const cancelled = e instanceof DOMException && e.name === "AbortError";
       const run: BenchmarkRun = {
         ...runBase,
-        state: "provider_error",
+        state: cancelled ? "cancelled" : "provider_error",
         providerCalls: 1,
         error: err,
         finishedAt: new Date().toISOString(),
