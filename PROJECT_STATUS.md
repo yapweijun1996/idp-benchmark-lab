@@ -3,7 +3,7 @@
 ## Current status
 
 **Phase 3/4 (Harness + Evaluation) in progress.**  
-Repeated benchmark core is functional (presets, queue, stop, retry, budget cap, per-run persistence). The evaluation engine is complete and wired into every run: deterministic canonicalization, schema validity, exact match, leaf-field accuracy with mismatch paths, ordered row accuracy (missing/extra/duplicate/reordered), conservative normalization with strict-vs-normalized scores, variant grouping, and stability metrics. Next: progress screen and results dashboard UI. 172 tests passing; lint/typecheck/build green.  
+The Benchmarks page now runs full repeated benchmarks with a progress screen (completed/total, succeeded/schema-invalid/failed), live Stop, and a results summary panel: exact pass rate, schema-valid rate, avg leaf accuracy, row accuracy, consistency, unique variants, golden stability, error rate, latency (avg/p50/p95), and cost (total/avg/per-correct). Suite summary computation is a tested pure function with documented denominators. 190 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-037. Next: TASK-038 (benchmark progress screen), TASK-039 (results summary dashboard), TASK-040 (field heatmap), TASK-041 (run inspector), TASK-042/043 (latency/cost dashboards).
+Everything in `TASK.md` except TASK-000..TASK-039. Next: TASK-040 (field accuracy heatmap), TASK-041 (JSON diff/run inspector), TASK-042/043 (latency/cost dashboards), TASK-044 (compare screen), TASK-045 (export).
 
 ## Risks
 

@@ -78,3 +78,10 @@ Implementation status: not started.
 - Variant grouping by canonical output hash with percentages and representative run numbers; stability metrics (consistency rate, golden stability) with division guards per EVALUATION.md.
 - Test fixtures cover the documented cases: missing/extra fields, wrong identifier digits, null vs 0, remark leakage, row missing/extra/duplicate/reordered, whitespace-only differences.
 - 172 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Benchmark Progress & Results Dashboard
+
+- Benchmarks page: repeated benchmark builder (5/10/20/50/100 presets, concurrency, hard budget cap), live progress (completed/total with per-outcome counts), Stop button wired to the runner's stop gate.
+- Results summary panel: exact pass rate, schema-valid rate, avg leaf accuracy, row accuracy, consistency, unique variants, golden stability, error rate, latency avg/p50/p95 (linear-interpolation percentiles), cost total/avg/per-correct — all with documented denominators and division guards.
+- Runner progress callback (`onRunComplete`) per terminal run; summary aggregation uses raw row totals (matched/golden rows), not averaged ratios.
+- 190 tests passing; lint, typecheck, build green.

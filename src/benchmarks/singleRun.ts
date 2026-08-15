@@ -103,6 +103,8 @@ export class SingleRunService {
         exactMatch: outcome.evaluation?.exactMatch,
         leafAccuracy: outcome.evaluation?.leafAccuracy.accuracy,
         rowAccuracy: rowAccuracyOf(outcome.evaluation),
+        rowMatched: outcome.evaluation?.rowComparison.matchedRows,
+        rowTotal: outcome.evaluation?.rowComparison.goldenRows,
         outputHash: outcome.outputHash,
         providerCalls: outcome.response.providerCalls,
         usage: outcome.response.usage,

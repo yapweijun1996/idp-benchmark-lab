@@ -37,6 +37,8 @@ export interface BenchmarkConfig extends SingleRunInput {
 export interface RunnerDeps extends ExecuteDeps {
   /** Backoff seam; tests inject an immediate resolve. */
   sleep?: (ms: number) => Promise<void>;
+  /** Progress callback: fired after each run reaches a terminal state. */
+  onRunComplete?: (run: BenchmarkRun) => void;
 }
 
 function backoffDelay(policy: RetryPolicy, attempt: number): number {
@@ -145,6 +147,8 @@ export class BenchmarkRunner {
             exactMatch: outcome.evaluation?.exactMatch,
             leafAccuracy: outcome.evaluation?.leafAccuracy.accuracy,
             rowAccuracy: rowAccuracyOf(outcome.evaluation),
+            rowMatched: outcome.evaluation?.rowComparison.matchedRows,
+            rowTotal: outcome.evaluation?.rowComparison.goldenRows,
             outputHash: outcome.outputHash,
             providerCalls: attempt,
             usage: outcome.response.usage,
@@ -156,6 +160,7 @@ export class BenchmarkRunner {
           if (outcome.costUsd !== undefined) {
             knownCost += outcome.costUsd;
           }
+          this.deps.onRunComplete?.(run);
           return;
         } catch (e) {
           lastError = normalizeFailure(e);
@@ -174,6 +179,7 @@ export class BenchmarkRunner {
         finishedAt: new Date().toISOString(),
       };
       await db.benchmarkRuns.put(failedRun);
+      this.deps.onRunComplete?.(failedRun);
     };
 
     const budgetWouldExceed = (): boolean => {

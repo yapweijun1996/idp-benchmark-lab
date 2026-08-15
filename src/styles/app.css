@@ -506,3 +506,34 @@ details summary {
   font-weight: 600;
   margin: 8px 0;
 }
+.progress-panel {
+  margin-top: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+  padding: 12px 14px;
+}
+
+.progress-panel progress {
+  width: 100%;
+  height: 14px;
+}
+
+.summary-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 14px;
+}
+
+.summary-table th,
+.summary-table td {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.summary-table th {
+  width: 24%;
+  color: var(--text-muted);
+  font-weight: 600;
+}

@@ -6,13 +6,16 @@ import { useGoldens } from "../golden/useGoldens";
 import { useProfiles } from "../profiles/useProfiles";
 import { useProviderConfigs } from "../providers/useProviderConfigs";
 import type { InputMode } from "../storage/types";
+import { RepeatedBenchmarkSection, type BenchmarkFactory } from "./RepeatedBenchmarkSection";
 
 interface BenchmarksPageProps {
   /** Test seam: supplies a runner without touching the real service. */
   singleRunFactory?: () => Pick<SingleRunService, "run">;
+  /** Test seam for the repeated benchmark runner. */
+  benchmarkFactory?: BenchmarkFactory;
 }
 
-export function BenchmarksPage({ singleRunFactory }: BenchmarksPageProps) {
+export function BenchmarksPage({ singleRunFactory, benchmarkFactory }: BenchmarksPageProps) {
   const documents = useDocuments();
   const profiles = useProfiles();
   const providers = useProviderConfigs();
@@ -161,6 +164,19 @@ export function BenchmarksPage({ singleRunFactory }: BenchmarksPageProps) {
       </div>
 
       {result ? <RunResultPanel result={result} /> : null}
+
+      <RepeatedBenchmarkSection
+        benchmarkFactory={benchmarkFactory}
+        selection={{
+          documentId,
+          profileId,
+          providerConfigId,
+          goldenId: goldenId || undefined,
+          mode,
+          temperature: temperature.trim() === "" ? undefined : Number(temperature),
+          thinking: thinking.trim() || undefined,
+        }}
+      />
 
       <h2>Recent runs</h2>
       {history.suites.length === 0 ? (

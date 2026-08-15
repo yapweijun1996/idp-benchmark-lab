@@ -42,8 +42,8 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-035 | Hard budget cap | done | TASK-021/031 |
 | TASK-036 | Persist suite/run lifecycle | done | TASK-006/031 |
 | TASK-037 | Output hashing/variants | done | TASK-024/036 |
-| TASK-038 | Benchmark progress screen | todo | TASK-036 |
-| TASK-039 | Result summary dashboard | todo | TASK-025-037 |
+| TASK-038 | Benchmark progress screen | done | TASK-036 |
+| TASK-039 | Result summary dashboard | done | TASK-025-037 |
 | TASK-040 | Field accuracy heatmap | todo | TASK-027 |
 | TASK-041 | JSON diff/run inspector | todo | TASK-026 |
 | TASK-042 | Latency statistics | todo | TASK-036 |

@@ -138,6 +138,8 @@ export type BenchmarkRun = {
   exactMatch?: boolean;
   leafAccuracy?: number;
   rowAccuracy?: number;
+  rowMatched?: number;
+  rowTotal?: number;
   outputHash?: string;
   providerCalls: number;
   usage?: unknown;

@@ -205,6 +205,24 @@ describe("Retry policy", () => {
   });
 });
 
+describe("Progress callback", () => {
+  it("fires once per completed run in run order", async () => {
+    const adapter = fakeAdapter();
+    adapter.extract.mockResolvedValue(okResponse());
+    const { profile } = await seed();
+    const completed: number[] = [];
+    const runner = new BenchmarkRunner({
+      db,
+      adapters: { gemini: adapter },
+      getBlob: () => Promise.resolve(new Blob(["%PDF"], { type: "application/pdf" })),
+      sleep: () => Promise.resolve(),
+      onRunComplete: (run) => completed.push(run.runNumber),
+    });
+    await runner.run({ ...baseConfig, profileId: profile.id, requestedRuns: 3 });
+    expect(completed).toEqual([1, 2, 3]);
+  });
+});
+
 describe("Hard budget cap", () => {
   it("stops before a run that would exceed the cap", async () => {
     const adapter = fakeAdapter();
