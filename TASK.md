@@ -13,7 +13,7 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-006 | IndexedDB persistence | done | TASK-002 |
 | TASK-007 | Document entity/PDF upload | done | TASK-006 |
 | TASK-008 | PDF preview using PDF.js | done | TASK-007 |
-| TASK-009 | Native PDF vs canonical render modes | todo | TASK-008 |
+| TASK-009 | Native PDF vs canonical render modes | done | TASK-008 |
 | TASK-010 | Extraction profile editor | done | TASK-006 |
 | TASK-011 | Modular prompt/contract editor | done | TASK-010 |
 | TASK-012 | JSON schema editor + AJV validation | done | TASK-010 |
@@ -24,8 +24,8 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-017 | Custom OpenAI-compatible adapter | done | TASK-014 |
 | TASK-018 | BYOK key/session handling | done | TASK-014 |
 | TASK-019 | Provider connection diagnostics | done | TASK-015/16/17 |
-| TASK-020 | Pricing registry | todo | TASK-014 |
-| TASK-021 | Normalized usage/cost model | todo | TASK-020 |
+| TASK-020 | Pricing registry | done | TASK-014 |
+| TASK-021 | Normalized usage/cost model | done | TASK-020 |
 | TASK-022 | Single extraction run | todo | TASK-013/15/16/17 |
 | TASK-023 | Raw response + parsed JSON persistence | todo | TASK-022 |
 | TASK-024 | Deterministic JSON canonicalization | todo | TASK-022 |

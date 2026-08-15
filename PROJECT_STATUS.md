@@ -3,7 +3,7 @@
 ## Current status
 
 **Phase 2 (Golden Single-Run Extraction) in progress.**  
-Configuration stack complete (documents, profiles, Golden Answers). Provider layer complete: OpenAI/Gemini/Custom OpenAI-compatible adapters behind one normalized contract, capability declarations, conservative JSON extraction, usage/error normalization, BYOK key store (memory-only default, sessionStorage opt-in), connection diagnostics UI, and secret-redaction tests. 116 tests passing; lint/typecheck/build green.  
+Configuration stack, provider layer, canonical page rendering (fixed settings, page ranges, PNG/JPEG), pricing presets (model names only — no hard-coded prices), snapshot service, and the cost estimation engine with the documented precedence (reported > usage×snapshot > flat > unknown, never zero) are complete. 130 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-008, TASK-010..TASK-019. Next: TASK-009 (native vs canonical render modes), TASK-020..TASK-024 (pricing, usage/cost, single-run extraction).
+Everything in `TASK.md` except TASK-000..TASK-008, TASK-009..TASK-021. Next: TASK-022 (single extraction run), TASK-023 (raw response persistence), TASK-024 (deterministic canonicalization — core already in place).
 
 ## Risks
 

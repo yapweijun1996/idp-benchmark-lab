@@ -47,3 +47,10 @@ Implementation status: not started.
 - BYOK key store: memory-only default, sessionStorage opt-in per tab, never localStorage/IndexedDB/exports — with hard tests asserting no key leakage and no key echo in connection results.
 - Providers page: config cards, key input with reveal, connection testing, capability badges, explicit BYOK warning.
 - 116 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Canonical Rendering, Pricing & Cost Engine
+
+- Canonical rendered-image input mode: fixed-scale page rendering with page ranges, PNG/JPEG output, renderer seam for tests; settings are part of benchmark identity.
+- Pricing presets are model names only (per the no-hard-coded-prices rule); users save verified `PricingSnapshot`s, and `latestFor(provider, model)` feeds the cost engine.
+- Cost estimation with the documented precedence: provider-reported → usage × snapshot (partial usage counts only known parts) → flat per-request → unknown (undefined, never rendered as zero).
+- 130 tests passing; lint, typecheck, build green.
