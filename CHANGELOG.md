@@ -54,3 +54,11 @@ Implementation status: not started.
 - Pricing presets are model names only (per the no-hard-coded-prices rule); users save verified `PricingSnapshot`s, and `latestFor(provider, model)` feeds the cost engine.
 - Cost estimation with the documented precedence: provider-reported → usage × snapshot (partial usage counts only known parts) → flat per-request → unknown (undefined, never rendered as zero).
 - 130 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Single Extraction Run (Phase 2 complete)
+
+- `SingleRunService`: orchestrates document/profile/provider/golden into one extraction — BYOK lookup, prompt composition, native-PDF or canonical-image input preparation, capability gates, adapter call, schema evaluation, cost estimation, and latency measurement.
+- Immutable benchmark identity snapshot on every suite (document/profile/prompt/schema/normalization/golden/provider/model/thinking/temperature/mode/renderer/build), with the app build injected from package.json.
+- Run evidence persisted immediately: state, safe raw response, parsed JSON, schema validity, output hash, usage, cost, normalized error; provider failures mark the run `provider_error` and the suite `failed` without corrupting data.
+- Benchmarks page: single-run form (mode/temperature/thinking), result panel with raw + parsed JSON, recent-run history.
+- 140 tests passing; lint, typecheck, build green.

@@ -483,3 +483,26 @@ h1 {
 .provider-card h2 {
   margin-top: 0;
 }
+.chip--bad {
+  background: #fbe4e2;
+  color: var(--accent-bad);
+}
+
+.raw-pre {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  max-height: 360px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  margin: 8px 0;
+}

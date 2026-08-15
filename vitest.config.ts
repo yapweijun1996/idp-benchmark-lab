@@ -5,6 +5,9 @@ import { defineConfig } from "vitest/config";
 // conflicts with the app's Vite plugin types at typecheck time.
 // JSX in tests is transformed by Vite's default esbuild automatic runtime.
 export default defineConfig({
+  define: {
+    __APP_BUILD__: JSON.stringify("0.1.0"),
+  },
   resolve: {
     alias: [
       {

@@ -26,8 +26,8 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-019 | Provider connection diagnostics | done | TASK-015/16/17 |
 | TASK-020 | Pricing registry | done | TASK-014 |
 | TASK-021 | Normalized usage/cost model | done | TASK-020 |
-| TASK-022 | Single extraction run | todo | TASK-013/15/16/17 |
-| TASK-023 | Raw response + parsed JSON persistence | todo | TASK-022 |
+| TASK-022 | Single extraction run | done | TASK-013/15/16/17 |
+| TASK-023 | Raw response + parsed JSON persistence | done | TASK-022 |
 | TASK-024 | Deterministic JSON canonicalization | todo | TASK-022 |
 | TASK-025 | Schema-valid evaluation | todo | TASK-024 |
 | TASK-026 | Exact-match evaluation | todo | TASK-024 |

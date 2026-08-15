@@ -1,10 +1,14 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import pkg from "./package.json";
 
 // base "./" keeps asset URLs working under any GitHub Pages sub-path.
 export default defineConfig({
   base: "./",
+  define: {
+    __APP_BUILD__: JSON.stringify(pkg.version),
+  },
   plugins: [
     react(),
     VitePWA({

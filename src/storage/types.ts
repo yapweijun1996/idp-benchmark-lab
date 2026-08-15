@@ -80,9 +80,9 @@ export type BenchmarkIdentity = {
   promptSha256: string;
   schemaSha256: string;
   normalizationPolicySha256?: string;
-  goldenId: string;
-  goldenVersion: number;
-  goldenSha256: string;
+  goldenId?: string;
+  goldenVersion?: number;
+  goldenSha256?: string;
   providerKind: ProviderKind;
   model: string;
   thinking?: string;
