@@ -35,12 +35,12 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-028 | Ordered row accuracy | todo | TASK-027 |
 | TASK-029 | Conservative normalization | todo | TASK-026 |
 | TASK-030 | Strict vs normalized scoring | todo | TASK-029 |
-| TASK-031 | Benchmark queue | todo | TASK-022 |
-| TASK-032 | 5/10/20/50/100 presets | todo | TASK-031 |
-| TASK-033 | Stop behavior | todo | TASK-031 |
-| TASK-034 | Retry/backoff | todo | TASK-031 |
-| TASK-035 | Hard budget cap | todo | TASK-021/031 |
-| TASK-036 | Persist suite/run lifecycle | todo | TASK-006/031 |
+| TASK-031 | Benchmark queue | done | TASK-022 |
+| TASK-032 | 5/10/20/50/100 presets | done | TASK-031 |
+| TASK-033 | Stop behavior | done | TASK-031 |
+| TASK-034 | Retry/backoff | done | TASK-031 |
+| TASK-035 | Hard budget cap | done | TASK-021/031 |
+| TASK-036 | Persist suite/run lifecycle | done | TASK-006/031 |
 | TASK-037 | Output hashing/variants | todo | TASK-024/036 |
 | TASK-038 | Benchmark progress screen | todo | TASK-036 |
 | TASK-039 | Result summary dashboard | todo | TASK-025-037 |

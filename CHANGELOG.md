@@ -62,3 +62,11 @@ Implementation status: not started.
 - Run evidence persisted immediately: state, safe raw response, parsed JSON, schema validity, output hash, usage, cost, normalized error; provider failures mark the run `provider_error` and the suite `failed` without corrupting data.
 - Benchmarks page: single-run form (mode/temperature/thinking), result panel with raw + parsed JSON, recent-run history.
 - 140 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Benchmark Harness Core (Phase 3)
+
+- Shared extraction engine (`execute.ts`): the single run and the repeated runner now share one provider path, so behavior cannot drift between them.
+- `BenchmarkRunner`: 5/10/20/50/100 presets, bounded concurrency with unique run numbers (DB-level unique index backs this), Stop gate that starts no new runs, retry with exponential backoff (non-retryable errors never retried; actual attempt count recorded), and a hard budget cap that stops before a run whose projected cost would exceed the cap.
+- Budget semantics per docs: unknown cost never blocks execution and is never rendered as zero; interrupted-suite recovery remains a documented future option.
+- Suite lifecycle persisted: running → completed/stopped/budget_stopped/failed with per-run evidence written immediately.
+- 150 tests passing; lint, typecheck, build green.

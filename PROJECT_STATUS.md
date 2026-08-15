@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase 2 (Golden Single-Run Extraction) complete.**  
-End-to-end single run works: pick document/profile/provider/golden, choose input mode (native PDF or canonical images), run, and inspect persisted raw/parsed/schema/cost/latency evidence; every run records an immutable benchmark identity (document/profile/prompt/schema/golden/provider/model/settings/mode/renderer/app build). Phase 3 (repeated benchmark harness) is next. 140 tests passing; lint/typecheck/build green.  
+**Phase 3 (Benchmark Harness) in progress.**  
+Repeated benchmark core is functional: 5/10/20/50/100 presets, bounded concurrency queue with unique run numbers, Stop gate (no new starts), retry with exponential backoff (bounded, non-retryable never retried), hard budget cap (stops before a run that would exceed it; unknown cost never blocks), and per-run immediate persistence through the shared extraction engine. Next: progress screen and results dashboard. 150 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-023. Next: TASK-024 (deterministic canonicalization — core module already exists), then Phase 3: TASK-031..TASK-038 (benchmark queue, presets, stop, retry, budget, persistence, progress).
+Everything in `TASK.md` except TASK-000..TASK-036. Next: TASK-037/038 (output hashing/variants + benchmark progress screen), TASK-039 (results dashboard).
 
 ## Risks
 
