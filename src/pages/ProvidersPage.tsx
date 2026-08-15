@@ -205,6 +205,9 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         Capabilities: {caps.nativePdf ? "native PDF" : "images only"} · structured output{" "}
         {caps.structuredOutput ? "yes" : "no"} · usage {caps.tokenUsage ? "yes" : "no"}
       </p>
+      {!caps.nativePdf ? (
+        <p className="schema-bad">该适配器不支持原生 PDF 输入：基准请选择 Canonical Images 模式。</p>
+      ) : null}
 
       <div className="toolbar">
         <button type="button" className="btn btn--primary" onClick={() => void save()}>

@@ -7,6 +7,7 @@ import { useProfiles, type UseProfilesResult } from "../profiles/useProfiles";
 import { useProviderConfigs, type UseProviderConfigsResult } from "../providers/useProviderConfigs";
 import { useGoldens, type UseGoldensResult } from "../golden/useGoldens";
 import { useRunHistory } from "../benchmarks/useRunHistory";
+import { adapterFor } from "../providers/registry";
 import type { DocumentRecord, ExtractionProfile, ProviderConfig } from "../storage/types";
 
 vi.mock("../documents/useDocuments", () => ({ useDocuments: vi.fn() }));
@@ -14,6 +15,7 @@ vi.mock("../profiles/useProfiles", () => ({ useProfiles: vi.fn() }));
 vi.mock("../providers/useProviderConfigs", () => ({ useProviderConfigs: vi.fn() }));
 vi.mock("../golden/useGoldens", () => ({ useGoldens: vi.fn() }));
 vi.mock("../benchmarks/useRunHistory", () => ({ useRunHistory: vi.fn() }));
+vi.mock("../providers/registry", () => ({ adapterFor: vi.fn() }));
 
 const useDocumentsMock = vi.mocked(useDocuments);
 const useProfilesMock = vi.mocked(useProfiles);
@@ -97,6 +99,22 @@ function emptyGoldens(): UseGoldensResult {
 }
 
 beforeEach(() => {
+  vi.mocked(adapterFor).mockReturnValue({
+    kind: "gemini",
+    capabilities: () => ({
+      nativePdf: true,
+      imageInput: true,
+      structuredOutput: true,
+      tokenUsage: true,
+      providerReportedCost: false,
+      temperature: true,
+      thinking: true,
+    }),
+    testConnection: async () => ({ ok: true, message: "ok" }),
+    extract: async () => {
+      throw new Error("not used");
+    },
+  } as never);
   useDocumentsMock.mockReturnValue(emptyDocuments());
   useProfilesMock.mockReturnValue(emptyProfiles());
   useProviderConfigsMock.mockReturnValue(emptyProviders());
@@ -155,6 +173,35 @@ describe("BenchmarksPage", () => {
     expect(screen.getByText(/latency 123 ms/)).toBeInTheDocument();
     expect(screen.getByText(/cost \$0\.000100/)).toBeInTheDocument();
     expect(screen.getAllByText(/0004131999/).length).toBeGreaterThan(0);
+  });
+
+  it("blocks submission for incompatible provider/mode combinations", async () => {
+    vi.mocked(adapterFor).mockReturnValue({
+      kind: "openai",
+      capabilities: () => ({
+        nativePdf: false,
+        imageInput: true,
+        structuredOutput: true,
+        tokenUsage: true,
+        providerReportedCost: false,
+        temperature: true,
+        thinking: false,
+      }),
+      testConnection: async () => ({ ok: true, message: "ok" }),
+      extract: async () => {
+        throw new Error("not used");
+      },
+    } as never);
+    const openaiConfig: ProviderConfig = { ...config, id: "c-openai", kind: "openai", name: "OpenAI" };
+    useProviderConfigsMock.mockReturnValue({ ...emptyProviders(), configs: [openaiConfig] });
+    render(<BenchmarksPage />);
+    fireEvent.change(screen.getByLabelText(/document/i), { target: { value: "doc-1" } });
+    fireEvent.change(screen.getByLabelText(/extraction profile/i), { target: { value: "p-1" } });
+    fireEvent.change(screen.getByLabelText(/provider/i), { target: { value: "c-openai" } });
+    // 默认 native_pdf 与 OpenAI 不兼容：按钮禁用且展示原因
+    const button = screen.getByRole("button", { name: /run single extraction/i });
+    expect(button).toBeDisabled();
+    expect(screen.getAllByText(/配置不兼容.*canonical images/i).length).toBeGreaterThan(0);
   });
 
   it("shows normalized failures", async () => {

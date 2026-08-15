@@ -30,9 +30,12 @@ interface ProgressState {
 export function RepeatedBenchmarkSection({
   selection,
   benchmarkFactory,
+  unsupportedReason,
 }: {
   selection: BenchmarkSelection;
   benchmarkFactory?: BenchmarkFactory;
+  /** 由父级能力门禁计算：非空时禁止启动基准并展示原因。 */
+  unsupportedReason?: string;
 }) {
   const [preset, setPreset] = useState<number>(5);
   const [concurrency, setConcurrency] = useState("1");
@@ -51,6 +54,10 @@ export function RepeatedBenchmarkSection({
     setError(null);
     if (!selection.documentId || !selection.profileId || !selection.providerConfigId) {
       setError("Select a document, profile, and provider before benchmarking.");
+      return;
+    }
+    if (unsupportedReason) {
+      setError("配置不兼容：" + unsupportedReason);
       return;
     }
     collectedRunsRef.current = [];
@@ -90,7 +97,7 @@ export function RepeatedBenchmarkSection({
     } finally {
       setRunning(false);
     }
-  }, [selection, preset, concurrency, budget, benchmarkFactory]);
+  }, [selection, preset, concurrency, budget, benchmarkFactory, unsupportedReason]);
 
   const stop = () => {
     runnerRef.current?.requestStop();
@@ -137,6 +144,12 @@ export function RepeatedBenchmarkSection({
         </label>
       </div>
 
+      {unsupportedReason ? (
+        <p role="status" className="schema-bad">
+          配置不兼容：{unsupportedReason}
+        </p>
+      ) : null}
+
       {error ? (
         <p role="alert" className="status-error">
           {error}
@@ -144,7 +157,12 @@ export function RepeatedBenchmarkSection({
       ) : null}
 
       <div className="toolbar">
-        <button type="button" className="btn btn--primary" onClick={() => void start()} disabled={running}>
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={() => void start()}
+          disabled={running || Boolean(unsupportedReason)}
+        >
           {running ? "Benchmark running…" : "Start benchmark"}
         </button>
         <button type="button" className="btn" onClick={stop} disabled={!running}>

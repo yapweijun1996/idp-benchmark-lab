@@ -7,6 +7,8 @@ import { useProfiles } from "../profiles/useProfiles";
 import { useProviderConfigs } from "../providers/useProviderConfigs";
 import type { BenchmarkRun, BenchmarkSuite, GoldenAnswer, InputMode } from "../storage/types";
 import { getDb } from "../storage/db";
+import { adapterFor } from "../providers/registry";
+import { checkModeSupport } from "../providers/capabilityGate";
 import { RepeatedBenchmarkSection, type BenchmarkFactory } from "./RepeatedBenchmarkSection";
 import { SuiteDetail } from "./SuiteDetail";
 
@@ -49,11 +51,20 @@ export function BenchmarksPage({ singleRunFactory, benchmarkFactory }: Benchmark
     setInspecting({ suite, runs, golden });
   };
 
+  const selectedProvider = providers.configs.find((c) => c.id === providerConfigId);
+  const modeSupport = selectedProvider
+    ? checkModeSupport(adapterFor(selectedProvider.kind), selectedProvider, mode)
+    : null;
+
   const run = async () => {
     setResult(null);
     setFailure(null);
     if (!documentId || !profileId || !providerConfigId) {
       setFailure("Select a document, profile, and provider before running.");
+      return;
+    }
+    if (modeSupport && !modeSupport.supported) {
+      setFailure("配置不兼容：" + (modeSupport.reason ?? "所选 provider 不支持该输入模式。"));
       return;
     }
     setRunning(true);
@@ -165,6 +176,12 @@ export function BenchmarksPage({ singleRunFactory, benchmarkFactory }: Benchmark
           </div>
         </div>
 
+        {modeSupport && !modeSupport.supported ? (
+          <p role="status" className="schema-bad">
+            配置不兼容：{modeSupport.reason}
+          </p>
+        ) : null}
+
         {failure ? (
           <p role="alert" className="status-error">
             {failure}
@@ -172,7 +189,12 @@ export function BenchmarksPage({ singleRunFactory, benchmarkFactory }: Benchmark
         ) : null}
 
         <div className="toolbar">
-          <button type="button" className="btn btn--primary" onClick={() => void run()} disabled={running}>
+          <button
+            type="button"
+            className="btn btn--primary"
+            onClick={() => void run()}
+            disabled={running || (modeSupport ? !modeSupport.supported : false)}
+          >
             {running ? "Running…" : "Run single extraction"}
           </button>
         </div>
@@ -182,6 +204,7 @@ export function BenchmarksPage({ singleRunFactory, benchmarkFactory }: Benchmark
 
       <RepeatedBenchmarkSection
         benchmarkFactory={benchmarkFactory}
+        unsupportedReason={modeSupport && !modeSupport.supported ? modeSupport.reason : undefined}
         selection={{
           documentId,
           profileId,
