@@ -30,3 +30,11 @@ Implementation status: not started.
 - Lazy PDF.js preview: pages render to canvas only when scrolled near the viewport; page count recorded on the document record.
 - Testing notes: pdfjs-dist is aliased to a stub in jsdom tests (real module OOMs); loader is dependency-injected into `usePdfDocument`. Effect-dependency stability conventions documented in TESTING.md.
 - 33 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Profiles & Golden Answers
+
+- Deterministic canonical JSON serialization (recursive key sort, array order preserved) as the shared hash basis.
+- Extraction profile editor: base prompt + extraction contract + JSON schema + conservative normalization policy; every save creates a new version with prompt/schema/normalization hashes for benchmark identity.
+- Strict draft-07 schema validation: AJV strict mode plus an explicit keyword whitelist that rejects provider-dialect keywords such as OpenAI `nullable` (docs/JSON_SCHEMA.md).
+- Golden Answer editor: two-pane JSON editor with live PDF preview, always validated against the active profile schema, versioned, never auto-rewritten.
+- 69 tests passing; lint, typecheck, build green.

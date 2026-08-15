@@ -385,3 +385,69 @@ h1 {
 .pdf-preview__status--error {
   color: var(--accent-bad);
 }
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.field span {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.field input[type="text"],
+.field textarea {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.mono-input {
+  font-family: var(--mono) !important;
+  font-size: 13px !important;
+}
+
+.profile-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+  max-width: 860px;
+}
+
+.schema-ok {
+  color: var(--accent-ok);
+  font-size: 13px;
+}
+
+.schema-bad {
+  color: var(--accent-bad);
+  font-size: 13px;
+}
+.golden-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .golden-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--surface);
+}

@@ -2,7 +2,9 @@ import { useCallback, useState } from "react";
 import { Layout } from "./app/Layout";
 import { useHashRoute } from "./app/useHashRoute";
 import { DocumentsPage } from "./pages/DocumentsPage";
+import { GoldenAnswersPage } from "./pages/GoldenAnswersPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
+import { ProfilesPage } from "./pages/ProfilesPage";
 
 export default function App() {
   const route = useHashRoute();
@@ -12,7 +14,10 @@ export default function App() {
 
   return (
     <Layout route={route} navOpen={navOpen} onToggleNav={toggleNav} onNavigate={closeNav}>
-      {route === "documents" ? <DocumentsPage /> : <PlaceholderPage routeId={route} />}
+      {route === "documents" ? <DocumentsPage /> : null}
+      {route === "profiles" ? <ProfilesPage /> : null}
+      {route === "golden" ? <GoldenAnswersPage /> : null}
+      {route !== "documents" && route !== "profiles" && route !== "golden" ? <PlaceholderPage routeId={route} /> : null}
     </Layout>
   );
 }

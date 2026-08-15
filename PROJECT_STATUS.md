@@ -3,7 +3,7 @@
 ## Current status
 
 **Phase 2 (Golden Single-Run Extraction) in progress.**  
-Documents page is functional: local PDF upload with SHA-256 fingerprint, session-only vs IndexedDB persistence, default input mode setting, and lazy page-by-page PDF.js preview. Phase 1 (PWA/Pages/storage) complete. 33 tests passing; lint/typecheck/build green.  
+Documents (upload/fingerprint/persist/preview) and the full configuration stack are functional: versioned extraction profiles (base prompt + contract + draft-07 schema with strict keyword whitelist + normalization policy), AJV validation, and schema-validated versioned Golden Answers with live PDF preview. 69 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-008. Next: TASK-009 (native vs canonical render modes), TASK-010..TASK-013 (profile/schema/Golden editors).
+Everything in `TASK.md` except TASK-000..TASK-008 and TASK-010..TASK-013. Next: TASK-009 (native vs canonical render modes), TASK-014..TASK-019 (provider adapters + BYOK).
 
 ## Risks
 

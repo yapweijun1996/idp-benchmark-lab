@@ -14,10 +14,10 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-007 | Document entity/PDF upload | done | TASK-006 |
 | TASK-008 | PDF preview using PDF.js | done | TASK-007 |
 | TASK-009 | Native PDF vs canonical render modes | todo | TASK-008 |
-| TASK-010 | Extraction profile editor | todo | TASK-006 |
-| TASK-011 | Modular prompt/contract editor | todo | TASK-010 |
-| TASK-012 | JSON schema editor + AJV validation | todo | TASK-010 |
-| TASK-013 | Golden Answer editor/versioning | todo | TASK-012 |
+| TASK-010 | Extraction profile editor | done | TASK-006 |
+| TASK-011 | Modular prompt/contract editor | done | TASK-010 |
+| TASK-012 | JSON schema editor + AJV validation | done | TASK-010 |
+| TASK-013 | Golden Answer editor/versioning | done | TASK-012 |
 | TASK-014 | Provider adapter interface | todo | TASK-002 |
 | TASK-015 | Gemini adapter | todo | TASK-014 |
 | TASK-016 | OpenAI adapter | todo | TASK-014 |
