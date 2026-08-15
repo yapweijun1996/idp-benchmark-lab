@@ -5,9 +5,9 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | ID | Task | Status | Depends On |
 |---|---|---|---|
 | TASK-000 | Create documentation seed | done | — |
-| TASK-001 | Initialize Git repository/project scaffold | todo | TASK-000 |
-| TASK-002 | React/Vite/TypeScript app shell | todo | TASK-001 |
-| TASK-003 | Responsive navigation/layout | todo | TASK-002 |
+| TASK-001 | Initialize Git repository/project scaffold | done | TASK-000 |
+| TASK-002 | React/Vite/TypeScript app shell | done | TASK-001 |
+| TASK-003 | Responsive navigation/layout | done | TASK-002 |
 | TASK-004 | PWA manifest/service worker | todo | TASK-002 |
 | TASK-005 | GitHub Pages Actions deployment | todo | TASK-002 |
 | TASK-006 | IndexedDB persistence | todo | TASK-002 |

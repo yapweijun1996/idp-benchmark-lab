@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Documentation ready for coding-agent handoff.**  
-**Implementation has not started.**  
+**Phase 1 (PWA Foundation) in progress.**  
+Scaffold + responsive shell complete: Vite 8 + React 19 + strict TypeScript, hash-based routing, 6 passing unit tests, lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -34,9 +34,15 @@ On the Golden Popular PO:
 
 A single good extraction is not enough evidence.
 
+## Completed work
+
+- documentation seed (TASK-000)
+- repository scaffold, Vite/React/TS strict toolchain (TASK-001)
+- responsive app shell with hash routing and unit tests (TASK-002, TASK-003)
+
 ## Pending work
 
-Everything in `TASK.md` except TASK-000.
+Everything in `TASK.md` except TASK-000..TASK-003. Next: TASK-004 (PWA manifest/service worker), TASK-005 (GitHub Pages Actions), TASK-006 (IndexedDB persistence).
 
 ## Risks
 
