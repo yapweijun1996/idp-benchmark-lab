@@ -149,6 +149,7 @@ export class BenchmarkRunner {
             rowAccuracy: rowAccuracyOf(outcome.evaluation),
             rowMatched: outcome.evaluation?.rowComparison.matchedRows,
             rowTotal: outcome.evaluation?.rowComparison.goldenRows,
+            fieldMismatches: outcome.evaluation?.leafAccuracy.mismatches,
             outputHash: outcome.outputHash,
             providerCalls: attempt,
             usage: outcome.response.usage,

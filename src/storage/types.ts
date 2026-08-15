@@ -140,6 +140,8 @@ export type BenchmarkRun = {
   rowAccuracy?: number;
   rowMatched?: number;
   rowTotal?: number;
+  /** Strict leaf mismatches from evaluation (path/expected/actual). */
+  fieldMismatches?: { path: string; expected: unknown; actual: unknown }[];
   outputHash?: string;
   providerCalls: number;
   usage?: unknown;

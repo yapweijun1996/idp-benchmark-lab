@@ -5,8 +5,10 @@ import { useDocuments } from "../documents/useDocuments";
 import { useGoldens } from "../golden/useGoldens";
 import { useProfiles } from "../profiles/useProfiles";
 import { useProviderConfigs } from "../providers/useProviderConfigs";
-import type { InputMode } from "../storage/types";
+import type { BenchmarkRun, BenchmarkSuite, GoldenAnswer, InputMode } from "../storage/types";
+import { getDb } from "../storage/db";
 import { RepeatedBenchmarkSection, type BenchmarkFactory } from "./RepeatedBenchmarkSection";
+import { SuiteDetail } from "./SuiteDetail";
 
 interface BenchmarksPageProps {
   /** Test seam: supplies a runner without touching the real service. */
@@ -33,6 +35,19 @@ export function BenchmarksPage({ singleRunFactory, benchmarkFactory }: Benchmark
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<SingleRunResult | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  const [inspecting, setInspecting] = useState<{
+    suite: BenchmarkSuite;
+    runs: BenchmarkRun[];
+    golden?: GoldenAnswer;
+  } | null>(null);
+
+  const inspectSuite = async (suite: BenchmarkSuite) => {
+    const db = getDb();
+    const runs = await db.benchmarkRuns.where("suiteId").equals(suite.id).toArray();
+    runs.sort((a, b) => a.runNumber - b.runNumber);
+    const golden = suite.identity.goldenId ? await db.goldenAnswers.get(suite.identity.goldenId) : undefined;
+    setInspecting({ suite, runs, golden });
+  };
 
   const run = async () => {
     setResult(null);
@@ -178,6 +193,10 @@ export function BenchmarksPage({ singleRunFactory, benchmarkFactory }: Benchmark
         }}
       />
 
+      {inspecting ? (
+        <SuiteDetail suite={inspecting.suite} runs={inspecting.runs} golden={inspecting.golden} />
+      ) : null}
+
       <h2>Recent runs</h2>
       {history.suites.length === 0 ? (
         <p className="empty-state">No runs yet.</p>
@@ -194,6 +213,9 @@ export function BenchmarksPage({ singleRunFactory, benchmarkFactory }: Benchmark
               <span className={"chip " + (s.status === "failed" ? "chip--bad" : s.status === "completed" ? "chip--ok" : "chip--todo")}>
                 {s.status}
               </span>
+              <button type="button" onClick={() => void inspectSuite(s)}>
+                Inspect
+              </button>
               <span className="doc-card__meta">{new Date(s.createdAt).toLocaleString()}</span>
             </li>
           ))}

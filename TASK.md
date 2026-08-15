@@ -44,10 +44,10 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-037 | Output hashing/variants | done | TASK-024/036 |
 | TASK-038 | Benchmark progress screen | done | TASK-036 |
 | TASK-039 | Result summary dashboard | done | TASK-025-037 |
-| TASK-040 | Field accuracy heatmap | todo | TASK-027 |
-| TASK-041 | JSON diff/run inspector | todo | TASK-026 |
-| TASK-042 | Latency statistics | todo | TASK-036 |
-| TASK-043 | Cost dashboard | todo | TASK-021/036 |
+| TASK-040 | Field accuracy heatmap | done | TASK-027 |
+| TASK-041 | JSON diff/run inspector | done | TASK-026 |
+| TASK-042 | Latency statistics | done | TASK-036 |
+| TASK-043 | Cost dashboard | done | TASK-021/036 |
 | TASK-044 | Compare screen | todo | TASK-039 |
 | TASK-045 | JSON/CSV export | todo | TASK-036 |
 | TASK-046 | Project backup/import | todo | TASK-006 |

@@ -537,3 +537,7 @@ details summary {
   color: var(--text-muted);
   font-weight: 600;
 }
+.chip--warn {
+  background: #fdf3e7;
+  color: var(--accent-warn);
+}

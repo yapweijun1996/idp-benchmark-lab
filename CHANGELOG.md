@@ -85,3 +85,11 @@ Implementation status: not started.
 - Results summary panel: exact pass rate, schema-valid rate, avg leaf accuracy, row accuracy, consistency, unique variants, golden stability, error rate, latency avg/p50/p95 (linear-interpolation percentiles), cost total/avg/per-correct — all with documented denominators and division guards.
 - Runner progress callback (`onRunComplete`) per terminal run; summary aggregation uses raw row totals (matched/golden rows), not averaged ratios.
 - 190 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Field Heatmap & Run Inspector
+
+- Per-run strict leaf mismatches (path/expected/actual) are persisted with run evidence.
+- Field accuracy heatmap: per-path mismatch rates over evaluated runs plus observed expected→actual value frequencies (field stability view, e.g. `row_data[1].remark` null → "920-007596").
+- Suite detail view on the Benchmarks page: heatmap table, ordered run list, and a run inspector with mismatch table, parsed JSON, Golden Answer, and raw provider response.
+- Latency (avg/p50/p95/min/max) and cost (total/avg/per-correct) statistics verified as covered by the summary panel.
+- 199 tests passing; lint, typecheck, build green.

@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase 3/4 (Harness + Evaluation) in progress.**  
-The Benchmarks page now runs full repeated benchmarks with a progress screen (completed/total, succeeded/schema-invalid/failed), live Stop, and a results summary panel: exact pass rate, schema-valid rate, avg leaf accuracy, row accuracy, consistency, unique variants, golden stability, error rate, latency (avg/p50/p95), and cost (total/avg/per-correct). Suite summary computation is a tested pure function with documented denominators. 190 tests passing; lint/typecheck/build green.  
+**Phase 4 (Evaluation Dashboard) nearly complete.**  
+Every suite is now fully inspectable: field accuracy heatmap (per-path mismatch rates + observed expected→actual value frequencies), run inspector (raw/parsed/golden JSON with mismatch tables), plus the existing summary panel with latency and cost statistics. Remaining Phase 4 work: compare screen and export. 199 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-039. Next: TASK-040 (field accuracy heatmap), TASK-041 (JSON diff/run inspector), TASK-042/043 (latency/cost dashboards), TASK-044 (compare screen), TASK-045 (export).
+Everything in `TASK.md` except TASK-000..TASK-043. Next: TASK-044 (compare screen), TASK-045 (JSON/CSV export), TASK-046 (project backup/import).
 
 ## Risks
 
