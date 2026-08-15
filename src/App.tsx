@@ -5,6 +5,7 @@ import { DocumentsPage } from "./pages/DocumentsPage";
 import { GoldenAnswersPage } from "./pages/GoldenAnswersPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { ProfilesPage } from "./pages/ProfilesPage";
+import { ProvidersPage } from "./pages/ProvidersPage";
 
 export default function App() {
   const route = useHashRoute();
@@ -17,7 +18,10 @@ export default function App() {
       {route === "documents" ? <DocumentsPage /> : null}
       {route === "profiles" ? <ProfilesPage /> : null}
       {route === "golden" ? <GoldenAnswersPage /> : null}
-      {route !== "documents" && route !== "profiles" && route !== "golden" ? <PlaceholderPage routeId={route} /> : null}
+      {route === "providers" ? <ProvidersPage /> : null}
+      {route !== "documents" && route !== "profiles" && route !== "golden" && route !== "providers" ? (
+        <PlaceholderPage routeId={route} />
+      ) : null}
     </Layout>
   );
 }

@@ -38,3 +38,12 @@ Implementation status: not started.
 - Strict draft-07 schema validation: AJV strict mode plus an explicit keyword whitelist that rejects provider-dialect keywords such as OpenAI `nullable` (docs/JSON_SCHEMA.md).
 - Golden Answer editor: two-pane JSON editor with live PDF preview, always validated against the active profile schema, versioned, never auto-rewritten.
 - 69 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Provider Adapters & BYOK
+
+- Normalized provider contract (`ProviderAdapter`): capabilities, `testConnection`, `extract` — benchmark code never touches provider APIs directly (ADR-008).
+- OpenAI adapter (chat/completions, json_object, image input; native PDF honestly unsupported), Gemini adapter (inline PDF base64 + images, `x-goog-api-key` header so keys never enter URLs, responseSchema-ready, safety block handling), Custom OpenAI-compatible adapter (base URL validation, custom headers, capability overrides, CORS-aware diagnostics).
+- Conservative JSON extraction (bare or single fenced block), status→category error normalization, network/CORS ambiguity explained without treating CORS as a model failure.
+- BYOK key store: memory-only default, sessionStorage opt-in per tab, never localStorage/IndexedDB/exports — with hard tests asserting no key leakage and no key echo in connection results.
+- Providers page: config cards, key input with reveal, connection testing, capability badges, explicit BYOK warning.
+- 116 tests passing; lint, typecheck, build green.

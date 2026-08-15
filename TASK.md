@@ -18,12 +18,12 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-011 | Modular prompt/contract editor | done | TASK-010 |
 | TASK-012 | JSON schema editor + AJV validation | done | TASK-010 |
 | TASK-013 | Golden Answer editor/versioning | done | TASK-012 |
-| TASK-014 | Provider adapter interface | todo | TASK-002 |
-| TASK-015 | Gemini adapter | todo | TASK-014 |
-| TASK-016 | OpenAI adapter | todo | TASK-014 |
-| TASK-017 | Custom OpenAI-compatible adapter | todo | TASK-014 |
-| TASK-018 | BYOK key/session handling | todo | TASK-014 |
-| TASK-019 | Provider connection diagnostics | todo | TASK-015/16/17 |
+| TASK-014 | Provider adapter interface | done | TASK-002 |
+| TASK-015 | Gemini adapter | done | TASK-014 |
+| TASK-016 | OpenAI adapter | done | TASK-014 |
+| TASK-017 | Custom OpenAI-compatible adapter | done | TASK-014 |
+| TASK-018 | BYOK key/session handling | done | TASK-014 |
+| TASK-019 | Provider connection diagnostics | done | TASK-015/16/17 |
 | TASK-020 | Pricing registry | todo | TASK-014 |
 | TASK-021 | Normalized usage/cost model | todo | TASK-020 |
 | TASK-022 | Single extraction run | todo | TASK-013/15/16/17 |

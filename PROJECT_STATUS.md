@@ -3,7 +3,7 @@
 ## Current status
 
 **Phase 2 (Golden Single-Run Extraction) in progress.**  
-Documents (upload/fingerprint/persist/preview) and the full configuration stack are functional: versioned extraction profiles (base prompt + contract + draft-07 schema with strict keyword whitelist + normalization policy), AJV validation, and schema-validated versioned Golden Answers with live PDF preview. 69 tests passing; lint/typecheck/build green.  
+Configuration stack complete (documents, profiles, Golden Answers). Provider layer complete: OpenAI/Gemini/Custom OpenAI-compatible adapters behind one normalized contract, capability declarations, conservative JSON extraction, usage/error normalization, BYOK key store (memory-only default, sessionStorage opt-in), connection diagnostics UI, and secret-redaction tests. 116 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-008 and TASK-010..TASK-013. Next: TASK-009 (native vs canonical render modes), TASK-014..TASK-019 (provider adapters + BYOK).
+Everything in `TASK.md` except TASK-000..TASK-008, TASK-010..TASK-019. Next: TASK-009 (native vs canonical render modes), TASK-020..TASK-024 (pricing, usage/cost, single-run extraction).
 
 ## Risks
 

@@ -451,3 +451,35 @@ h1 {
   font-family: inherit;
   background: var(--surface);
 }
+.provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.warning-banner {
+  background: #fdf3e7;
+  border: 1px solid #e8c68a;
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  color: #6d4c00;
+}
+
+.key-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.key-row input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  font-family: var(--mono);
+}
+
+.provider-card h2 {
+  margin-top: 0;
+}
