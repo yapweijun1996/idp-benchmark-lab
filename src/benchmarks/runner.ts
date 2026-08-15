@@ -187,11 +187,28 @@ export class BenchmarkRunner {
       this.deps.onRunComplete?.(failedRun);
     };
 
+    // 预算规则（docs/COST_AND_PRICING.md）：
+    // 下一次运行的成本用「最近一次已确认成本」作为上界预估；当且仅当
+    // 已确认累计 + 该预估 严格超过上限时才停止启动新运行。若最近一次
+    // 成本未知（provider 未报告且无 pricing 快照），则无法保证上限，
+    // 按文档继续运行并在 stopReason 中说明。
+    let budgetStopReason: string | undefined;
     const budgetWouldExceed = (): boolean => {
-      if (config.maxBudgetUsd === undefined || lastRunCost === undefined) {
+      if (config.maxBudgetUsd === undefined) {
         return false;
       }
-      return knownCost + lastRunCost > config.maxBudgetUsd;
+      if (lastRunCost === undefined) {
+        return false;
+      }
+      const projected = knownCost + lastRunCost;
+      if (projected > config.maxBudgetUsd) {
+        budgetStopReason =
+          `预算上限 ${config.maxBudgetUsd} USD：已确认花费 ${knownCost.toFixed(6)} USD，` +
+          `按最近一次运行成本预估下一运行 ${lastRunCost.toFixed(6)} USD，` +
+          `预计总花费 ${projected.toFixed(6)} USD 将超过上限，已停止启动新运行。`;
+        return true;
+      }
+      return false;
     };
 
     const worker = async (): Promise<void> => {
@@ -231,6 +248,7 @@ export class BenchmarkRunner {
       ...suite,
       status,
       costUsdKnown: knownCost > 0 ? knownCost : undefined,
+      stopReason: budgetStopReason ?? (this.stopRequested && attempted < config.requestedRuns ? "用户手动停止。" : undefined),
       finishedAt: new Date().toISOString(),
     };
     await db.benchmarkSuites.put(finalSuite);

@@ -103,6 +103,8 @@ export type BenchmarkSuite = {
   requestedRuns: number;
   concurrency: number;
   maxBudgetUsd?: number;
+  /** Why the suite stopped early (budget/stop), for transparent UI. */
+  stopReason?: string;
   status: SuiteStatus;
   createdAt: string;
   startedAt?: string;
