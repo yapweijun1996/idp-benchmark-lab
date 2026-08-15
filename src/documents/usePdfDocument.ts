@@ -1,5 +1,6 @@
 import { useEffect, useReducer, useRef } from "react";
 import { getDocument, GlobalWorkerOptions } from "pdfjs-dist";
+import { blobToArrayBuffer } from "./blob";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 
@@ -40,7 +41,9 @@ export interface PdfDocumentState {
   doc: PDFDocumentProxy | null;
 }
 
-export type PdfLoader = (source: { data: Blob }) => {
+// pdfjs-dist v6 accepts TypedArray/ArrayBuffer only — Blobs must be
+// converted before calling getDocument.
+export type PdfLoader = (source: { data: ArrayBuffer }) => {
   promise: Promise<PDFDocumentProxy>;
   destroy: () => Promise<void>;
 };
@@ -68,14 +71,39 @@ export function usePdfDocument(blob: Blob | undefined, loader: PdfLoader = defau
       return;
     }
     dispatch({ type: "start", blob });
-    const task = loaderRef.current({ data: blob });
-    void task.promise
-      .then((doc) => dispatch({ type: "loaded", blob, doc }))
-      .catch((e: unknown) =>
-        dispatch({ type: "failed", blob, error: e instanceof Error ? e.message : String(e) }),
-      );
+    let cancelled = false;
+    let task: ReturnType<PdfLoader> | undefined;
+    void (async () => {
+      let data: ArrayBuffer;
+      try {
+        data = await blobToArrayBuffer(blob);
+      } catch (e) {
+        if (!cancelled) {
+          dispatch({ type: "failed", blob, error: e instanceof Error ? e.message : String(e) });
+        }
+        return;
+      }
+      if (cancelled) {
+        return;
+      }
+      task = loaderRef.current({ data });
+      void task.promise
+        .then((doc) => {
+          if (!cancelled) {
+            dispatch({ type: "loaded", blob, doc });
+          }
+        })
+        .catch((e: unknown) => {
+          if (!cancelled) {
+            dispatch({ type: "failed", blob, error: e instanceof Error ? e.message : String(e) });
+          }
+        });
+    })();
     return () => {
-      void task.destroy();
+      cancelled = true;
+      if (task) {
+        void task.destroy();
+      }
     };
   }, [blob]);
 

@@ -116,3 +116,9 @@ Implementation status: not started.
 - Security audit tests: service-worker precache whitelist limited to static app-shell extensions; key non-persistence and backup/export secret rejection enforced.
 - Docs reconciled: README project status, ARCHITECTURE modules (export/pwa), TESTING.md (smoke/a11y/audit chapters).
 - 221 unit/integration tests + 4 e2e specs passing; lint, typecheck, build green. Git tag v0.1.0.
+
+## 2026-08-15 — v0.1.1 fixes
+
+- Fixed PDF preview crash: pdfjs-dist v6 rejects Blob inputs (ArrayBuffer/TypedArray only), which surfaced as a full React tree unmount. `usePdfDocument` and the canonical rendering path now convert Blobs to ArrayBuffers first, with cancellation guards.
+- Browser smoke now proves the real PDF path: a minimal PDF fixture is uploaded, previewed to a rendered canvas, and the page count is written back.
+- 221 unit/integration tests + 5 e2e specs passing; lint, typecheck, build green.

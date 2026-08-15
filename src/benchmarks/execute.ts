@@ -183,7 +183,8 @@ async function buildRequest(
       retryable: false,
     });
   }
-  const task = deps.pdfLoader({ data: blob });
+  const pdfBytes = await blobToArrayBuffer(blob);
+  const task = deps.pdfLoader({ data: pdfBytes });
   let pdf: { numPages: number; getPage(n: number): Promise<unknown> };
   try {
     pdf = await task.promise;

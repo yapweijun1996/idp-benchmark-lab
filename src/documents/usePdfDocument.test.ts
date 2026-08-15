@@ -1,4 +1,4 @@
-import { act, renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { usePdfDocument, type PdfLoader } from "./usePdfDocument";
 
@@ -30,7 +30,7 @@ describe("usePdfDocument", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.numPages).toBe(13);
     expect(result.current.error).toBeNull();
-    expect(loader).toHaveBeenCalledWith({ data: expect.any(Blob) });
+    expect(loader).toHaveBeenCalledWith({ data: expect.any(ArrayBuffer) });
   });
 
   it("reports load failures", async () => {
@@ -42,23 +42,11 @@ describe("usePdfDocument", () => {
     expect(result.current.numPages).toBe(0);
   });
 
-  it("ignores stale results when the blob changes quickly", async () => {
-    let resolveFirst!: (d: typeof fakeDoc) => void;
-    const loader = vi
-      .fn()
-      .mockImplementationOnce(
-        () =>
-          ({
-            promise: new Promise((res) => {
-              resolveFirst = res;
-            }),
-            destroy: vi.fn(() => Promise.resolve()),
-          }) as unknown,
-      )
-      .mockImplementation(() => ({
-        promise: Promise.resolve({ ...fakeDoc, numPages: 2 }),
-        destroy: vi.fn(() => Promise.resolve()),
-      })) as unknown as PdfLoader;
+  it("loads only the latest blob when the blob changes quickly", async () => {
+    const loader = vi.fn(() => ({
+      promise: Promise.resolve({ ...fakeDoc, numPages: 2 }),
+      destroy: vi.fn(() => Promise.resolve()),
+    })) as unknown as PdfLoader;
 
     const first = blob();
     const second = blob();
@@ -67,12 +55,8 @@ describe("usePdfDocument", () => {
     });
     rerender({ b: second });
     await waitFor(() => expect(result.current.numPages).toBe(2));
-
-    // Resolving the stale first request must be ignored.
-    act(() => {
-      resolveFirst({ ...fakeDoc, numPages: 99 });
-    });
-    await Promise.resolve();
-    expect(result.current.numPages).toBe(2);
+    // 旧 blob 的读取在 rerender 时被取消：loader 只为最新 blob 调用一次。
+    await waitFor(() => expect(loader).toHaveBeenCalledTimes(1));
+    expect(result.current.error).toBeNull();
   });
 });

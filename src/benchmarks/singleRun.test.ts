@@ -208,6 +208,7 @@ describe("SingleRunService", () => {
       adapters: { gemini: adapter },
       pdfLoader: loader as never,
       pageRenderer: renderer,
+      getBlob: () => Promise.resolve(new Blob(["%PDF"], { type: "application/pdf" })),
     });
     const result = await svc.run({ ...input, mode: "canonical_images" });
 

@@ -29,3 +29,20 @@ test("unknown hash falls back to the dashboard", async ({ page }) => {
   await page.goto("/#/does-not-exist");
   await expect(page.getByRole("heading", { name: /dashboard/i })).toBeVisible();
 });
+
+test("PDF upload renders a preview canvas with lazy page rendering", async ({ page }) => {
+  await page.goto("/#/documents");
+
+  const fileInput = page.locator('input[type="file"]#pdf-upload');
+  await fileInput.setInputFiles("tests/fixtures/mini.pdf");
+
+  // 文档卡片出现（含大小与 sha256 指纹）
+  await expect(page.locator(".doc-card__name", { hasText: "mini.pdf" })).toBeVisible();
+
+  // PDF.js 异步加载 + IntersectionObserver 惰性渲染 → canvas 出现
+  const canvas = page.locator(".pdf-page canvas");
+  await expect(canvas).toHaveCount(1, { timeout: 15_000 });
+
+  // 页数回写（卡片与预览面板可能各显示一次）
+  await expect(page.getByText(/1 page/).first()).toBeVisible();
+});
