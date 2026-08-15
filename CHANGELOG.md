@@ -23,3 +23,10 @@ Implementation status: not started.
 - GitHub Pages Actions workflow (`actions/checkout@v6`, `setup-node@v6`, `configure-pages@v6`, `upload-pages-artifact@v4`, `deploy-pages@v5`) with lint/typecheck/test/build gates.
 - IndexedDB/Dexie schema v1: 8 stores matching DATA_MODEL.md, forward-only migration, unique `[suiteId+runNumber]` index enforcing no duplicate run numbers.
 - 11 tests passing (app shell + storage layer); lint, typecheck, build green.
+
+## 2026-08-15 — Documents & PDF Preview
+
+- Documents page: local PDF upload (type-validated), SHA-256 fingerprint, session-only vs IndexedDB persistence toggle, delete, default input-mode setting persisted to app settings.
+- Lazy PDF.js preview: pages render to canvas only when scrolled near the viewport; page count recorded on the document record.
+- Testing notes: pdfjs-dist is aliased to a stub in jsdom tests (real module OOMs); loader is dependency-injected into `usePdfDocument`. Effect-dependency stability conventions documented in TESTING.md.
+- 33 tests passing; lint, typecheck, build green.

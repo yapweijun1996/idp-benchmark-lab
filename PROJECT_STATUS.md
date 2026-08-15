@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase 1 (PWA Foundation) complete.**  
-Scaffold, responsive shell, installable PWA (manifest + app-shell-only service worker + explicit update prompt), GitHub Pages Actions workflow, and versioned IndexedDB/Dexie data layer (8 stores, unique run-number constraint) are in place. 11 tests passing; lint/typecheck/build green.  
+**Phase 2 (Golden Single-Run Extraction) in progress.**  
+Documents page is functional: local PDF upload with SHA-256 fingerprint, session-only vs IndexedDB persistence, default input mode setting, and lazy page-by-page PDF.js preview. Phase 1 (PWA/Pages/storage) complete. 33 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-006. Next: TASK-007 (document entity/PDF upload), TASK-008 (PDF preview with PDF.js), TASK-010..TASK-013 (profile/schema/Golden editors).
+Everything in `TASK.md` except TASK-000..TASK-008. Next: TASK-009 (native vs canonical render modes), TASK-010..TASK-013 (profile/schema/Golden editors).
 
 ## Risks
 

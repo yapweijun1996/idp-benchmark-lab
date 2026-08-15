@@ -243,3 +243,145 @@ h1 {
     padding: 16px;
   }
 }
+
+.btn {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: var(--primary-text);
+  border-color: var(--primary);
+}
+
+.btn--danger {
+  color: var(--accent-bad);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mode-picker {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin: 12px 0;
+  display: flex;
+  gap: 18px;
+}
+
+.mode-picker legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+
+.doc-list {
+  list-style: none;
+  margin: 12px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  flex-wrap: wrap;
+}
+
+.doc-card__main {
+  flex: 1;
+  min-width: 200px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.doc-card__name {
+  font-weight: 600;
+}
+
+.doc-card__meta {
+  color: var(--text-muted);
+  font-size: 13px;
+  font-family: var(--mono);
+}
+
+.chip--session {
+  background: var(--surface-alt);
+  color: var(--text-muted);
+}
+
+.chip--ok {
+  background: #e2f2e8;
+  color: var(--accent-ok);
+}
+
+.chip--active {
+  background: var(--primary);
+  color: var(--primary-text);
+}
+
+.empty-state {
+  color: var(--text-muted);
+}
+
+.status-error {
+  color: var(--accent-bad);
+}
+
+.preview-panel {
+  margin-top: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 14px;
+}
+
+.pdf-preview__pages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pdf-page canvas {
+  border: 1px solid var(--border);
+  border-radius: 2px;
+}
+
+.pdf-preview__status {
+  color: var(--text-muted);
+}
+
+.pdf-preview__status--error {
+  color: var(--accent-bad);
+}

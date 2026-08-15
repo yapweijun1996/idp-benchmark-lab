@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { Layout } from "./app/Layout";
 import { useHashRoute } from "./app/useHashRoute";
+import { DocumentsPage } from "./pages/DocumentsPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 
 export default function App() {
@@ -11,7 +12,7 @@ export default function App() {
 
   return (
     <Layout route={route} navOpen={navOpen} onToggleNav={toggleNav} onNavigate={closeNav}>
-      <PlaceholderPage routeId={route} />
+      {route === "documents" ? <DocumentsPage /> : <PlaceholderPage routeId={route} />}
     </Layout>
   );
 }

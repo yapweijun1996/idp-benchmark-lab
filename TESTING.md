@@ -29,6 +29,12 @@ Test IndexedDB migrations, CRUD, suite/run persistence, import/export, and secre
 
 Test PDF upload, profile creation, Golden Answer, BYOK config UI, mocked single run, mocked 5-run benchmark, Stop, budget stop, dashboard, export, and PWA smoke.
 
+## pdfjs-dist in jsdom tests
+
+The real `pdfjs-dist` module OOMs the Node process when loaded under jsdom, so `vitest.config.ts` aliases it to `src/test/pdfjs-stub.ts`. Unit tests must not import `pdfjs-dist`; they inject a fake `PdfLoader` into `usePdfDocument(blob, loader)` instead. Real PDF rendering is covered by browser smoke tests (TASK-052).
+
+Hooks that take object/function inputs in deps must not be called with fresh inline instances per render — an effect whose dependency changes on every render loops until OOM. Pass stable references (module constants, refs, or values created outside the render callback).
+
 ## Evaluation fixtures
 
 Include deterministic cases for:

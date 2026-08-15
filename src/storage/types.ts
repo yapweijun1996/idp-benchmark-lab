@@ -151,6 +151,7 @@ export type AppSettings = {
   id: "app";
   defaultProviderId?: string;
   defaultConcurrency: number;
+  defaultInputMode: InputMode;
   theme: "light" | "dark" | "system";
   showSecretsWarning: boolean;
   updatedAt: string;
