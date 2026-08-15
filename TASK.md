@@ -50,8 +50,8 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-043 | Cost dashboard | done | TASK-021/036 |
 | TASK-044 | Compare screen | done | TASK-039 |
 | TASK-045 | JSON/CSV export | done | TASK-036 |
-| TASK-046 | Project backup/import | todo | TASK-006 |
-| TASK-047 | Golden Popular PO fixture metadata | todo | TASK-013 |
+| TASK-046 | Project backup/import | done | TASK-006 |
+| TASK-047 | Golden Popular PO fixture metadata | done | TASK-013 |
 | TASK-048 | Unit tests for evaluation engine | todo | TASK-024-030 |
 | TASK-049 | Provider adapter contract tests | todo | TASK-014 |
 | TASK-050 | IndexedDB persistence tests | todo | TASK-006 |

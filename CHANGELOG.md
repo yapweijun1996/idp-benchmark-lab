@@ -100,3 +100,10 @@ Implementation status: not started.
 - Export per suite: full JSON bundle (format version, app build, suite, runs, summary, field accuracy — no secrets), summary CSV (documented columns), field-accuracy CSV with observed value pairs; RFC 4180 escaping; browser download helper.
 - Suite detail view gains Export JSON / summary CSV / field CSV buttons with download tests.
 - 213 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Backup/Import & Golden PO Fixture (Phase 5 complete)
+
+- Project backup: full bundle (formatVersion, appVersion, entities) with document blobs as base64; Settings page export.
+- Import with strict validation before any write: JSON structure, string record ids, and secret-like fields (apiKey/authorization/x-api-key/key, case-insensitive) are rejected without touching existing data; replace and merge modes.
+- Golden Popular PO fixture committed (TS module + JSON example): 13 rows, leading-zero document number, exact "LOGITECH M650 M WL WHITE", null remarks and footer — enforced by an executable contract test.
+- 229 tests passing; lint, typecheck, build green.

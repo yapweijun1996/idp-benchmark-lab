@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase 4 complete; Phase 5 (Compare & Portability) in progress.**  
-Compare screen (side-by-side metric table across selected suites) and export (full JSON bundle with format version, summary CSV, field-accuracy CSV, RFC 4180 escaping, no secrets) are done. Remaining: project backup/import and Phase 6 hardening. 213 tests passing; lint/typecheck/build green.  
+**Phase 5 complete; Phase 6 (Spike Hardening) next.**  
+Project backup/import is done: full backup bundle (format version, app version, entities with document blobs as base64), strict import validation (JSON structure, record ids, secret-like fields rejected without touching data), replace/merge modes, and a Settings page for export/import. The Golden Popular PO fixture (13 rows, leading-zero document number, exact M650 M WL WHITE, null remarks/footer) is committed with an executable contract test. 229 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-045. Next: TASK-046 (project backup/import), TASK-047 (Golden Popular PO fixture), then Phase 6 QA (TASK-048..TASK-056).
+Everything in `TASK.md` except TASK-000..TASK-047. Next: Phase 6 — TASK-048..TASK-054 (remaining tests), TASK-055 (docs/code reconciliation), TASK-056 (v0.1.0 release).
 
 ## Risks
 

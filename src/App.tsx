@@ -7,6 +7,7 @@ import { DocumentsPage } from "./pages/DocumentsPage";
 import { GoldenAnswersPage } from "./pages/GoldenAnswersPage";
 import { PlaceholderPage } from "./pages/PlaceholderPage";
 import { ProfilesPage } from "./pages/ProfilesPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { ProvidersPage } from "./pages/ProvidersPage";
 
 export default function App() {
@@ -23,7 +24,8 @@ export default function App() {
       {route === "providers" ? <ProvidersPage /> : null}
       {route === "benchmarks" ? <BenchmarksPage /> : null}
       {route === "compare" ? <ComparePage /> : null}
-      {route !== "documents" && route !== "profiles" && route !== "golden" && route !== "providers" && route !== "benchmarks" && route !== "compare" ? (
+      {route === "settings" ? <SettingsPage /> : null}
+      {route !== "documents" && route !== "profiles" && route !== "golden" && route !== "providers" && route !== "benchmarks" && route !== "compare" && route !== "settings" ? (
         <PlaceholderPage routeId={route} />
       ) : null}
     </Layout>
