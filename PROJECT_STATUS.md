@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase 3 (Benchmark Harness) in progress.**  
-Repeated benchmark core is functional: 5/10/20/50/100 presets, bounded concurrency queue with unique run numbers, Stop gate (no new starts), retry with exponential backoff (bounded, non-retryable never retried), hard budget cap (stops before a run that would exceed it; unknown cost never blocks), and per-run immediate persistence through the shared extraction engine. Next: progress screen and results dashboard. 150 tests passing; lint/typecheck/build green.  
+**Phase 3/4 (Harness + Evaluation) in progress.**  
+Repeated benchmark core is functional (presets, queue, stop, retry, budget cap, per-run persistence). The evaluation engine is complete and wired into every run: deterministic canonicalization, schema validity, exact match, leaf-field accuracy with mismatch paths, ordered row accuracy (missing/extra/duplicate/reordered), conservative normalization with strict-vs-normalized scores, variant grouping, and stability metrics. Next: progress screen and results dashboard UI. 172 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -45,7 +45,7 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-036. Next: TASK-037/038 (output hashing/variants + benchmark progress screen), TASK-039 (results dashboard).
+Everything in `TASK.md` except TASK-000..TASK-037. Next: TASK-038 (benchmark progress screen), TASK-039 (results summary dashboard), TASK-040 (field heatmap), TASK-041 (run inspector), TASK-042/043 (latency/cost dashboards).
 
 ## Risks
 

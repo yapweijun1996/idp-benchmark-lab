@@ -124,6 +124,7 @@ export class BenchmarkRunner {
         temperature: config.temperature,
         thinking: config.thinking,
         renderSettings: config.renderSettings,
+        goldenJson: golden?.json,
       };
 
       let lastError: ReturnType<typeof normalizeFailure> | undefined;
@@ -141,6 +142,9 @@ export class BenchmarkRunner {
             safeRawResponse: outcome.response.raw,
             parsedJson: outcome.response.json,
             schemaValid: outcome.schemaValid,
+            exactMatch: outcome.evaluation?.exactMatch,
+            leafAccuracy: outcome.evaluation?.leafAccuracy.accuracy,
+            rowAccuracy: rowAccuracyOf(outcome.evaluation),
             outputHash: outcome.outputHash,
             providerCalls: attempt,
             usage: outcome.response.usage,
@@ -257,4 +261,12 @@ export class BenchmarkRunner {
 
 function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function rowAccuracyOf(evaluation: import("./execute").RunOutcome["evaluation"]): number | undefined {
+  const rows = evaluation?.rowComparison;
+  if (!rows || rows.goldenRows === 0) {
+    return undefined;
+  }
+  return rows.matchedRows / rows.goldenRows;
 }

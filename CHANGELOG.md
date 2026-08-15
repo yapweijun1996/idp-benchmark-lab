@@ -70,3 +70,11 @@ Implementation status: not started.
 - Budget semantics per docs: unknown cost never blocks execution and is never rendered as zero; interrupted-suite recovery remains a documented future option.
 - Suite lifecycle persisted: running → completed/stopped/budget_stopped/failed with per-run evidence written immediately.
 - 150 tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Evaluation Engine
+
+- Leaf flattening with index paths (`row_data[0].remark`), null kept as a leaf; conservative normalization (trim + line endings only, trim-before-normalize ordering fixed by tests).
+- Per-run evaluation: exact match (strict + normalized), leaf accuracy with mismatch path/expected/actual, ordered row comparison (missing/extra/duplicate detection), all wired into every single and repeated run's persisted evidence.
+- Variant grouping by canonical output hash with percentages and representative run numbers; stability metrics (consistency rate, golden stability) with division guards per EVALUATION.md.
+- Test fixtures cover the documented cases: missing/extra fields, wrong identifier digits, null vs 0, remark leakage, row missing/extra/duplicate/reordered, whitespace-only differences.
+- 172 tests passing; lint, typecheck, build green.

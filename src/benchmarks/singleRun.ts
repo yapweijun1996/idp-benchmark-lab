@@ -90,6 +90,7 @@ export class SingleRunService {
         thinking: input.thinking,
         renderSettings: input.renderSettings,
         signal: options.signal,
+        goldenJson: golden?.json,
       });
       const state = outcome.schemaValid ? ("succeeded" as const) : ("schema_invalid" as const);
       const run: BenchmarkRun = {
@@ -99,6 +100,9 @@ export class SingleRunService {
         safeRawResponse: outcome.response.raw,
         parsedJson: outcome.response.json,
         schemaValid: outcome.schemaValid,
+        exactMatch: outcome.evaluation?.exactMatch,
+        leafAccuracy: outcome.evaluation?.leafAccuracy.accuracy,
+        rowAccuracy: rowAccuracyOf(outcome.evaluation),
         outputHash: outcome.outputHash,
         providerCalls: outcome.response.providerCalls,
         usage: outcome.response.usage,
@@ -179,5 +183,13 @@ export class SingleRunService {
     await this.deps.db.benchmarkSuites.put(suite);
     return suite;
   }
+}
+
+function rowAccuracyOf(evaluation: RunOutcome["evaluation"]): number | undefined {
+  const rows = evaluation?.rowComparison;
+  if (!rows || rows.goldenRows === 0) {
+    return undefined;
+  }
+  return rows.matchedRows / rows.goldenRows;
 }
 

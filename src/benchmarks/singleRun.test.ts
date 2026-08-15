@@ -113,6 +113,10 @@ describe("SingleRunService", () => {
     expect(result.run.parsedJson).toEqual({ document_number: "0004131999" });
     expect(result.run.outputHash).toHaveLength(64);
     expect(result.run.usage).toEqual({ inputTokens: 10, outputTokens: 2, totalTokens: 12 });
+    // Golden 匹配 → 评估字段已持久化
+    expect(result.run.exactMatch).toBe(true);
+    expect(result.run.leafAccuracy).toBe(1);
+    expect(result.run.rowAccuracy).toBeUndefined();
     expect(result.run.latencyMs).toBeGreaterThanOrEqual(0);
 
     expect(result.suite.status).toBe("completed");

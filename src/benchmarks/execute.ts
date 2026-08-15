@@ -4,6 +4,7 @@ import { sha256Hex } from "../documents/hash";
 import { composePrompt } from "../profiles/composePrompt";
 import { validateData } from "../profiles/schema";
 import { estimateCost, type CostSource } from "../cost/estimate";
+import { evaluateOutput, type RunEvaluation } from "../evaluation/metrics";
 import { PricingService } from "../cost/pricingService";
 import { getApiKey } from "../providers/keys";
 import { adapterFor } from "../providers/registry";
@@ -47,6 +48,8 @@ export interface ExecuteInput {
   thinking?: string;
   renderSettings?: CanonicalRenderSettings;
   signal?: AbortSignal;
+  /** Golden JSON enables accuracy evaluation for this run. */
+  goldenJson?: unknown;
 }
 
 export interface RunOutcome {
@@ -56,6 +59,8 @@ export interface RunOutcome {
   costSource: CostSource;
   latencyMs: number;
   outputHash: string;
+  /** Accuracy evaluation against the Golden Answer, when one was supplied. */
+  evaluation?: RunEvaluation;
 }
 
 export class RunFailure extends Error {
@@ -119,6 +124,10 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
 
   const latencyMs = Math.round(performance.now() - startedAt);
   const outputHash = await sha256String(canonicalJson(response.json));
+  const evaluation =
+    input.goldenJson !== undefined
+      ? evaluateOutput(input.goldenJson, response.json, { normalizationPolicy: profile.normalizationPolicy })
+      : undefined;
   return {
     response,
     schemaValid: schemaCheck.valid,
@@ -126,6 +135,7 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
     costSource: cost.source,
     latencyMs,
     outputHash,
+    evaluation,
   };
 }
 

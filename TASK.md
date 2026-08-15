@@ -28,20 +28,20 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-021 | Normalized usage/cost model | done | TASK-020 |
 | TASK-022 | Single extraction run | done | TASK-013/15/16/17 |
 | TASK-023 | Raw response + parsed JSON persistence | done | TASK-022 |
-| TASK-024 | Deterministic JSON canonicalization | todo | TASK-022 |
-| TASK-025 | Schema-valid evaluation | todo | TASK-024 |
-| TASK-026 | Exact-match evaluation | todo | TASK-024 |
-| TASK-027 | Leaf-field accuracy | todo | TASK-026 |
-| TASK-028 | Ordered row accuracy | todo | TASK-027 |
-| TASK-029 | Conservative normalization | todo | TASK-026 |
-| TASK-030 | Strict vs normalized scoring | todo | TASK-029 |
+| TASK-024 | Deterministic JSON canonicalization | done | TASK-022 |
+| TASK-025 | Schema-valid evaluation | done | TASK-024 |
+| TASK-026 | Exact-match evaluation | done | TASK-024 |
+| TASK-027 | Leaf-field accuracy | done | TASK-026 |
+| TASK-028 | Ordered row accuracy | done | TASK-027 |
+| TASK-029 | Conservative normalization | done | TASK-026 |
+| TASK-030 | Strict vs normalized scoring | done | TASK-029 |
 | TASK-031 | Benchmark queue | done | TASK-022 |
 | TASK-032 | 5/10/20/50/100 presets | done | TASK-031 |
 | TASK-033 | Stop behavior | done | TASK-031 |
 | TASK-034 | Retry/backoff | done | TASK-031 |
 | TASK-035 | Hard budget cap | done | TASK-021/031 |
 | TASK-036 | Persist suite/run lifecycle | done | TASK-006/031 |
-| TASK-037 | Output hashing/variants | todo | TASK-024/036 |
+| TASK-037 | Output hashing/variants | done | TASK-024/036 |
 | TASK-038 | Benchmark progress screen | todo | TASK-036 |
 | TASK-039 | Result summary dashboard | todo | TASK-025-037 |
 | TASK-040 | Field accuracy heatmap | todo | TASK-027 |
