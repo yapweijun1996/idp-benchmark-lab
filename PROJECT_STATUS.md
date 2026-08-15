@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase 1 (PWA Foundation) in progress.**  
-Scaffold + responsive shell complete: Vite 8 + React 19 + strict TypeScript, hash-based routing, 6 passing unit tests, lint/typecheck/build green.  
+**Phase 1 (PWA Foundation) complete.**  
+Scaffold, responsive shell, installable PWA (manifest + app-shell-only service worker + explicit update prompt), GitHub Pages Actions workflow, and versioned IndexedDB/Dexie data layer (8 stores, unique run-number constraint) are in place. 11 tests passing; lint/typecheck/build green.  
 Date: 2026-08-15
 
 ## Completed discovery
@@ -39,10 +39,13 @@ A single good extraction is not enough evidence.
 - documentation seed (TASK-000)
 - repository scaffold, Vite/React/TS strict toolchain (TASK-001)
 - responsive app shell with hash routing and unit tests (TASK-002, TASK-003)
+- PWA manifest, app-shell-only service worker, icon set, explicit update prompt (TASK-004)
+- GitHub Pages Actions deployment workflow with CI gates (TASK-005)
+- IndexedDB/Dexie schema v1: 8 stores, forward-only migration, unique [suiteId+runNumber] (TASK-006)
 
 ## Pending work
 
-Everything in `TASK.md` except TASK-000..TASK-003. Next: TASK-004 (PWA manifest/service worker), TASK-005 (GitHub Pages Actions), TASK-006 (IndexedDB persistence).
+Everything in `TASK.md` except TASK-000..TASK-006. Next: TASK-007 (document entity/PDF upload), TASK-008 (PDF preview with PDF.js), TASK-010..TASK-013 (profile/schema/Golden editors).
 
 ## Risks
 

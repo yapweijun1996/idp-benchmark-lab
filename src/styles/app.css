@@ -172,6 +172,42 @@ h1 {
   color: var(--text-muted);
 }
 
+.update-prompt {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.15);
+  max-width: calc(100vw - 32px);
+}
+
+.update-prompt button {
+  background: var(--primary);
+  color: var(--primary-text);
+  border: none;
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.update-prompt button:last-child {
+  background: var(--surface-alt);
+  color: var(--text);
+}
+
+.update-prompt button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;

@@ -15,3 +15,11 @@ Implementation status: not started.
 - Base `./` asset URLs verified against the production build.
 - Reconcile P1/P2 documentation review findings (adapter contract, canonical JSON Schema draft-07 example, benchmark identity normalization policy, metric denominator definitions, ADR-015).
 - 6 unit tests passing; lint, typecheck, build green.
+
+## 2026-08-15 — Phase 1 Complete (PWA Foundation)
+
+- Installable PWA: generated icon set (favicon/180/192/512/maskable), web manifest, `registerType: prompt` with explicit update/reload prompt.
+- Service worker precaches app shell only (17 entries); runtime caching of provider traffic/PDFs/keys/results is explicitly disabled per SECURITY.md.
+- GitHub Pages Actions workflow (`actions/checkout@v6`, `setup-node@v6`, `configure-pages@v6`, `upload-pages-artifact@v4`, `deploy-pages@v5`) with lint/typecheck/test/build gates.
+- IndexedDB/Dexie schema v1: 8 stores matching DATA_MODEL.md, forward-only migration, unique `[suiteId+runNumber]` index enforcing no duplicate run numbers.
+- 11 tests passing (app shell + storage layer); lint, typecheck, build green.

@@ -8,9 +8,9 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 | TASK-001 | Initialize Git repository/project scaffold | done | TASK-000 |
 | TASK-002 | React/Vite/TypeScript app shell | done | TASK-001 |
 | TASK-003 | Responsive navigation/layout | done | TASK-002 |
-| TASK-004 | PWA manifest/service worker | todo | TASK-002 |
-| TASK-005 | GitHub Pages Actions deployment | todo | TASK-002 |
-| TASK-006 | IndexedDB persistence | todo | TASK-002 |
+| TASK-004 | PWA manifest/service worker | done | TASK-002 |
+| TASK-005 | GitHub Pages Actions deployment | done | TASK-002 |
+| TASK-006 | IndexedDB persistence | done | TASK-002 |
 | TASK-007 | Document entity/PDF upload | todo | TASK-006 |
 | TASK-008 | PDF preview using PDF.js | todo | TASK-007 |
 | TASK-009 | Native PDF vs canonical render modes | todo | TASK-008 |
