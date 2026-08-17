@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { summarizeSuite, type SuiteSummary } from "../benchmarks/summary";
 import { useRunHistory } from "../benchmarks/useRunHistory";
+import { DemoBenchmarkCard } from "./DemoBenchmarkCard";
 import { getDb } from "../storage/db";
 import type { BenchmarkRun, BenchmarkSuite } from "../storage/types";
 
@@ -52,21 +53,8 @@ export function DashboardPage() {
     return (
       <section aria-labelledby="dashboard-title">
         <h1 id="dashboard-title">Home</h1>
-        <div className="profile-form onboarding-card">
-          <h2>Run your first AI document benchmark</h2>
-          <ol className="onboarding-list">
-            <li>Upload a PDF</li>
-            <li>Tell the AI what to extract</li>
-            <li>Add the correct expected result</li>
-            <li>Choose an AI model</li>
-            <li>Run the benchmark</li>
-          </ol>
-          <div className="toolbar">
-            <a href="#/new-benchmark" className="btn btn--primary">
-              Start Benchmark
-            </a>
-          </div>
-        </div>
+        <p>Test how accurately and consistently AI extracts structured data from documents.</p>
+        <DemoBenchmarkCard />
       </section>
     );
   }

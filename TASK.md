@@ -66,8 +66,9 @@ Status values: `todo`, `in_progress`, `blocked`, `done`.
 
 All TASK-000..056 items above are done (v0.1.0 released). No open blocker on this task list.
 
-Post-v0.1.0 UI/UX redesign work (task-oriented navigation, guided wizard, terminology cleanup)
-is tracked as Phase 7 in ROADMAP.md rather than as new numbered TASK-### entries here, since it
-restructures existing screens rather than adding new functional requirements.
+Post-v0.1.0 UI/UX redesign work (task-oriented navigation, guided wizard, terminology cleanup;
+then the demo-first Home) is tracked as Phase 7 and Phase 8 in ROADMAP.md rather than as new
+numbered TASK-### entries here, since it restructures existing screens rather than adding new
+functional requirements.
 
 Expected risks: provider browser CORS, browser-visible BYOK keys, provider PDF/structured-output differences, pricing/API drift, large PDF memory use, Safari IndexedDB/service-worker edge cases, GitHub Pages base-path routing.

@@ -80,7 +80,9 @@ Assert no raw API key in IndexedDB, localStorage, service-worker Cache Storage, 
 
 ## Browser smoke (TASK-052)
 
-`tests/e2e/smoke.spec.ts` (Playwright, Chromium) verifies against the production preview build: shell/title/navigation render on the Home page, hash routing reaches the Library page's Documents tab, the Library's Extraction Templates tab and Settings' AI Providers tab render, a PDF upload renders a preview canvas, and unknown hashes fall back to Home. Legacy pre-redesign routes (`#/dashboard`, `#/documents`, `#/profiles`, `#/golden`, `#/providers`, `#/benchmarks`) redirect via `LEGACY_REDIRECTS` in `src/app/routes.ts`; the exercised routes above already cover their redirect targets.
+`tests/e2e/smoke.spec.ts` (Playwright, Chromium) verifies against the production preview build: shell/title/navigation render on the Home page, the Home demo card is ready to run for a first-time visitor with no setup (bundled sample checklist, provider/run-count defaults, Run Benchmark button, secondary upload-your-own link), hash routing reaches the Library page's Documents tab, the Library's Extraction Templates tab and Settings' AI Providers tab render, a PDF upload renders a preview canvas, and unknown hashes fall back to Home. Legacy pre-redesign routes (`#/dashboard`, `#/documents`, `#/profiles`, `#/golden`, `#/providers`, `#/benchmarks`) redirect via `LEGACY_REDIRECTS` in `src/app/routes.ts`; the exercised routes above already cover their redirect targets.
+
+`tests/e2e/demo.spec.ts` runs the Home demo card's full real pipeline — the bundled demo PDF (inlined as a `data:` URL by Vite, since it's under the 4KB inline threshold) is actually fetched into a Blob, `seedDemoFixture` actually writes to IndexedDB, and `BenchmarkRunner`/the Gemini adapter build and send a real request — with only the network call to `generativelanguage.googleapis.com` intercepted (`page.route`) and answered with a fixed fake response, so no real API key is required. Confirms the result renders on Home and the run appears in Runs & Results afterward.
 
 ## Accessibility (TASK-053)
 

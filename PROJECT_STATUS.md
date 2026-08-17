@@ -2,17 +2,25 @@
 
 ## Current status
 
-**v0.1.0 released (all 56 tasks complete). Phase 7 (UI/UX Redesign, ROADMAP.md) implementation
-and QA complete — closure pending review of the redesign report.**  
+**v0.1.0 released (all 56 tasks complete). Phase 7 (task-oriented IA, guided wizard, terminology)
+and Phase 8 (demo-first Home) complete — see ROADMAP.md.**  
 Phase 6 hardening delivered: evaluation/adapter/storage/stop-budget test coverage verified, Playwright browser smoke (4 specs against the production build), axe-core accessibility gate, security audit tests (app-shell-only SW whitelist, key non-persistence, backup secret rejection), and docs/code reconciliation (README status, ARCHITECTURE modules, TESTING additions).
 
 Phase 7 replaced the v0.1.0 entity-first sidebar with a task-oriented IA (Home/New Benchmark/
 Runs & Results/Compare/Library/Settings), a guided 6-step benchmark wizard, a user-facing
 terminology sweep, a persisted default run-count setting, and inline feedback states across
 upload/save/validate/connect/run/stop/import/export flows — see ROADMAP.md Phase 7 and
-DESIGN.md for details. Lint/typecheck/build green; 261 unit/integration tests passing; 5/5 e2e
-specs passing (production build, real Chromium); axe-core gate expanded to 6 routes; real
-browser screenshots taken at 375/768/1280px.  
+DESIGN.md for details.
+
+Phase 8 replaced the first-time Home experience with a bundled, ready-to-run demo (sample PDF +
+prompt + schema + expected result already loaded) so a new visitor can see a real accuracy/
+stability result within one click, with custom-document benchmarking demoted to a secondary
+"Upload my document" link. Along the way, fixed a real pre-existing gap: canonical_images mode
+(needed by OpenAI/OpenAI-compatible, which don't accept native PDF) had no PDF renderer wired
+anywhere in production — see ROADMAP.md Phase 8.
+
+Lint/typecheck/build green; 270 unit/integration tests passing; 7/7 e2e specs passing
+(production build, real Chromium).  
 Date: 2026-08-17
 
 ## Completed discovery
@@ -54,16 +62,16 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-All v0.1.0 tasks in `TASK.md` are done. Phase 7 (UI/UX Redesign) implementation, QA gates,
-browser QA (desktop/tablet/mobile), and expanded accessibility coverage are complete — see
-ROADMAP.md Phase 7. Remaining before Phase 7 formally closes: user review/sign-off of the
-redesign report, and — noted as deliberate scope decisions rather than open work — inline
-in-wizard resource creation (B.2, skipped by design) and a unified provider Connect+Test button
-(kept as two separate actions; see ROADMAP.md Phase 7 for the reasoning).
+All v0.1.0 tasks in `TASK.md` are done. Phase 7 and Phase 8 are both complete — see ROADMAP.md.
+Noted as deliberate scope decisions rather than open work: inline in-wizard resource creation
+(B.2, skipped by design), a unified provider Connect+Test button on `ProvidersPage` (kept as two
+separate actions), and demo-run persistence into Library/Runs & Results (kept as-is — the demo
+reuses the exact same `BenchmarkRunner`, so its runs are real, inspectable history, not a
+sandboxed/throwaway mode).
 
-Post-release follow-ups deferred until Phase 7 closes: push to GitHub and enable Pages,
-real-provider Golden PO validation run, canonical-image cross-provider comparison,
-interrupted-suite resume, Agentic Workflow, ERP integration.
+Post-release follow-ups: push to GitHub and enable Pages, real-provider Golden PO validation run
+(now easy to try via the Home demo card against a real key), interrupted-suite resume, Agentic
+Workflow, ERP integration.
 
 ## Risks
 

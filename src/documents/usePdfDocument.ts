@@ -51,7 +51,7 @@ export type PdfLoader = (source: { data: ArrayBuffer }) => {
 // pdfjs-dist's typings do not declare Blob for DocumentInitParameters.data
 // even though the runtime accepts it; the cast keeps the default loader
 // assignable to PdfLoader.
-const defaultLoader: PdfLoader = (source) =>
+export const defaultLoader: PdfLoader = (source) =>
   getDocument(source as unknown as Parameters<typeof getDocument>[0]);
 
 /** Loads a PDF document (metadata only; page rendering is PdfPreview's job). */

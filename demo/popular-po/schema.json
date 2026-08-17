@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "properties": {
+    "doc_info": {
+      "type": "object",
+      "properties": {
+        "document_number": { "type": ["string", "null"] },
+        "date": { "type": ["string", "null"] }
+      },
+      "required": ["document_number", "date"],
+      "additionalProperties": false
+    },
+    "row_data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stock_code": { "type": ["string", "null"] },
+          "description": { "type": ["string", "null"] },
+          "qty": { "type": ["string", "null"] }
+        },
+        "required": ["stock_code", "description", "qty"],
+        "additionalProperties": false
+      }
+    },
+    "footer": {
+      "type": "object",
+      "properties": {
+        "remark": { "type": ["string", "null"] }
+      },
+      "required": ["remark"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["doc_info", "row_data", "footer"],
+  "additionalProperties": false
+}

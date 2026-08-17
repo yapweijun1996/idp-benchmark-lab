@@ -73,7 +73,7 @@ describe("DashboardPage", () => {
     expect(screen.getAllByText("66.7%").length).toBeGreaterThan(0);
   });
 
-  it("shows onboarding for first-time users with no benchmarks", async () => {
+  it("shows the demo-first benchmark card for first-time users with no benchmarks", async () => {
     useRunHistoryMock.mockReturnValue({
       suites: [],
       loading: false,
@@ -81,10 +81,11 @@ describe("DashboardPage", () => {
     });
     render(<DashboardPage />);
     await vi.waitFor(() =>
-      expect(screen.getByRole("heading", { name: /run your first ai document benchmark/i })).toBeInTheDocument(),
+      expect(screen.getByRole("region", { name: /demo benchmark/i })).toBeInTheDocument(),
     );
-    expect(screen.getByRole("link", { name: /start benchmark/i })).toHaveAttribute("href", "#/new-benchmark");
-    // No duplicate "no data" messaging alongside the onboarding steps.
+    expect(screen.getByRole("button", { name: /run benchmark/i })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /upload my document/i })).toHaveAttribute("href", "#/new-benchmark");
+    // No duplicate "no data" messaging alongside the demo card.
     expect(screen.queryByText(/no suites yet/i)).not.toBeInTheDocument();
   });
 

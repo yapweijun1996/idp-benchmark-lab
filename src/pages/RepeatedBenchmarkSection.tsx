@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { BenchmarkRunner, RUN_PRESETS, type RunPreset } from "../benchmarks/runner";
 import { RunFailure } from "../benchmarks/execute";
 import { summarizeSuite, type SuiteSummary } from "../benchmarks/summary";
+import { browserExecuteDeps } from "../documents/runtimeDeps";
 import { getAppSettings } from "../storage/settings";
 import type { BenchmarkRun, BenchmarkSuite, InputMode } from "../storage/types";
 
@@ -92,7 +93,9 @@ export function RepeatedBenchmarkSection({
           : prev,
       );
     };
-    const runner = benchmarkFactory ? benchmarkFactory(onRunComplete) : new BenchmarkRunner({ onRunComplete });
+    const runner = benchmarkFactory
+      ? benchmarkFactory(onRunComplete)
+      : new BenchmarkRunner({ onRunComplete, ...browserExecuteDeps() });
     runnerRef.current = runner;
     setProgress({ total: preset, completed: 0, succeeded: 0, schemaInvalid: 0, failed: 0 });
     setRunning(true);

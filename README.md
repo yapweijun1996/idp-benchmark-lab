@@ -4,9 +4,14 @@ A static, BYOK (Bring Your Own Key) PWA demo/spike for benchmarking Intelligent 
 
 ## Project status
 
-**Status:** v0.1.0 released — Phases 1-6 complete (PWA foundation, single-run extraction, benchmark harness, evaluation dashboard, compare & portability, hardening/release). Phase 7 (UI/UX Redesign — task-oriented navigation, guided benchmark wizard, terminology cleanup; see ROADMAP.md) in progress.  
+**Status:** v0.1.0 released — Phases 1-6 complete (PWA foundation, single-run extraction, benchmark harness, evaluation dashboard, compare & portability, hardening/release). Phase 7 (task-oriented navigation, guided benchmark wizard, terminology cleanup) and Phase 8 (demo-first Home — a ready-to-run bundled sample, no upload/setup required to see value; see ROADMAP.md) complete.  
 **Date:** 2026-08-17  
 **Repository:** `idp-benchmark-lab`
+
+**Try it now:** open the app — Home already has a sample document, prompt, schema, and expected
+result loaded. Choose an AI provider, paste an API key, pick 1/3/5 runs, and click Run Benchmark to
+see accuracy and stability immediately. No PDF upload or Library/Settings setup required for the
+demo; uploading your own document is a secondary, optional path.
 
 All MVP functional requirements (FR-001..FR-020) are implemented and covered by unit, integration, accessibility, security-audit, and browser-smoke tests. The repository code, tests, and provider adapters are the source of truth; documentation is updated in the same change whenever behavior changes.
 

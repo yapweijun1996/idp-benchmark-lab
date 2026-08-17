@@ -34,8 +34,9 @@ entity-first sidebar. Each entity (document, extraction template, expected resul
 a resource picked *inside* the guided benchmark workflow, not a top-level destination — it only
 gets its own nav slot if a user needs to manage it independently of running a benchmark:
 
-- **Home** (`#/home`) — most-recent-benchmark summary for returning users; a "Start Benchmark"
-  onboarding card for first-time users with zero benchmarks.
+- **Home** (`#/home`) — most-recent-benchmark summary for returning users; a ready-to-run **Try
+  Demo** card (bundled sample document/prompt/schema/expected-result, choose provider, choose
+  1/3/5 runs, Run) for first-time users with zero benchmarks — see "Home — demo-first" below.
 - **New Benchmark** (`#/new-benchmark`) — the guided wizard (see below); the primary workflow.
 - **Runs & Results** (`#/runs`) — every past benchmark, newest first; inspect one for field
   accuracy, drift, and export.
@@ -55,12 +56,31 @@ Mobile/tablet collapses this into a slide-out drawer (see `styles/app.css` mobil
 
 ## Key screens
 
-### Home
+### Home — demo-first (Phase 8)
 
-First-time users see an onboarding card (5-step "how this works" list + a single "Start
-Benchmark" CTA). Returning users see: benchmark totals, the latest benchmark's summary table
-(exact pass, schema-valid, leaf accuracy, consistency, latency, cost), and a "Recent benchmarks"
-list. A "Compare results" link appears only once 2+ benchmarks exist.
+First-time users (zero benchmarks) see the **Try Demo** card (`src/pages/DemoBenchmarkCard.tsx`),
+not an empty state or a setup checklist. A bundled sample — a synthetic "Popular Purchase Order"
+document plus its matching extraction prompt, JSON schema, and expected result
+(`demo/popular-po/`) — is already loaded; the card shows a "Demo ready: ✓ Sample PDF ✓ Extraction
+prompt ✓ JSON schema ✓ Expected result" checklist with nothing to upload or configure first. The
+user only chooses **AI provider/model**, pastes an **API key** (memory-only, exactly like every
+other provider entry in this app — see BYOK below), picks **1 / 3 / 5 runs**, and clicks **Run
+Benchmark**. The mode (native PDF vs. rendered images) is derived automatically from the chosen
+provider's capabilities — the user is never asked to understand input modes to run the demo.
+Results render inline: schema-valid/exact-match counts, field/row accuracy, stability, unique
+variants, average latency, and a "Failures" list (run number, field path, expected vs. actual) for
+quick mismatch inspection, plus a link into Runs & Results for full raw-output inspection. A
+secondary, clearly subordinate "Want to test your own document? → Upload my document" link is the
+only path into the full guided wizard — custom-document benchmarking is available but never
+required to see value. The demo card seeds its fixture into local storage once (idempotent, fixed
+ids) and runs through the *same* `BenchmarkRunner` as every other benchmark (`docs/` "Custom paths
+reuse the core" — see below); it is not a separate engine.
+
+Returning users (1+ benchmarks already run) see the pre-Phase-8 view: benchmark totals, the latest
+benchmark's summary table (exact pass, schema-valid, leaf accuracy, consistency, latency, cost),
+and a "Recent benchmarks" list. A "Compare results" link appears once 2+ benchmarks exist. This
+view is deliberately unchanged — once someone has real benchmark history, showing it beats
+repeating the demo pitch.
 
 ### New Benchmark (guided wizard)
 

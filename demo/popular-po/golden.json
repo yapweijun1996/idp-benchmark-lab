@@ -1,0 +1,16 @@
+{
+  "doc_info": {
+    "document_number": "0083217",
+    "date": "15.03.2024"
+  },
+  "row_data": [
+    { "stock_code": "910-006021", "description": "LOGITECH M650 M WL WHITE", "qty": "2" },
+    { "stock_code": "910-006022", "description": "LOGITECH M650 M WL BLACK", "qty": "1" },
+    { "stock_code": "920-010567", "description": "LOGITECH K120 KEYBOARD BLACK", "qty": "3" },
+    { "stock_code": "920-009879", "description": "LOGITECH C270 HD WEBCAM BLACK", "qty": "1" },
+    { "stock_code": "910-004914", "description": "LOGITECH M185 WIRELESS MOUSE GREY", "qty": "4" }
+  ],
+  "footer": {
+    "remark": null
+  }
+}

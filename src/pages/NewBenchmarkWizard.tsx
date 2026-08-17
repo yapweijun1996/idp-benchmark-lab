@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { checkModeSupport } from "../providers/capabilityGate";
 import { adapterFor } from "../providers/registry";
 import { RunFailure, SingleRunService, type SingleRunResult } from "../benchmarks/singleRun";
+import { browserExecuteDeps } from "../documents/runtimeDeps";
 import { useDocuments } from "../documents/useDocuments";
 import { useGoldens } from "../golden/useGoldens";
 import { useProfiles } from "../profiles/useProfiles";
@@ -87,7 +88,7 @@ export function NewBenchmarkWizard({ singleRunFactory, benchmarkFactory }: NewBe
     }
     setRunning(true);
     try {
-      const service = singleRunFactory ? singleRunFactory() : new SingleRunService();
+      const service = singleRunFactory ? singleRunFactory() : new SingleRunService(browserExecuteDeps());
       const outcome = await service.run({
         documentId,
         profileId,
