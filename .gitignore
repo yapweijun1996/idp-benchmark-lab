@@ -19,3 +19,6 @@ playwright-report/
 # Editor / OS files
 .DS_Store
 *.local
+
+# Local agent/tooling config (e.g. Claude Code dev-server launch config)
+.claude/
