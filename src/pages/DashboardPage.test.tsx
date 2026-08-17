@@ -73,15 +73,19 @@ describe("DashboardPage", () => {
     expect(screen.getAllByText("66.7%").length).toBeGreaterThan(0);
   });
 
-  it("shows an empty state without suites", async () => {
+  it("shows onboarding for first-time users with no benchmarks", async () => {
     useRunHistoryMock.mockReturnValue({
       suites: [],
       loading: false,
       refresh: vi.fn(() => Promise.resolve()),
     });
     render(<DashboardPage />);
-    await vi.waitFor(() => expect(screen.getByText(/no benchmarks yet/i)).toBeInTheDocument());
-    expect(screen.getByText(/no suites yet/i)).toBeInTheDocument();
+    await vi.waitFor(() =>
+      expect(screen.getByRole("heading", { name: /run your first ai document benchmark/i })).toBeInTheDocument(),
+    );
+    expect(screen.getByRole("link", { name: /start benchmark/i })).toHaveAttribute("href", "#/new-benchmark");
+    // No duplicate "no data" messaging alongside the onboarding steps.
+    expect(screen.queryByText(/no suites yet/i)).not.toBeInTheDocument();
   });
 
   it("shows storage totals", async () => {
@@ -89,7 +93,32 @@ describe("DashboardPage", () => {
     await db.benchmarkSuites.put(suite);
     await db.benchmarkRuns.bulkPut([run(1, true), run(2, true)]);
     render(<DashboardPage />);
-    await vi.waitFor(() => expect(screen.getByText("1 suites")).toBeInTheDocument());
+    await vi.waitFor(() => expect(screen.getByText("1 benchmarks")).toBeInTheDocument());
     expect(screen.getByText("2 runs")).toBeInTheDocument();
+  });
+
+  it("offers Compare as the next action once at least two suites exist", async () => {
+    const db = getDb();
+    await db.benchmarkSuites.put(suite);
+    await db.benchmarkRuns.bulkPut([run(1, true)]);
+    const suiteB: BenchmarkSuite = { ...suite, id: "s-2" };
+    useRunHistoryMock.mockReturnValue({
+      suites: [suite, suiteB],
+      loading: false,
+      refresh: vi.fn(() => Promise.resolve()),
+    });
+
+    render(<DashboardPage />);
+    await vi.waitFor(() => expect(screen.getByRole("link", { name: /compare results/i })).toBeInTheDocument());
+    expect(screen.getByRole("link", { name: /compare results/i })).toHaveAttribute("href", "#/compare");
+  });
+
+  it("does not offer Compare with only one suite", async () => {
+    const db = getDb();
+    await db.benchmarkSuites.put(suite);
+    await db.benchmarkRuns.bulkPut([run(1, true)]);
+    render(<DashboardPage />);
+    await vi.waitFor(() => expect(screen.getByRole("region", { name: /latest benchmark/i })).toBeInTheDocument());
+    expect(screen.queryByRole("link", { name: /compare results/i })).not.toBeInTheDocument();
   });
 });

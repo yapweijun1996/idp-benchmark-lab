@@ -80,7 +80,7 @@ describe("SuiteDetail", () => {
     fireEvent.click(screen.getByRole("button", { name: /run 1 succeeded/i }));
     expect(screen.getByRole("region", { name: /run 1 inspector/i })).toBeInTheDocument();
     expect(screen.getAllByText("x.y").length).toBeGreaterThan(0);
-    expect(screen.getByText(/golden answer \(v1\)/i)).toBeInTheDocument();
+    expect(screen.getByText(/expected result \(v1\)/i)).toBeInTheDocument();
   });
 
   it("shows an empty heatmap state without mismatches", () => {

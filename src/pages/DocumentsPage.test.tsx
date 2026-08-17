@@ -1,15 +1,12 @@
-import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { DocumentsPage } from "./DocumentsPage";
 import { useDocuments, type UseDocumentsResult } from "../documents/useDocuments";
-import { getAppSettings, saveAppSettings } from "../storage/settings";
 import type { DocumentRecord } from "../storage/types";
 
 vi.mock("../documents/useDocuments", () => ({ useDocuments: vi.fn() }));
-vi.mock("../storage/settings", () => ({ getAppSettings: vi.fn(), saveAppSettings: vi.fn() }));
 
 const useDocumentsMock = vi.mocked(useDocuments);
-const getAppSettingsMock = vi.mocked(getAppSettings);
 
 function emptyResult(): UseDocumentsResult {
   return {
@@ -37,17 +34,6 @@ const record: DocumentRecord = {
   storageMode: "session",
 };
 
-beforeEach(() => {
-  getAppSettingsMock.mockResolvedValue({
-    id: "app",
-    defaultConcurrency: 1,
-    defaultInputMode: "native_pdf",
-    theme: "system",
-    showSecretsWarning: true,
-    updatedAt: "",
-  });
-});
-
 describe("DocumentsPage", () => {
   it("renders the empty state with an upload control", () => {
     useDocumentsMock.mockReturnValue(emptyResult());
@@ -66,26 +52,35 @@ describe("DocumentsPage", () => {
     expect(screen.getByText("active")).toBeInTheDocument();
   });
 
-  it("deletes a document via the Delete button", () => {
+  it("deletes a document via the Delete button and shows confirmation", async () => {
     const remove = vi.fn(() => Promise.resolve());
     useDocumentsMock.mockReturnValue({ ...emptyResult(), documents: [record], remove });
     render(<DocumentsPage />);
     screen.getByRole("button", { name: /delete/i }).click();
     expect(remove).toHaveBeenCalledWith("doc-1");
+    expect(await screen.findByText(/✓ golden-po\.pdf deleted/i)).toBeInTheDocument();
   });
 
-  it("persists the selected input mode to settings", async () => {
-    const saveMock = vi.mocked(saveAppSettings).mockResolvedValue({
-      id: "app",
-      defaultConcurrency: 1,
-      defaultInputMode: "canonical_images",
-      theme: "system",
-      showSecretsWarning: true,
-      updatedAt: "",
-    });
-    useDocumentsMock.mockReturnValue(emptyResult());
+  it("shows a success message after a successful upload", async () => {
+    const upload = vi.fn(() => Promise.resolve());
+    useDocumentsMock.mockReturnValue({ ...emptyResult(), upload });
     render(<DocumentsPage />);
-    screen.getByRole("radio", { name: /canonical rendered images/i }).click();
-    expect(saveMock).toHaveBeenCalledWith({ defaultInputMode: "canonical_images" });
+    const file = new File(["%PDF"], "invoice.pdf", { type: "application/pdf" });
+    const input = document.querySelector("#pdf-upload") as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(await screen.findByText(/✓ invoice\.pdf uploaded/i)).toBeInTheDocument();
+  });
+
+  it("shows an actionable error when the uploaded file isn't a PDF", async () => {
+    const invalidTypeError = Object.assign(new Error("Expected application/pdf, got text/plain"), {
+      code: "invalid_type",
+    });
+    const upload = vi.fn(() => Promise.reject(invalidTypeError));
+    useDocumentsMock.mockReturnValue({ ...emptyResult(), upload });
+    render(<DocumentsPage />);
+    const file = new File(["hello"], "notes.txt", { type: "text/plain" });
+    const input = document.querySelector("#pdf-upload") as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [file] } });
+    expect(await screen.findByRole("alert")).toHaveTextContent(/isn't a pdf/i);
   });
 });

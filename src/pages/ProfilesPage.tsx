@@ -52,6 +52,7 @@ export function ProfilesPage() {
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
+  const [savedMessage, setSavedMessage] = useState<string | null>(null);
 
   const schemaCheck = useMemo(() => {
     const parsed = parseJson(form.schemaText);
@@ -65,12 +66,14 @@ export function ProfilesPage() {
     setEditingId("new");
     setForm(EMPTY_FORM);
     setFormError(null);
+    setSavedMessage(null);
   };
 
   const startEdit = (profile: ExtractionProfile) => {
     setEditingId(profile.id);
     setForm(formFromProfile(profile));
     setFormError(null);
+    setSavedMessage(null);
   };
 
   const cancel = () => {
@@ -106,13 +109,10 @@ export function ProfilesPage() {
       },
     };
     try {
-      if (editingId === "new") {
-        await profiles.create(input);
-      } else if (editingId) {
-        await profiles.update(editingId, input);
-      }
+      const saved = editingId === "new" ? await profiles.create(input) : editingId ? await profiles.update(editingId, input) : null;
       setEditingId(null);
       setFormError(null);
+      setSavedMessage(saved ? `✓ Extraction Template saved as version ${saved.version}` : null);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : String(e));
     }
@@ -122,8 +122,8 @@ export function ProfilesPage() {
 
   return (
     <section aria-labelledby="profiles-title">
-      <h1 id="profiles-title">Extraction Profiles</h1>
-      <p>Modular profiles: base prompt + extraction contract + JSON schema + normalization policy. Each save creates a new version.</p>
+      <h2 id="profiles-title">Extraction Templates</h2>
+      <p>Modular templates: base prompt + extraction contract + JSON schema + normalization policy. Each save creates a new version.</p>
 
       {profiles.error ? (
         <p role="alert" className="status-error">
@@ -131,13 +131,22 @@ export function ProfilesPage() {
         </p>
       ) : null}
 
+      {editingId === null && savedMessage ? (
+        <p role="status" className="schema-ok">
+          {savedMessage}
+        </p>
+      ) : null}
+
       {editingId === null ? (
         <>
           <button type="button" className="btn btn--primary" onClick={startCreate}>
-            New profile
+            New template
           </button>
           {profiles.profiles.length === 0 ? (
-            <p className="empty-state">No profiles yet.</p>
+            <p className="empty-state">
+              No extraction templates yet. A template tells the AI what information to extract from a document —
+              create one to use it in a benchmark.
+            </p>
           ) : (
             <ul className="doc-list">
               {profiles.profiles.map((p) => (
@@ -163,10 +172,10 @@ export function ProfilesPage() {
         </>
       ) : (
         <div className="profile-form">
-          <h2>{editing ? `Edit ${editing.name}` : "New profile"}</h2>
+          <h3>{editing ? `Edit ${editing.name}` : "New template"}</h3>
           {editing ? (
             <p className="doc-card__meta">
-              Saving creates version {editing.version + 1} of this profile.
+              Saving creates version {editing.version + 1} of this template.
             </p>
           ) : null}
 
@@ -246,7 +255,7 @@ export function ProfilesPage() {
 
           <div className="toolbar">
             <button type="button" className="btn btn--primary" onClick={() => void save()}>
-              {editing ? "Save new version" : "Create profile"}
+              {editing ? "Save new version" : "Create template"}
             </button>
             <button type="button" className="btn" onClick={cancel}>
               Cancel

@@ -5,6 +5,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   id: "app",
   defaultConcurrency: 1,
   defaultInputMode: "native_pdf",
+  defaultRunCount: 5,
   theme: "system",
   showSecretsWarning: true,
   updatedAt: "",

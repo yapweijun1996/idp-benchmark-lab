@@ -27,7 +27,7 @@ Test IndexedDB migrations, CRUD, suite/run persistence, import/export, and secre
 
 ### Browser/E2E
 
-Test PDF upload, profile creation, Golden Answer, BYOK config UI, mocked single run, mocked 5-run benchmark, Stop, budget stop, dashboard, export, and PWA smoke.
+Test PDF upload, extraction template creation, Expected Result, BYOK config UI, mocked single run, mocked 5-run benchmark, Stop, budget stop, Home, export, and PWA smoke.
 
 ## pdfjs-dist in jsdom tests
 
@@ -80,7 +80,7 @@ Assert no raw API key in IndexedDB, localStorage, service-worker Cache Storage, 
 
 ## Browser smoke (TASK-052)
 
-`tests/e2e/smoke.spec.ts` (Playwright, Chromium) verifies against the production preview build: shell/title/navigation render, hash routing reaches Documents, Profiles, and Providers pages, and unknown hashes fall back to the dashboard.
+`tests/e2e/smoke.spec.ts` (Playwright, Chromium) verifies against the production preview build: shell/title/navigation render on the Home page, hash routing reaches the Library page's Documents tab, the Library's Extraction Templates tab and Settings' AI Providers tab render, a PDF upload renders a preview canvas, and unknown hashes fall back to Home. Legacy pre-redesign routes (`#/dashboard`, `#/documents`, `#/profiles`, `#/golden`, `#/providers`, `#/benchmarks`) redirect via `LEGACY_REDIRECTS` in `src/app/routes.ts`; the exercised routes above already cover their redirect targets.
 
 ## Accessibility (TASK-053)
 

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PdfPreview } from "../documents/PdfPreview";
 import { useDocuments } from "../documents/useDocuments";
-import { getAppSettings, saveAppSettings } from "../storage/settings";
-import type { InputMode } from "../storage/types";
+
+type ActionStatus = { kind: "success" | "error"; text: string };
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) {
@@ -21,15 +21,10 @@ function shortHash(hash: string): string {
 export function DocumentsPage() {
   const docs = useDocuments();
   const [persist, setPersist] = useState(false);
-  const [inputMode, setInputMode] = useState<InputMode>("native_pdf");
   const [activeBlob, setActiveBlob] = useState<{ id: string; blob: Blob | undefined } | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [status, setStatus] = useState<ActionStatus | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    void getAppSettings()
-      .then((s) => setInputMode(s.defaultInputMode))
-      .catch(() => undefined);
-  }, []);
 
   const { activeId, getBlob } = docs;
 
@@ -50,24 +45,43 @@ export function DocumentsPage() {
   const onFilesChanged = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       const file = event.target.files?.[0];
-      if (file) {
-        void docs.upload(file, persist);
-      }
       event.target.value = "";
+      if (!file) {
+        return;
+      }
+      setStatus(null);
+      setUploading(true);
+      void docs
+        .upload(file, persist)
+        .then(() => setStatus({ kind: "success", text: `✓ ${file.name} uploaded.` }))
+        .catch((e: unknown) => {
+          const message =
+            e instanceof Error && "code" in e && (e as { code: string }).code === "invalid_type"
+              ? `✗ ${file.name} isn't a PDF. Choose a PDF file.`
+              : `✗ Upload failed: ${e instanceof Error ? e.message : String(e)}`;
+          setStatus({ kind: "error", text: message });
+        })
+        .finally(() => setUploading(false));
     },
     [docs, persist],
   );
 
-  const changeMode = useCallback((mode: InputMode) => {
-    setInputMode(mode);
-    void saveAppSettings({ defaultInputMode: mode }).catch(() => undefined);
-  }, []);
+  const onDelete = useCallback(
+    (id: string, name: string) => {
+      setStatus(null);
+      void docs
+        .remove(id)
+        .then(() => setStatus({ kind: "success", text: `✓ ${name} deleted.` }))
+        .catch((e: unknown) => setStatus({ kind: "error", text: `✗ Delete failed: ${e instanceof Error ? e.message : String(e)}` }));
+    },
+    [docs],
+  );
 
   const active = docs.documents.find((d) => d.id === docs.activeId);
 
   return (
     <section aria-labelledby="documents-title">
-      <h1 id="documents-title">Documents</h1>
+      <h2 id="documents-title">Documents</h2>
       <p>Upload and preview local PDFs. Default storage is session-only; nothing leaves this browser until a benchmark runs.</p>
 
       <div className="toolbar">
@@ -77,40 +91,29 @@ export function DocumentsPage() {
           accept="application/pdf"
           className="visually-hidden"
           id="pdf-upload"
+          aria-hidden="true"
+          tabIndex={-1}
           onChange={onFilesChanged}
         />
-        <button type="button" className="btn btn--primary" onClick={() => fileInputRef.current?.click()}>
-          Upload PDF
+        <button
+          type="button"
+          className="btn btn--primary"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? "Uploading…" : "Upload PDF"}
         </button>
         <label className="checkbox">
           <input type="checkbox" checked={persist} onChange={(e) => setPersist(e.target.checked)} />
-          Keep in browser storage (IndexedDB)
+          Save on this device
         </label>
       </div>
 
-      <fieldset className="mode-picker">
-        <legend>Default input mode</legend>
-        <label>
-          <input
-            type="radio"
-            name="input-mode"
-            value="native_pdf"
-            checked={inputMode === "native_pdf"}
-            onChange={() => changeMode("native_pdf")}
-          />
-          Native PDF
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="input-mode"
-            value="canonical_images"
-            checked={inputMode === "canonical_images"}
-            onChange={() => changeMode("canonical_images")}
-          />
-          Canonical rendered images
-        </label>
-      </fieldset>
+      {status ? (
+        <p role={status.kind === "error" ? "alert" : "status"} className={status.kind === "error" ? "status-error" : "schema-ok"}>
+          {status.text}
+        </p>
+      ) : null}
 
       {docs.error ? (
         <p role="alert" className="status-error">
@@ -119,7 +122,10 @@ export function DocumentsPage() {
       ) : null}
 
       {docs.documents.length === 0 ? (
-        <p className="empty-state">No documents yet. Upload a PDF to begin.</p>
+        <p className="empty-state">
+          No documents yet. Upload the PDF you want to benchmark extraction accuracy against — it stays in this
+          browser.
+        </p>
       ) : (
         <ul className="doc-list">
           {docs.documents.map((doc) => (
@@ -141,7 +147,7 @@ export function DocumentsPage() {
               >
                 {doc.storageMode === "indexeddb" ? "Make session-only" : "Persist"}
               </button>
-              <button type="button" className="btn--danger" onClick={() => void docs.remove(doc.id)}>
+              <button type="button" className="btn--danger" onClick={() => onDelete(doc.id, doc.name)}>
                 Delete
               </button>
             </li>
@@ -151,7 +157,7 @@ export function DocumentsPage() {
 
       {active && activeBlob && activeBlob.id === active.id && activeBlob.blob ? (
         <div className="preview-panel">
-          <h2>Preview — {active.name}</h2>
+          <h3>Preview — {active.name}</h3>
           <PdfPreview blob={activeBlob.blob} onPageCount={(n) => void docs.updatePageCount(active.id, n)} />
         </div>
       ) : null}

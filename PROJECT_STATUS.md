@@ -2,9 +2,18 @@
 
 ## Current status
 
-**v0.1.0 released (all 56 tasks complete).**  
-Phase 6 hardening delivered: evaluation/adapter/storage/stop-budget test coverage verified, Playwright browser smoke (4 specs against the production build), axe-core accessibility gate, security audit tests (app-shell-only SW whitelist, key non-persistence, backup secret rejection), and docs/code reconciliation (README status, ARCHITECTURE modules, TESTING additions). 221 unit/integration tests + 4 e2e specs passing; lint/typecheck/build green.  
-Date: 2026-08-15
+**v0.1.0 released (all 56 tasks complete). Phase 7 (UI/UX Redesign, ROADMAP.md) implementation
+and QA complete — closure pending review of the redesign report.**  
+Phase 6 hardening delivered: evaluation/adapter/storage/stop-budget test coverage verified, Playwright browser smoke (4 specs against the production build), axe-core accessibility gate, security audit tests (app-shell-only SW whitelist, key non-persistence, backup secret rejection), and docs/code reconciliation (README status, ARCHITECTURE modules, TESTING additions).
+
+Phase 7 replaced the v0.1.0 entity-first sidebar with a task-oriented IA (Home/New Benchmark/
+Runs & Results/Compare/Library/Settings), a guided 6-step benchmark wizard, a user-facing
+terminology sweep, a persisted default run-count setting, and inline feedback states across
+upload/save/validate/connect/run/stop/import/export flows — see ROADMAP.md Phase 7 and
+DESIGN.md for details. Lint/typecheck/build green; 261 unit/integration tests passing; 5/5 e2e
+specs passing (production build, real Chromium); axe-core gate expanded to 6 routes; real
+browser screenshots taken at 375/768/1280px.  
+Date: 2026-08-17
 
 ## Completed discovery
 
@@ -45,7 +54,16 @@ A single good extraction is not enough evidence.
 
 ## Pending work
 
-All tasks in `TASK.md` are done. Post-release follow-ups: push to GitHub and enable Pages, real-provider Golden PO validation run, canonical-image cross-provider comparison, interrupted-suite resume.
+All v0.1.0 tasks in `TASK.md` are done. Phase 7 (UI/UX Redesign) implementation, QA gates,
+browser QA (desktop/tablet/mobile), and expanded accessibility coverage are complete — see
+ROADMAP.md Phase 7. Remaining before Phase 7 formally closes: user review/sign-off of the
+redesign report, and — noted as deliberate scope decisions rather than open work — inline
+in-wizard resource creation (B.2, skipped by design) and a unified provider Connect+Test button
+(kept as two separate actions; see ROADMAP.md Phase 7 for the reasoning).
+
+Post-release follow-ups deferred until Phase 7 closes: push to GitHub and enable Pages,
+real-provider Golden PO validation run, canonical-image cross-provider comparison,
+interrupted-suite resume, Agentic Workflow, ERP integration.
 
 ## Risks
 

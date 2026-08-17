@@ -37,6 +37,7 @@ describe("IdpDatabase CRUD", () => {
       id: "app",
       defaultConcurrency: 1,
       defaultInputMode: "native_pdf",
+      defaultRunCount: 5,
       theme: "system",
       showSecretsWarning: true,
       updatedAt: "2026-08-15T00:00:00.000Z",

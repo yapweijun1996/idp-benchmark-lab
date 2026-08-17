@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { RepeatedBenchmarkSection, type BenchmarkSelection } from "./RepeatedBenchmarkSection";
+import { saveAppSettings } from "../storage/settings";
 import type { BenchmarkRun } from "../storage/types";
 
 const selection: BenchmarkSelection = {
@@ -24,6 +25,24 @@ function run(n: number, state: BenchmarkRun["state"], extra: Partial<BenchmarkRu
 }
 
 describe("RepeatedBenchmarkSection", () => {
+  afterEach(async () => {
+    await saveAppSettings({ defaultRunCount: 5 });
+  });
+
+  it("preselects the run count saved in settings", async () => {
+    await saveAppSettings({ defaultRunCount: 20 });
+    render(<RepeatedBenchmarkSection selection={selection} />);
+    await vi.waitFor(() => expect(screen.getByRole("radio", { name: "20" })).toBeChecked());
+  });
+
+  it("keeps a manual run-count pick even if settings resolve afterwards", async () => {
+    await saveAppSettings({ defaultRunCount: 20 });
+    render(<RepeatedBenchmarkSection selection={selection} />);
+    fireEvent.click(screen.getByRole("radio", { name: "10" }));
+    await vi.waitFor(() => expect(screen.getByRole("radio", { name: "10" })).toBeChecked());
+    expect(screen.getByRole("radio", { name: "20" })).not.toBeChecked();
+  });
+
   it("renders run-count presets, concurrency, budget, and stop", () => {
     render(<RepeatedBenchmarkSection selection={selection} />);
     expect(screen.getByRole("radio", { name: "5" })).toBeInTheDocument();
@@ -69,6 +88,36 @@ describe("RepeatedBenchmarkSection", () => {
     expect(screen.getAllByText(/4 succeeded/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/1 provider errors/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/80.0%/).length).toBeGreaterThan(0); // exact pass 4/5
+  });
+
+  it("shows the manual stop reason once the run settles", async () => {
+    const factory = (onRunComplete: (r: BenchmarkRun) => void) => ({
+      requestStop: vi.fn(),
+      run: vi.fn(async () => {
+        onRunComplete(run(1, "succeeded", { exactMatch: true, schemaValid: true, outputHash: "h1" }));
+        return { id: "s-1", status: "stopped", stopReason: "Stopped manually by the user." } as never;
+      }),
+    });
+    render(<RepeatedBenchmarkSection selection={selection} benchmarkFactory={factory} />);
+    fireEvent.click(screen.getByRole("button", { name: /start benchmark/i }));
+    expect(await screen.findByText(/stopped manually by the user/i)).toBeInTheDocument();
+  });
+
+  it("shows the budget-cap stop reason once the run settles", async () => {
+    const factory = (onRunComplete: (r: BenchmarkRun) => void) => ({
+      requestStop: vi.fn(),
+      run: vi.fn(async () => {
+        onRunComplete(run(1, "succeeded", { exactMatch: true, schemaValid: true, outputHash: "h1" }));
+        return {
+          id: "s-1",
+          status: "budget_stopped",
+          stopReason: "Budget cap 2.5 USD: confirmed spend 2.000000 USD, next run estimated at 1.000000 USD...",
+        } as never;
+      }),
+    });
+    render(<RepeatedBenchmarkSection selection={selection} benchmarkFactory={factory} />);
+    fireEvent.click(screen.getByRole("button", { name: /start benchmark/i }));
+    expect(await screen.findByText(/budget cap 2\.5 usd/i)).toBeInTheDocument();
   });
 
   it("stop requests the runner to stop", async () => {

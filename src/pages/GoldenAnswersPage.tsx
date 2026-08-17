@@ -22,6 +22,7 @@ export function GoldenAnswersPage() {
   const [profileId, setProfileId] = useState("");
   const [jsonText, setJsonText] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const profile = profiles.profiles.find((p) => p.id === profileId);
   const activeDocument = documents.documents.find((d) => d.id === documentId);
@@ -46,15 +47,17 @@ export function GoldenAnswersPage() {
     setProfileId(golden.profileId);
     setJsonText(JSON.stringify(golden.json, null, 2));
     setFormError(null);
+    setSaved(false);
   };
 
   const save = async () => {
+    setSaved(false);
     if (!documentId) {
       setFormError("Select a document first.");
       return;
     }
     if (!profileId) {
-      setFormError("Select an extraction profile first.");
+      setFormError("Select an extraction template first.");
       return;
     }
     const parsed = parseJson(jsonText);
@@ -74,6 +77,7 @@ export function GoldenAnswersPage() {
         await goldens.create({ documentId, profileId, json: parsed.value });
       }
       setFormError(null);
+      setSaved(true);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : String(e));
     }
@@ -81,8 +85,8 @@ export function GoldenAnswersPage() {
 
   return (
     <section aria-labelledby="golden-title">
-      <h1 id="golden-title">Golden Answers</h1>
-      <p>The expected correct JSON. Every save is validated against the active profile schema and versioned; nothing is auto-rewritten.</p>
+      <h2 id="golden-title">Expected Results</h2>
+      <p>The expected correct JSON. Every save is validated against the active template's schema and versioned; nothing is auto-rewritten.</p>
 
       <div className="golden-grid">
         <div className="profile-form">
@@ -99,9 +103,9 @@ export function GoldenAnswersPage() {
           </label>
 
           <label className="field">
-            <span>Extraction profile</span>
+            <span>Extraction template</span>
             <select value={profileId} onChange={(e) => setProfileId(e.target.value)}>
-              <option value="">— select profile —</option>
+              <option value="">— select template —</option>
               {profiles.profiles.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} (v{p.version})
@@ -111,24 +115,33 @@ export function GoldenAnswersPage() {
           </label>
 
           <label className="field">
-            <span>Golden JSON</span>
+            <span>Expected Result JSON</span>
             <textarea
               rows={14}
               className="mono-input"
               value={jsonText}
-              onChange={(e) => setJsonText(e.target.value)}
+              onChange={(e) => {
+                setJsonText(e.target.value);
+                setSaved(false);
+              }}
             />
           </label>
 
           {validation ? (
             <p className={validation.valid ? "schema-ok" : "schema-bad"} role="status">
-              {validation.valid ? "Valid against profile schema" : `Schema errors: ${validation.errors[0] ?? "invalid"}`}
+              {validation.valid ? "Valid against template schema" : `Schema errors: ${validation.errors[0] ?? "invalid"}`}
             </p>
           ) : (
-            <p className="schema-bad" role="status">
-              Select a profile to validate against its schema.
+            <p className="doc-card__meta" role="status">
+              Select a template to validate against its schema.
             </p>
           )}
+
+          {saved && !formError ? (
+            <p role="status" className="schema-ok">
+              ✓ Expected Result is valid and saved
+            </p>
+          ) : null}
 
           {formError ? (
             <p role="alert" className="status-error">
@@ -138,7 +151,7 @@ export function GoldenAnswersPage() {
 
           <div className="toolbar">
             <button type="button" className="btn btn--primary" onClick={() => void save()}>
-              {goldens.activeId ? "Save new version" : "Save Golden Answer"}
+              {goldens.activeId ? "Save new version" : "Save Expected Result"}
             </button>
           </div>
         </div>
@@ -146,7 +159,7 @@ export function GoldenAnswersPage() {
         <div>
           {activeDocument ? (
             <div className="preview-panel">
-              <h2>Preview — {activeDocument.name}</h2>
+              <h3>Preview — {activeDocument.name}</h3>
               <DocumentPreview documentId={activeDocument.id} />
             </div>
           ) : (
@@ -156,17 +169,20 @@ export function GoldenAnswersPage() {
       </div>
 
       {goldens.goldens.length === 0 ? (
-        <p className="empty-state">No Golden Answers yet.</p>
+        <p className="empty-state">
+          No Expected Results yet. An Expected Result is the correct extracted JSON for a document — save one above
+          so benchmarks can score accuracy against it.
+        </p>
       ) : (
         <ul className="doc-list">
           {goldens.goldens.map((g) => (
             <li key={g.id} className="doc-card">
               <button type="button" className="doc-card__main" onClick={() => startEdit(g.id)}>
                 <span className="doc-card__name">
-                  Golden <span className="chip chip--todo">v{g.version}</span>
+                  Expected Result <span className="chip chip--todo">v{g.version}</span>
                 </span>
                 <span className="doc-card__meta">
-                  profile {g.profileId.slice(0, 8)}… · document {g.documentId.slice(0, 8)}… · sha {g.sha256.slice(0, 10)}…
+                  template {g.profileId.slice(0, 8)}… · document {g.documentId.slice(0, 8)}… · sha {g.sha256.slice(0, 10)}…
                 </span>
               </button>
               <button type="button" onClick={() => startEdit(g.id)}>

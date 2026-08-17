@@ -20,13 +20,13 @@ export function checkModeSupport(
   if (mode === "native_pdf" && !capabilities.nativePdf) {
     return {
       supported: false,
-      reason: config.kind + " 适配器不支持原生 PDF 输入，请改用 Canonical Images 模式。",
+      reason: config.kind + " does not support native PDF input — choose \"Render pages as images\" instead.",
     };
   }
   if (mode === "canonical_images" && !capabilities.imageInput) {
     return {
       supported: false,
-      reason: config.kind + " 已配置为不支持图像输入，请改用 Native PDF 模式或调整其能力配置。",
+      reason: config.kind + " is configured without image-input support — choose \"Send original PDF\" instead, or update its capabilities.",
     };
   }
   return { supported: true };

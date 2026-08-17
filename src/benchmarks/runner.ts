@@ -203,9 +203,9 @@ export class BenchmarkRunner {
       const projected = knownCost + lastRunCost;
       if (projected > config.maxBudgetUsd) {
         budgetStopReason =
-          `预算上限 ${config.maxBudgetUsd} USD：已确认花费 ${knownCost.toFixed(6)} USD，` +
-          `按最近一次运行成本预估下一运行 ${lastRunCost.toFixed(6)} USD，` +
-          `预计总花费 ${projected.toFixed(6)} USD 将超过上限，已停止启动新运行。`;
+          `Budget cap ${config.maxBudgetUsd} USD: confirmed spend ${knownCost.toFixed(6)} USD, ` +
+          `next run estimated at ${lastRunCost.toFixed(6)} USD based on the most recent run, ` +
+          `projected total ${projected.toFixed(6)} USD would exceed the cap — stopped starting new runs.`;
         return true;
       }
       return false;
@@ -248,7 +248,7 @@ export class BenchmarkRunner {
       ...suite,
       status,
       costUsdKnown: knownCost > 0 ? knownCost : undefined,
-      stopReason: budgetStopReason ?? (this.stopRequested && attempted < config.requestedRuns ? "用户手动停止。" : undefined),
+      stopReason: budgetStopReason ?? (this.stopRequested && attempted < config.requestedRuns ? "Stopped manually by the user." : undefined),
       finishedAt: new Date().toISOString(),
     };
     await db.benchmarkSuites.put(finalSuite);

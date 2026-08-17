@@ -4,7 +4,12 @@ import { clearAllKeys, clearApiKey, getApiKey, isKeyRememberedForTab, setApiKey 
 beforeEach(() => {
   clearAllKeys();
   window.sessionStorage.clear();
-  window.localStorage.clear();
+  // Optional chaining, not a plain call: some Node versions expose a built-in
+  // global `localStorage` that shadows jsdom's window.localStorage and lacks
+  // `.clear()` (see keys.test.ts "never writes to localStorage" for why this
+  // doesn't hide a real bug — the source module never touches localStorage
+  // at all). Real browsers always implement `.clear()`.
+  window.localStorage.clear?.();
 });
 
 describe("BYOK key store", () => {
@@ -43,7 +48,8 @@ describe("BYOK key store", () => {
 
   it("never writes to localStorage", () => {
     setApiKey("cfg-1", "sk-x", { rememberForTab: true });
-    expect(window.localStorage.length).toBe(0);
+    // Object.keys works reliably across environments; `.length` does not —
+    // see the beforeEach comment above for why.
     expect(Object.keys(window.localStorage)).toHaveLength(0);
   });
 });

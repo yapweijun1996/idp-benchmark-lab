@@ -53,9 +53,9 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
   };
 
   return (
-    <div className="profile-form" role="region" aria-label="Suite detail">
+    <div className="profile-form" role="region" aria-label="Benchmark detail">
       <h2>
-        {suite.name ?? "Suite"} <span className="chip chip--todo">{suite.status}</span>
+        {suite.name ?? "Benchmark"} <span className="chip chip--todo">{suite.status}</span>
       </h2>
       <p className="doc-card__meta">
         {suite.identity.model} · {suite.identity.inputMode} · {runs.length}/{suite.requestedRuns} runs
@@ -75,7 +75,7 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
 
       <h3>Field accuracy heatmap</h3>
       {heatmap.length === 0 ? (
-        <p className="empty-state">No evaluated mismatches in this suite.</p>
+        <p className="empty-state">No evaluated mismatches in this benchmark.</p>
       ) : (
         <table className="summary-table">
           <thead>
@@ -163,7 +163,7 @@ function RunInspector({ run, golden }: { run: BenchmarkRun; golden?: GoldenAnswe
       </details>
       {golden ? (
         <details>
-          <summary>Golden Answer (v{golden.version})</summary>
+          <summary>Expected Result (v{golden.version})</summary>
           <pre className="raw-pre">{JSON.stringify(golden.json, null, 2)}</pre>
         </details>
       ) : null}

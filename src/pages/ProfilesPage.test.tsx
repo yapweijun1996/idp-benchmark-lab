@@ -49,8 +49,8 @@ describe("ProfilesPage", () => {
   it("renders empty state with a create button", () => {
     useProfilesMock.mockReturnValue(emptyResult());
     render(<ProfilesPage />);
-    expect(screen.getByText(/no profiles yet/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /new profile/i })).toBeInTheDocument();
+    expect(screen.getByText(/no extraction templates yet/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /new template/i })).toBeInTheDocument();
   });
 
   it("lists profiles with version and hashes", () => {
@@ -65,21 +65,22 @@ describe("ProfilesPage", () => {
     const create = vi.fn(() => Promise.resolve(profile));
     useProfilesMock.mockReturnValue({ ...emptyResult(), create });
     render(<ProfilesPage />);
-    fireEvent.click(screen.getByRole("button", { name: /new profile/i }));
+    fireEvent.click(screen.getByRole("button", { name: /new template/i }));
 
     fireEvent.change(screen.getByLabelText(/^name$/i), { target: { value: "PO v2" } });
     fireEvent.change(screen.getByLabelText(/json schema/i), {
       target: { value: '{"type":"object","properties":{"a":{"type":"string"}}}' },
     });
 
-    screen.getByRole("button", { name: /create profile/i }).click();
+    screen.getByRole("button", { name: /create template/i }).click();
     await vi.waitFor(() => expect(create).toHaveBeenCalled());
+    expect(await screen.findByText(/✓ extraction template saved as version 1/i)).toBeInTheDocument();
   });
 
   it("shows schema validation status while editing", () => {
     useProfilesMock.mockReturnValue(emptyResult());
     render(<ProfilesPage />);
-    fireEvent.click(screen.getByRole("button", { name: /new profile/i }));
+    fireEvent.click(screen.getByRole("button", { name: /new template/i }));
     // 空 schema 文本 → 解析失败状态
     expect(screen.getByRole("status").textContent).toMatch(/schema/i);
   });

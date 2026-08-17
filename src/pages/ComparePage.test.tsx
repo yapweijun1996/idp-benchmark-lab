@@ -86,4 +86,44 @@ describe("ComparePage", () => {
     expect(screen.getAllByText("100.0%").length).toBeGreaterThan(0);
     expect(screen.getAllByText("0.0%").length).toBeGreaterThan(0);
   });
+
+  it("does not warn when selected suites share the same document, prompt, and schema", () => {
+    render(<ComparePage runsLoader={loader} />);
+    const boxes = screen.getAllByRole("checkbox");
+    fireEvent.click(boxes[0]!);
+    fireEvent.click(boxes[1]!);
+    expect(screen.queryByText(/differ in/i)).not.toBeInTheDocument();
+  });
+
+  it("warns without blocking when selected suites differ in benchmark identity", () => {
+    const suiteC: BenchmarkSuite = {
+      ...suiteA,
+      id: "s-c",
+      name: "Bench C",
+      identity: { ...suiteA.identity, documentSha256: "different-doc" },
+    };
+    useRunHistoryMock.mockReturnValue({
+      suites: [suiteA, suiteC],
+      loading: false,
+      refresh: vi.fn(() => Promise.resolve()),
+    });
+    render(<ComparePage runsLoader={loader} />);
+    const boxes = screen.getAllByRole("checkbox");
+    fireEvent.click(boxes[0]!);
+    fireEvent.click(boxes[1]!);
+    expect(screen.getByText(/differ in documentSha256/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /compare selected/i })).toBeEnabled();
+  });
+
+  it("shows a guided empty state with fewer than two suites", () => {
+    useRunHistoryMock.mockReturnValue({
+      suites: [suiteA],
+      loading: false,
+      refresh: vi.fn(() => Promise.resolve()),
+    });
+    render(<ComparePage />);
+    expect(screen.getByText(/nothing to compare yet/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /run a benchmark/i })).toHaveAttribute("href", "#/new-benchmark");
+    expect(screen.queryByRole("button", { name: /compare selected/i })).not.toBeInTheDocument();
+  });
 });

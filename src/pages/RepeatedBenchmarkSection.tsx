@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from "react";
-import { BenchmarkRunner, RUN_PRESETS } from "../benchmarks/runner";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { BenchmarkRunner, RUN_PRESETS, type RunPreset } from "../benchmarks/runner";
 import { RunFailure } from "../benchmarks/execute";
 import { summarizeSuite, type SuiteSummary } from "../benchmarks/summary";
+import { getAppSettings } from "../storage/settings";
 import type { BenchmarkRun, BenchmarkSuite, InputMode } from "../storage/types";
 
 export interface BenchmarkSelection {
@@ -37,7 +38,7 @@ export function RepeatedBenchmarkSection({
   /** 由父级能力门禁计算：非空时禁止启动基准并展示原因。 */
   unsupportedReason?: string;
 }) {
-  const [preset, setPreset] = useState<number>(5);
+  const [preset, setPresetState] = useState<number>(5);
   const [concurrency, setConcurrency] = useState("1");
   const [budget, setBudget] = useState("");
   const [running, setRunning] = useState(false);
@@ -47,6 +48,22 @@ export function RepeatedBenchmarkSection({
   const [error, setError] = useState<string | null>(null);
   const runnerRef = useRef<{ requestStop: () => void } | null>(null);
   const collectedRunsRef = useRef<BenchmarkRun[]>([]);
+  const presetTouchedRef = useRef(false);
+
+  const setPreset = useCallback((n: number) => {
+    presetTouchedRef.current = true;
+    setPresetState(n);
+  }, []);
+
+  useEffect(() => {
+    void getAppSettings()
+      .then((s) => {
+        if (!presetTouchedRef.current && RUN_PRESETS.includes(s.defaultRunCount as RunPreset)) {
+          setPresetState(s.defaultRunCount);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   const start = useCallback(async () => {
     setSuite(null);
@@ -57,7 +74,7 @@ export function RepeatedBenchmarkSection({
       return;
     }
     if (unsupportedReason) {
-      setError("配置不兼容：" + unsupportedReason);
+      setError("Incompatible configuration: " + unsupportedReason);
       return;
     }
     collectedRunsRef.current = [];
@@ -146,7 +163,7 @@ export function RepeatedBenchmarkSection({
 
       {unsupportedReason ? (
         <p role="status" className="schema-bad">
-          配置不兼容：{unsupportedReason}
+          Incompatible configuration: {unsupportedReason}
         </p>
       ) : null}
 
@@ -173,11 +190,19 @@ export function RepeatedBenchmarkSection({
       {progress ? (
         <div role="status" className="progress-panel">
           <p>
-            Progress: {progress.completed}/{progress.total} completed · {progress.succeeded} succeeded ·{" "}
+            {running ? "Running: " : ""}
+            {progress.completed} of {progress.total} runs completed · {progress.succeeded} succeeded ·{" "}
             {progress.schemaInvalid} schema-invalid · {progress.failed} failed
           </p>
           <progress max={progress.total} value={progress.completed} aria-label="Benchmark progress" />
         </div>
+      ) : null}
+
+      {!running && suite?.stopReason ? (
+        <p role="status" className={suite.status === "budget_stopped" ? "schema-bad" : "schema-ok"}>
+          {suite.status === "budget_stopped" ? "⚠ " : "⏹ "}
+          {suite.stopReason}
+        </p>
       ) : null}
 
       {summary ? <SummaryPanel summary={summary} suite={suite} /> : null}
@@ -217,7 +242,7 @@ function SummaryPanel({ summary, suite }: { summary: SuiteSummary; suite: Benchm
             <td>{summary.uniqueVariants}</td>
           </tr>
           <tr>
-            <th>Golden stability</th>
+            <th>Expected Result stability</th>
             <td>{pct(summary.goldenStability)}</td>
             <th>Error rate</th>
             <td>{pct(summary.errorRate)}</td>

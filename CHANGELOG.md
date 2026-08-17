@@ -122,3 +122,36 @@ Implementation status: not started.
 - Fixed PDF preview crash: pdfjs-dist v6 rejects Blob inputs (ArrayBuffer/TypedArray only), which surfaced as a full React tree unmount. `usePdfDocument` and the canonical rendering path now convert Blobs to ArrayBuffers first, with cancellation guards.
 - Browser smoke now proves the real PDF path: a minimal PDF fixture is uploaded, previewed to a rendered canvas, and the page count is written back.
 - 221 unit/integration tests + 5 e2e specs passing; lint, typecheck, build green.
+
+## 2026-08-17 — Phase 7 UI/UX Redesign (Home/New Benchmark/Runs & Results/Compare/Library/Settings)
+
+- Replaced the v0.1.0 entity-first sidebar (Dashboard/Documents/Extraction Profiles/Golden
+  Answers/Providers/Benchmarks/Compare/Settings) with a 6-item task-oriented nav (Home/New
+  Benchmark/Runs & Results/Compare/Library/Settings); old routes redirect via
+  `LEGACY_REDIRECTS` in `src/app/routes.ts` so existing bookmarks keep working.
+- New guided 6-step benchmark wizard (`NewBenchmarkWizard.tsx`): Document → What to Extract →
+  Expected Result → Choose AI → Run Settings → Review & Run, with per-step readiness gating,
+  a Quick Test / Benchmark run-type choice, and capability-gate warnings for incompatible
+  provider/mode combinations.
+- Library page: Documents/Extraction Templates/Expected Results as tabs over the existing
+  per-entity pages, with an Empty State Standard (what it is / why you'd use it / next step +
+  CTA) applied throughout.
+- Settings hub restructured into AI Providers/General/Storage/Backup & Restore/Privacy &
+  Security/About tabs; General gained a persisted default input mode and default run count
+  (`defaultRunCount` on `AppSettings`, 5/10/20/50/100, read by the wizard's benchmark step).
+- Home and Compare rewritten with first-time-user onboarding and empty/gating states instead of
+  showing an empty dashboard or table.
+- User-facing terminology sweep: Golden Answer → Expected Result, Extraction Profile →
+  Extraction Template, Suite → Benchmark (display copy only — `BenchmarkSuite`/`ExtractionProfile`
+  type and table names deliberately unchanged), IndexedDB/sessionStorage jargon replaced with
+  plain language in action labels ("Save on this device", "Keep until this tab closes").
+- Inline feedback states added across Document upload/delete, Extraction Template save,
+  Expected Result validate/save, Quick Test run/failure, Benchmark progress/manual-stop/
+  budget-stop, and Backup export/import — fixed two real bugs found along the way: an
+  invalid-PDF upload was an unhandled promise rejection with zero user feedback, and the
+  Backup & Restore success message was unconditionally styled as an error.
+- Expanded the accessibility gate (`src/App.a11y.test.tsx`) to cover Runs & Results, Compare,
+  Library, and Settings routes in addition to the shell and wizard; this caught and fixed a real
+  bug — the Documents PDF upload `<input type="file">` had no accessible name (axe: "Form
+  elements must have labels").
+- 261 unit/integration tests + 5 e2e specs passing; lint, typecheck, build green.

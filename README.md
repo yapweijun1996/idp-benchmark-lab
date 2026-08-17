@@ -4,8 +4,8 @@ A static, BYOK (Bring Your Own Key) PWA demo/spike for benchmarking Intelligent 
 
 ## Project status
 
-**Status:** Phases 1-5 complete (PWA foundation, single-run extraction, benchmark harness, evaluation dashboard, compare & portability); Phase 6 hardening in progress.  
-**Date:** 2026-08-15  
+**Status:** v0.1.0 released — Phases 1-6 complete (PWA foundation, single-run extraction, benchmark harness, evaluation dashboard, compare & portability, hardening/release). Phase 7 (UI/UX Redesign — task-oriented navigation, guided benchmark wizard, terminology cleanup; see ROADMAP.md) in progress.  
+**Date:** 2026-08-17  
 **Repository:** `idp-benchmark-lab`
 
 All MVP functional requirements (FR-001..FR-020) are implemented and covered by unit, integration, accessibility, security-audit, and browser-smoke tests. The repository code, tests, and provider adapters are the source of truth; documentation is updated in the same change whenever behavior changes.

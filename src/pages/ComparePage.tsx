@@ -53,28 +53,56 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
     }
   };
 
+  if (history.suites.length < 2) {
+    return (
+      <section aria-labelledby="compare-title">
+        <h1 id="compare-title">Compare</h1>
+        <div className="profile-form">
+          <h2>Nothing to compare yet</h2>
+          <p className="empty-state">
+            Run at least two compatible benchmarks to compare models, providers, prompts, or input modes.
+          </p>
+          <div className="toolbar">
+            <a href="#/new-benchmark" className="btn btn--primary">
+              Run a benchmark
+            </a>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const selectedSuites = history.suites.filter((s) => selected.has(s.id));
+  const identityKeys = ["documentSha256", "promptSha256", "schemaSha256"] as const;
+  const mismatchedKeys = identityKeys.filter(
+    (key) => new Set(selectedSuites.map((s) => s.identity[key])).size > 1,
+  );
+
   return (
     <section aria-labelledby="compare-title">
       <h1 id="compare-title">Compare</h1>
-      <p>Select suites to compare side by side. Only the same benchmark identity inputs make stability claims comparable.</p>
+      <p>Select benchmarks to compare side by side. Only the same test configuration makes stability claims comparable.</p>
 
-      {history.suites.length === 0 ? (
-        <p className="empty-state">No suites yet. Run benchmarks first.</p>
-      ) : (
-        <ul className="doc-list">
-          {history.suites.map((s) => (
-            <li key={s.id} className="doc-card">
-              <label className="checkbox">
-                <input type="checkbox" checked={selected.has(s.id)} onChange={() => toggle(s.id)} />
-                <span className="doc-card__name">{s.name ?? s.id.slice(0, 8)}</span>
-              </label>
-              <span className="doc-card__meta">
-                {s.identity.model} · {s.identity.inputMode} · {s.status}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="doc-list">
+        {history.suites.map((s) => (
+          <li key={s.id} className="doc-card">
+            <label className="checkbox">
+              <input type="checkbox" checked={selected.has(s.id)} onChange={() => toggle(s.id)} />
+              <span className="doc-card__name">{s.name ?? s.id.slice(0, 8)}</span>
+            </label>
+            <span className="doc-card__meta">
+              {s.identity.model} · {s.identity.inputMode} · {s.status}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      {mismatchedKeys.length > 0 ? (
+        <p role="status" className="schema-bad">
+          Selected benchmarks differ in {mismatchedKeys.join(", ")} — stability claims across them are not directly
+          comparable, but you can still view the numbers side by side.
+        </p>
+      ) : null}
 
       {error ? (
         <p role="alert" className="status-error">
@@ -87,7 +115,7 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
           type="button"
           className="btn btn--primary"
           onClick={() => void compare()}
-          disabled={selected.size === 0}
+          disabled={selected.size < 2}
         >
           Compare selected
         </button>

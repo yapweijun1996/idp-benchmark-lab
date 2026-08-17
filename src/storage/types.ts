@@ -158,6 +158,7 @@ export type AppSettings = {
   defaultProviderId?: string;
   defaultConcurrency: number;
   defaultInputMode: InputMode;
+  defaultRunCount: number;
   theme: "light" | "dark" | "system";
   showSecretsWarning: boolean;
   updatedAt: string;

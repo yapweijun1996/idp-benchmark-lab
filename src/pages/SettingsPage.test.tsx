@@ -23,7 +23,11 @@ describe("SettingsPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /export project backup/i }));
     await vi.waitFor(() => expect(vi.mocked(downloadText)).toHaveBeenCalled());
     expect(vi.mocked(downloadText).mock.calls[0]?.[0]).toMatch(/backup-.*\.json/);
-    expect(screen.getByText(/never api keys/i)).toBeInTheDocument();
+    const confirmation = screen.getByText(/never api keys/i);
+    expect(confirmation).toBeInTheDocument();
+    // 成功消息不能用错误样式渲染 (role=status, not role=alert / status-error)
+    expect(confirmation).toHaveAttribute("role", "status");
+    expect(confirmation.className).not.toBe("status-error");
   });
 
   it("imports a validated backup file", async () => {
@@ -41,6 +45,7 @@ describe("SettingsPage", () => {
     const file = new File(['{"x":1}'], "bad.json", { type: "application/json" });
     const input = document.getElementById("backup-import") as HTMLInputElement;
     fireEvent.change(input, { target: { files: [file] } });
-    await vi.waitFor(() => expect(screen.getByText(/import rejected \(secret_found\)/i)).toBeInTheDocument());
+    const rejection = await screen.findByText(/import rejected \(secret_found\)/i);
+    expect(rejection).toHaveAttribute("role", "alert");
   });
 });

@@ -23,7 +23,7 @@ export function ProvidersPage() {
 
   return (
     <section aria-labelledby="providers-title">
-      <h1 id="providers-title">Providers</h1>
+      <h2 id="providers-title">AI Providers</h2>
       <p className="warning-banner">
         This static PWA sends requests directly from your browser to the selected provider. Your BYOK API key is
         available to your browser runtime. Use a limited/test key where possible and do not use a high-privilege
@@ -102,7 +102,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
       } else {
         clearApiKey(saved.id);
       }
-      setMessage("Saved. The API key stays in this browser tab only" + (remember ? " (session storage)" : " (memory)") + ".");
+      setMessage("Saved. The API key stays in this browser tab only" + (remember ? " (kept until this tab closes)" : " (memory only)") + ".");
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
     }
@@ -151,7 +151,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
 
   return (
     <article className="profile-form provider-card">
-      <h2>{kind === "openai" ? "OpenAI" : kind === "gemini" ? "Gemini" : "Custom OpenAI-compatible"}</h2>
+      <h3>{kind === "openai" ? "OpenAI" : kind === "gemini" ? "Gemini" : "Custom OpenAI-compatible"}</h3>
 
       <label className="field">
         <span>Model</span>
@@ -185,7 +185,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         </span>
         <label className="checkbox">
           <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-          Remember for this tab (sessionStorage opt-in)
+          Keep until this tab closes
         </label>
       </label>
 
@@ -206,7 +206,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         {caps.structuredOutput ? "yes" : "no"} · usage {caps.tokenUsage ? "yes" : "no"}
       </p>
       {!caps.nativePdf ? (
-        <p className="schema-bad">该适配器不支持原生 PDF 输入：基准请选择 Canonical Images 模式。</p>
+        <p className="schema-bad">This adapter doesn't support native PDF input — for benchmarks, choose "Render pages as images" instead.</p>
       ) : null}
 
       <div className="toolbar">

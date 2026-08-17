@@ -254,9 +254,9 @@ describe("Hard budget cap", () => {
     expect(runs).toHaveLength(2); // 2 * $1 = $2 ≤ 2.5；第三次预估 $1 会超
     expect(suite.costUsdKnown).toBeCloseTo(2, 9);
     // 停止原因对用户透明：含上限、已确认花费与预估
-    expect(suite.stopReason).toMatch(/预算上限 2.5 USD/);
-    expect(suite.stopReason).toMatch(/已确认花费 2.000000 USD/);
-    expect(suite.stopReason).toMatch(/1.000000 USD/);
+    expect(suite.stopReason).toMatch(/budget cap 2\.5 usd/i);
+    expect(suite.stopReason).toMatch(/confirmed spend 2\.000000 usd/i);
+    expect(suite.stopReason).toMatch(/1\.000000 usd/i);
   });
 
   it("keeps running when cost is unknown", async () => {

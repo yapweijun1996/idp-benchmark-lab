@@ -108,15 +108,15 @@ describe("GoldenAnswersPage", () => {
   it("renders selectors and the empty list state", () => {
     render(<GoldenAnswersPage />);
     expect(screen.getByLabelText(/document/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/extraction profile/i)).toBeInTheDocument();
-    expect(screen.getByText(/no golden answers yet/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/extraction template/i)).toBeInTheDocument();
+    expect(screen.getByText(/no expected results yet/i)).toBeInTheDocument();
   });
 
-  it("validates the JSON against the selected profile schema", () => {
+  it("validates the JSON against the selected template's schema", () => {
     render(<GoldenAnswersPage />);
     fireEvent.change(screen.getByLabelText(/document/i), { target: { value: "doc-1" } });
-    fireEvent.change(screen.getByLabelText(/extraction profile/i), { target: { value: "p-1" } });
-    fireEvent.change(screen.getByLabelText(/golden json/i), {
+    fireEvent.change(screen.getByLabelText(/extraction template/i), { target: { value: "p-1" } });
+    fireEvent.change(screen.getByLabelText(/expected result json/i), {
       target: { value: '{"document_number":42}' },
     });
     expect(screen.getByRole("status").textContent).toMatch(/schema errors/i);
@@ -127,12 +127,13 @@ describe("GoldenAnswersPage", () => {
     useGoldensMock.mockReturnValue({ ...emptyGoldens(), create });
     render(<GoldenAnswersPage />);
     fireEvent.change(screen.getByLabelText(/document/i), { target: { value: "doc-1" } });
-    fireEvent.change(screen.getByLabelText(/extraction profile/i), { target: { value: "p-1" } });
-    fireEvent.change(screen.getByLabelText(/golden json/i), {
+    fireEvent.change(screen.getByLabelText(/extraction template/i), { target: { value: "p-1" } });
+    fireEvent.change(screen.getByLabelText(/expected result json/i), {
       target: { value: '{"document_number":"0004131999"}' },
     });
-    fireEvent.click(screen.getByRole("button", { name: /save golden answer/i }));
+    fireEvent.click(screen.getByRole("button", { name: /save expected result/i }));
     await vi.waitFor(() => expect(create).toHaveBeenCalled());
+    expect(await screen.findByText(/✓ expected result is valid and saved/i)).toBeInTheDocument();
     expect(create).toHaveBeenCalledWith({
       documentId: "doc-1",
       profileId: "p-1",

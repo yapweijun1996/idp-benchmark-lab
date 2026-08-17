@@ -26,7 +26,7 @@ describe("checkModeSupport", () => {
   it("rejects native PDF when the adapter lacks nativePdf", () => {
     const result = checkModeSupport(adapter, config, "native_pdf");
     expect(result.supported).toBe(false);
-    expect(result.reason).toMatch(/canonical images/i);
+    expect(result.reason).toMatch(/render pages as images/i);
   });
 
   it("accepts canonical images when imageInput is available", () => {
@@ -48,7 +48,7 @@ describe("checkModeSupport", () => {
     };
     const result = checkModeSupport(noImages, config, "canonical_images");
     expect(result.supported).toBe(false);
-    expect(result.reason).toMatch(/native pdf/i);
+    expect(result.reason).toMatch(/send original pdf/i);
   });
 
   it("accepts native PDF for nativePdf-capable adapters", () => {

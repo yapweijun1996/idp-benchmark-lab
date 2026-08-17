@@ -1,17 +1,15 @@
 import { useCallback, useState } from "react";
 import { Layout } from "./app/Layout";
 import { useHashRoute } from "./app/useHashRoute";
-import { BenchmarksPage } from "./pages/BenchmarksPage";
+import { NewBenchmarkWizard } from "./pages/NewBenchmarkWizard";
 import { ComparePage } from "./pages/ComparePage";
 import { DashboardPage } from "./pages/DashboardPage";
-import { DocumentsPage } from "./pages/DocumentsPage";
-import { GoldenAnswersPage } from "./pages/GoldenAnswersPage";
-import { ProfilesPage } from "./pages/ProfilesPage";
-import { ProvidersPage } from "./pages/ProvidersPage";
-import { SettingsPage } from "./pages/SettingsPage";
+import { LibraryPage } from "./pages/LibraryPage";
+import { RunsResultsPage } from "./pages/RunsResultsPage";
+import { SettingsHubPage } from "./pages/SettingsHubPage";
 
-// Every declared route maps to a real page; unknown hashes fall back to the
-// dashboard inside useHashRoute (no placeholder fallback exists anymore).
+// Every declared route maps to a real page; unknown hashes fall back to
+// home inside useHashRoute (no placeholder fallback exists anymore).
 export default function App() {
   const route = useHashRoute();
   const [navOpen, setNavOpen] = useState(false);
@@ -20,14 +18,12 @@ export default function App() {
 
   return (
     <Layout route={route} navOpen={navOpen} onToggleNav={toggleNav} onNavigate={closeNav}>
-      {route === "dashboard" ? <DashboardPage /> : null}
-      {route === "documents" ? <DocumentsPage /> : null}
-      {route === "profiles" ? <ProfilesPage /> : null}
-      {route === "golden" ? <GoldenAnswersPage /> : null}
-      {route === "providers" ? <ProvidersPage /> : null}
-      {route === "benchmarks" ? <BenchmarksPage /> : null}
+      {route === "home" ? <DashboardPage /> : null}
+      {route === "new-benchmark" ? <NewBenchmarkWizard /> : null}
+      {route === "runs" ? <RunsResultsPage /> : null}
       {route === "compare" ? <ComparePage /> : null}
-      {route === "settings" ? <SettingsPage /> : null}
+      {route === "library" ? <LibraryPage /> : null}
+      {route === "settings" ? <SettingsHubPage /> : null}
     </Layout>
   );
 }
