@@ -14,13 +14,13 @@ interface CardForm {
 }
 
 const DEFAULTS: Record<ProviderKind, CardForm> = {
-  openai: { model: "gpt-4o-mini", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
+  openai: { model: "gpt-5.4-mini", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
   gemini: { model: "gemini-3.5-flash-lite", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
   openai_compatible: { model: "local-model", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
 };
 
 const MODEL_OPTIONS: Record<ProviderKind, readonly string[]> = {
-  openai: ["gpt-4o-mini", "gpt-4o"],
+  openai: ["gpt-5.4-mini", "gpt-4o-mini", "gpt-4o"],
   gemini: ["gemini-3.5-flash-lite", "gemini-3-flash-lite", "gemini-3-pro"],
   openai_compatible: ["local-model"],
 };

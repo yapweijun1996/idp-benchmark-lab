@@ -48,10 +48,27 @@ describe("ProvidersPage", () => {
     render(<ProvidersPage />);
     const models = screen.getAllByRole("combobox", { name: /^model$/i });
     expect(models).toHaveLength(3);
-    expect(models[0]).toHaveValue("gpt-4o-mini");
+    expect(models[0]).toHaveValue("gpt-5.4-mini");
     expect(models[1]).toHaveValue("gemini-3.5-flash-lite");
     expect(models[2]).toHaveValue("local-model");
     expect(screen.getByLabelText(/base url/i)).toHaveValue("");
+  });
+
+  it("saves a custom OpenAI model name from the combobox", async () => {
+    const result = emptyResult();
+    useProviderConfigsMock.mockReturnValue(result);
+    render(<ProvidersPage />);
+
+    const models = screen.getAllByRole("combobox", { name: /^model$/i });
+    fireEvent.change(models[0]!, { target: { value: "my-openai-compatible-model" } });
+    fireEvent.click(screen.getAllByRole("button", { name: /save config/i })[0]!);
+
+    await vi.waitFor(() => {
+      expect(result.save).toHaveBeenCalledWith(expect.objectContaining({
+        kind: "openai",
+        model: "my-openai-compatible-model",
+      }));
+    });
   });
 
   it("saves a config and keeps the key in the tab only", async () => {
