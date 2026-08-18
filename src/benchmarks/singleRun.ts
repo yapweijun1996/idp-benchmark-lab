@@ -11,6 +11,8 @@ import type { NormalizedExtractionResponse } from "../providers/types";
 import type { CanonicalRenderSettings } from "../documents/canonicalRenderer";
 import { executeExtraction, normalizeFailure, RunFailure, type ExecuteDeps, type RunOutcome } from "./execute";
 import { DEFAULT_RENDER_SETTINGS } from "../documents/canonicalRenderer";
+import { sha256Hex } from "../documents/hash";
+import { canonicalJson } from "../evaluation/canonical";
 
 export { RunFailure };
 export type { ExecuteDeps, RunOutcome };
@@ -20,6 +22,10 @@ export interface SingleRunInput {
   profileId: string;
   providerConfigId: string;
   goldenId?: string;
+  /** Optional prompt draft for this run; the saved profile remains unchanged. */
+  promptOverride?: string;
+  /** Optional JSON schema draft for this run; the saved profile remains unchanged. */
+  schemaOverride?: unknown;
   mode: "native_pdf" | "canonical_images";
   temperature?: number;
   thinking?: string;
@@ -87,6 +93,8 @@ export class SingleRunService {
         profile,
         config,
         mode: input.mode,
+        promptOverride: input.promptOverride,
+        schemaOverride: input.schemaOverride,
         temperature: input.temperature,
         thinking: input.thinking,
         renderSettings: input.renderSettings,
@@ -154,12 +162,19 @@ export class SingleRunService {
     now: string;
   }): Promise<BenchmarkSuite> {
     const { input, document, profile, config, golden, now } = args;
+    const promptSha256 = await sha256Hex(
+      new TextEncoder().encode(input.promptOverride ?? profile.basePrompt).buffer,
+    );
+    const schemaSha256 =
+      input.schemaOverride === undefined
+        ? profile.schemaSha256
+        : await sha256Hex(new TextEncoder().encode(canonicalJson(input.schemaOverride)).buffer);
     const identity: BenchmarkIdentity = {
       documentSha256: document.sha256,
       profileId: profile.id,
       profileVersion: profile.version,
-      promptSha256: profile.promptSha256,
-      schemaSha256: profile.schemaSha256,
+      promptSha256,
+      schemaSha256,
       normalizationPolicySha256: profile.normalizationPolicySha256,
       goldenId: golden?.id,
       goldenVersion: golden?.version,

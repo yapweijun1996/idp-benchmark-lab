@@ -8,6 +8,8 @@ import type {
   ProviderConfig,
 } from "../storage/types";
 import { DEFAULT_RENDER_SETTINGS } from "../documents/canonicalRenderer";
+import { sha256Hex } from "../documents/hash";
+import { canonicalJson } from "../evaluation/canonical";
 import { executeExtraction, normalizeFailure, RunFailure, type ExecuteDeps } from "./execute";
 import type { SingleRunInput } from "./singleRun";
 
@@ -91,7 +93,7 @@ export class BenchmarkRunner {
     const suite: BenchmarkSuite = {
       id: crypto.randomUUID(),
       name: `Benchmark — ${profile.name} (x${config.requestedRuns})`,
-      identity: this.buildIdentity({ config, document, profile, configRecord, golden, concurrency }),
+      identity: await this.buildIdentity({ config, document, profile, configRecord, golden, concurrency }),
       requestedRuns: config.requestedRuns,
       concurrency,
       maxBudgetUsd: config.maxBudgetUsd,
@@ -124,6 +126,8 @@ export class BenchmarkRunner {
         profile,
         config: configRecord,
         mode: config.mode,
+        promptOverride: config.promptOverride,
+        schemaOverride: config.schemaOverride,
         temperature: config.temperature,
         thinking: config.thinking,
         renderSettings: config.renderSettings,
@@ -255,21 +259,28 @@ export class BenchmarkRunner {
     return finalSuite;
   }
 
-  private buildIdentity(args: {
+  private async buildIdentity(args: {
     config: BenchmarkConfig;
     document: DocumentRecord;
     profile: ExtractionProfile;
     configRecord: ProviderConfig;
     golden?: { id: string; version: number; sha256: string };
     concurrency: number;
-  }): BenchmarkIdentity {
+  }): Promise<BenchmarkIdentity> {
     const { config, document, profile, configRecord, golden, concurrency } = args;
+    const promptSha256 = await sha256Hex(
+      new TextEncoder().encode(config.promptOverride ?? profile.basePrompt).buffer,
+    );
+    const schemaSha256 =
+      config.schemaOverride === undefined
+        ? profile.schemaSha256
+        : await sha256Hex(new TextEncoder().encode(canonicalJson(config.schemaOverride)).buffer);
     return {
       documentSha256: document.sha256,
       profileId: profile.id,
       profileVersion: profile.version,
-      promptSha256: profile.promptSha256,
-      schemaSha256: profile.schemaSha256,
+      promptSha256,
+      schemaSha256,
       normalizationPolicySha256: profile.normalizationPolicySha256,
       goldenId: golden?.id,
       goldenVersion: golden?.version,

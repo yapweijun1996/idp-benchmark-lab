@@ -3,8 +3,9 @@ import type { AppSettings } from "./types";
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   id: "app",
+  language: "en",
   defaultConcurrency: 1,
-  defaultInputMode: "native_pdf",
+  defaultInputMode: "canonical_images",
   defaultRunCount: 5,
   theme: "system",
   showSecretsWarning: true,

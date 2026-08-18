@@ -4,6 +4,8 @@ import { useDocuments } from "../documents/useDocuments";
 import { useGoldens } from "../golden/useGoldens";
 import { useProfiles } from "../profiles/useProfiles";
 import { validateData } from "../profiles/schema";
+import type { GoldenAnswer } from "../storage/types";
+import { useI18n } from "../i18n";
 
 function parseJson(text: string): { ok: true; value: unknown } | { ok: false; error: string } {
   try {
@@ -14,6 +16,7 @@ function parseJson(text: string): { ok: true; value: unknown } | { ok: false; er
 }
 
 export function GoldenAnswersPage() {
+  const { t } = useI18n();
   const documents = useDocuments();
   const profiles = useProfiles();
   const goldens = useGoldens();
@@ -26,6 +29,35 @@ export function GoldenAnswersPage() {
 
   const profile = profiles.profiles.find((p) => p.id === profileId);
   const activeDocument = documents.documents.find((d) => d.id === documentId);
+
+  const goldenFor = (selectedDocumentId: string, selectedProfileId: string) =>
+    goldens.goldens.find((g) => g.documentId === selectedDocumentId && g.profileId === selectedProfileId);
+
+  const selectDocument = (nextDocumentId: string) => {
+    setDocumentId(nextDocumentId);
+    const existing = goldenFor(nextDocumentId, profileId);
+    goldens.select(existing?.id);
+    setJsonText(existing ? JSON.stringify(existing.json, null, 2) : "");
+    setFormError(null);
+    setSaved(false);
+  };
+
+  const selectProfile = (nextProfileId: string) => {
+    setProfileId(nextProfileId);
+    const existing = goldenFor(documentId, nextProfileId);
+    goldens.select(existing?.id);
+    setJsonText(existing ? JSON.stringify(existing.json, null, 2) : "");
+    setFormError(null);
+    setSaved(false);
+  };
+
+  const goldenCases = profileId
+    ? documents.documents.map((document) => ({
+        document,
+        golden: goldenFor(document.id, profileId),
+      }))
+    : [];
+  const readyCases = goldenCases.filter((testCase) => testCase.golden).length;
 
   const validation = useMemo(() => {
     if (!profile) {
@@ -46,6 +78,7 @@ export function GoldenAnswersPage() {
     setDocumentId(golden.documentId);
     setProfileId(golden.profileId);
     setJsonText(JSON.stringify(golden.json, null, 2));
+    goldens.select(golden.id);
     setFormError(null);
     setSaved(false);
   };
@@ -53,29 +86,31 @@ export function GoldenAnswersPage() {
   const save = async () => {
     setSaved(false);
     if (!documentId) {
-      setFormError("Select a document first.");
+      setFormError(t("Select a document first."));
       return;
     }
     if (!profileId) {
-      setFormError("Select an extraction template first.");
+      setFormError(t("Select an extraction template first."));
       return;
     }
     const parsed = parseJson(jsonText);
     if (!parsed.ok) {
-      setFormError(`JSON parse error: ${parsed.error}`);
+      setFormError(`${t("JSON parse error")}: ${parsed.error}`);
       return;
     }
     if (!validation?.valid) {
-      setFormError(`Schema validation failed: ${validation?.errors.join("; ") ?? "unknown"}`);
+      setFormError(`${t("Schema validation failed")}: ${validation?.errors.join("; ") ?? t("unknown")}`);
       return;
     }
     try {
       const active = goldens.goldens.find((g) => g.id === goldens.activeId);
+      let savedGolden: GoldenAnswer;
       if (active && active.profileId === profileId && active.documentId === documentId) {
-        await goldens.update(active.id, parsed.value);
+        savedGolden = await goldens.update(active.id, parsed.value);
       } else {
-        await goldens.create({ documentId, profileId, json: parsed.value });
+        savedGolden = await goldens.create({ documentId, profileId, json: parsed.value });
       }
+      goldens.select(savedGolden.id);
       setFormError(null);
       setSaved(true);
     } catch (e) {
@@ -85,15 +120,15 @@ export function GoldenAnswersPage() {
 
   return (
     <section aria-labelledby="golden-title">
-      <h2 id="golden-title">Expected Results</h2>
-      <p>The expected correct JSON. Every save is validated against the active template's schema and versioned; nothing is auto-rewritten.</p>
+      <h2 id="golden-title">{t("Expected Results")}</h2>
+      <p>{t("The expected correct JSON. Every save is validated against the active template's schema and versioned; nothing is auto-rewritten.")}</p>
 
       <div className="golden-grid">
         <div className="profile-form">
           <label className="field">
-            <span>Document</span>
-            <select value={documentId} onChange={(e) => setDocumentId(e.target.value)}>
-              <option value="">— select document —</option>
+            <span>{t("Document")}</span>
+            <select value={documentId} onChange={(e) => selectDocument(e.target.value)}>
+              <option value="">— {t("select document")} —</option>
               {documents.documents.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -103,9 +138,9 @@ export function GoldenAnswersPage() {
           </label>
 
           <label className="field">
-            <span>Extraction template</span>
-            <select value={profileId} onChange={(e) => setProfileId(e.target.value)}>
-              <option value="">— select template —</option>
+            <span>{t("Extraction template")}</span>
+            <select value={profileId} onChange={(e) => selectProfile(e.target.value)}>
+              <option value="">— {t("select template")} —</option>
               {profiles.profiles.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} (v{p.version})
@@ -115,7 +150,7 @@ export function GoldenAnswersPage() {
           </label>
 
           <label className="field">
-            <span>Expected Result JSON</span>
+            <span>{t("Expected Result JSON")}</span>
             <textarea
               rows={14}
               className="mono-input"
@@ -129,17 +164,17 @@ export function GoldenAnswersPage() {
 
           {validation ? (
             <p className={validation.valid ? "schema-ok" : "schema-bad"} role="status">
-              {validation.valid ? "Valid against template schema" : `Schema errors: ${validation.errors[0] ?? "invalid"}`}
+              {validation.valid ? t("Valid against template schema") : `${t("Schema errors")}: ${validation.errors[0] ?? t("invalid")}`}
             </p>
           ) : (
             <p className="doc-card__meta" role="status">
-              Select a template to validate against its schema.
+              {t("Select a template to validate against its schema.")}
             </p>
           )}
 
           {saved && !formError ? (
             <p role="status" className="schema-ok">
-              ✓ Expected Result is valid and saved
+              ✓ {t("Expected Result is valid and saved")}
             </p>
           ) : null}
 
@@ -151,7 +186,7 @@ export function GoldenAnswersPage() {
 
           <div className="toolbar">
             <button type="button" className="btn btn--primary" onClick={() => void save()}>
-              {goldens.activeId ? "Save new version" : "Save Expected Result"}
+              {goldens.activeId ? t("Save new version") : t("Save Expected Result")}
             </button>
           </div>
         </div>
@@ -159,41 +194,84 @@ export function GoldenAnswersPage() {
         <div>
           {activeDocument ? (
             <div className="preview-panel">
-              <h3>Preview — {activeDocument.name}</h3>
+              <h3>{t("Preview")} — {activeDocument.name}</h3>
               <DocumentPreview documentId={activeDocument.id} />
             </div>
           ) : (
-            <p className="empty-state">Select a document to preview it.</p>
+            <p className="empty-state">{t("Select a document to preview it.")}</p>
           )}
         </div>
       </div>
 
+      <section className="golden-test-set" aria-labelledby="golden-test-set-title">
+        <div className="golden-test-set__heading">
+          <div>
+            <h3 id="golden-test-set-title">{t("Golden test set")}</h3>
+            <p>{t("Each PDF is a separate test case. Add an Expected Result for every preset you want to compare.")}</p>
+          </div>
+          {profileId ? (
+            <span className={readyCases === goldenCases.length ? "chip chip--ok" : "chip chip--todo"}>
+              {readyCases} / {goldenCases.length} {t("ready")}
+            </span>
+          ) : null}
+        </div>
+        {!profileId ? (
+          <p className="empty-state">{t("Select an extraction template to see its PDF test cases.")}</p>
+        ) : goldenCases.length === 0 ? (
+          <p className="empty-state">{t("Add PDFs in Documents to build a multi-document golden test.")}</p>
+        ) : (
+          <ul className="golden-case-list">
+            {goldenCases.map(({ document, golden }) => (
+              <li key={document.id} className="golden-case">
+                <div className="golden-case__info">
+                  <strong>{document.name}</strong>
+                  <span className="doc-card__meta">
+                    PDF · {Math.max(1, document.pageCount ?? 1)} {document.pageCount === 1 ? t("page") : t("pages")}
+                  </span>
+                </div>
+                {golden ? (
+                  <span className="chip chip--ok">{t("Ready")} · v{golden.version}</span>
+                ) : (
+                  <span className="chip chip--todo">{t("Expected Result missing")}</span>
+                )}
+                <button type="button" onClick={() => (golden ? startEdit(golden.id) : selectDocument(document.id))}>
+                  {golden ? t("Edit") : t("Add Expected Result")}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       {goldens.goldens.length === 0 ? (
         <p className="empty-state">
-          No Expected Results yet. An Expected Result is the correct extracted JSON for a document — save one above
-          so benchmarks can score accuracy against it.
+          {t("No Expected Results yet. An Expected Result is the correct extracted JSON for a document — save one above so benchmarks can score accuracy against it.")}
         </p>
       ) : (
-        <ul className="doc-list">
-          {goldens.goldens.map((g) => (
-            <li key={g.id} className="doc-card">
-              <button type="button" className="doc-card__main" onClick={() => startEdit(g.id)}>
-                <span className="doc-card__name">
-                  Expected Result <span className="chip chip--todo">v{g.version}</span>
-                </span>
-                <span className="doc-card__meta">
-                  template {g.profileId.slice(0, 8)}… · document {g.documentId.slice(0, 8)}… · sha {g.sha256.slice(0, 10)}…
-                </span>
-              </button>
-              <button type="button" onClick={() => startEdit(g.id)}>
-                Edit
-              </button>
-              <button type="button" className="btn--danger" onClick={() => void goldens.remove(g.id)}>
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <h3>{t("Saved expected results")}</h3>
+          <ul className="doc-list">
+            {goldens.goldens.map((g) => (
+              <li key={g.id} className="doc-card">
+                <button type="button" className="doc-card__main" onClick={() => startEdit(g.id)}>
+                  <span className="doc-card__name">
+                    {documents.documents.find((d) => d.id === g.documentId)?.name ?? t("Expected Result")}{" "}
+                    <span className="chip chip--todo">v{g.version}</span>
+                  </span>
+                  <span className="doc-card__meta">
+                    {t("template")} {g.profileId.slice(0, 8)}… · {t("document")} {g.documentId.slice(0, 8)}… · sha {g.sha256.slice(0, 10)}…
+                  </span>
+                </button>
+                <button type="button" onClick={() => startEdit(g.id)}>
+                  {t("Edit")}
+                </button>
+                <button type="button" className="btn--danger" onClick={() => void goldens.remove(g.id)}>
+                  {t("Delete")}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );
@@ -201,6 +279,7 @@ export function GoldenAnswersPage() {
 
 /** Fetches the document blob and renders the PDF preview. */
 function DocumentPreview({ documentId }: { documentId: string }) {
+  const { t } = useI18n();
   const { getBlob } = useDocuments();
   const [loaded, setLoaded] = useState<{ id: string; blob: Blob | undefined } | null>(null);
 
@@ -218,7 +297,7 @@ function DocumentPreview({ documentId }: { documentId: string }) {
 
   const blob = loaded && loaded.id === documentId ? loaded.blob : undefined;
   if (!blob) {
-    return <p className="empty-state">Loading preview…</p>;
+    return <p className="empty-state">{t("Loading preview…")}</p>;
   }
   return <PdfPreview blob={blob} />;
 }

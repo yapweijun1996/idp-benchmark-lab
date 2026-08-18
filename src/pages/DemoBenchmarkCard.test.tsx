@@ -5,6 +5,15 @@ import { getDb } from "../storage/db";
 import { getApiKey } from "../providers/keys";
 import type { BenchmarkRun, BenchmarkSuite } from "../storage/types";
 
+vi.mock("../demo/fixture", () => ({
+  DEMO_NAME: "Popular Purchase Order",
+  loadDemoDocumentBlob: vi.fn(() => Promise.resolve(new Blob(["%PDF"], { type: "application/pdf" }))),
+}));
+
+vi.mock("../documents/PdfPreview", () => ({
+  PdfPreview: ({ blob }: { blob: Blob }) => <div role="img" aria-label="PDF page preview">{blob.type}</div>,
+}));
+
 vi.mock("../demo/seedDemoFixture", () => ({
   seedDemoFixture: vi.fn(() =>
     Promise.resolve({ documentId: "demo-doc", profileId: "demo-profile", goldenId: "demo-golden" }),
@@ -72,6 +81,12 @@ describe("DemoBenchmarkCard", () => {
     expect(screen.getByRole("button", { name: /run benchmark/i })).toBeInTheDocument();
   });
 
+  it("shows the bundled PDF preview", async () => {
+    render(<DemoBenchmarkCard />);
+    expect(screen.getByRole("heading", { name: /document preview/i })).toBeInTheDocument();
+    expect(await screen.findByRole("img", { name: /pdf page preview/i })).toBeInTheDocument();
+  });
+
   it("requires an API key before running", async () => {
     render(<DemoBenchmarkCard runnerFactory={fakeRunnerFactory([])} />);
     fireEvent.click(screen.getByRole("button", { name: /run benchmark/i }));
@@ -121,8 +136,11 @@ describe("DemoBenchmarkCard", () => {
 
   it("switching provider kind updates the default model", () => {
     render(<DemoBenchmarkCard />);
-    expect(screen.getByLabelText(/^model$/i)).toHaveValue("gemini-3-flash-lite");
+    const model = screen.getByRole("combobox", { name: /^model$/i });
+    expect(model).toHaveValue("gemini-3.5-flash-lite");
+    expect(model).toHaveAttribute("list", "demo-model-options-gemini");
     fireEvent.click(screen.getByRole("radio", { name: "OpenAI" }));
-    expect(screen.getByLabelText(/^model$/i)).toHaveValue("gpt-4o-mini");
+    expect(model).toHaveValue("gpt-4o-mini");
+    expect(model).toHaveAttribute("list", "demo-model-options-openai");
   });
 });

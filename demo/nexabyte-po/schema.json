@@ -1,0 +1,114 @@
+{
+  "type": "object",
+  "properties": {
+    "doc_info": {
+      "type": "object",
+      "properties": {
+        "company_name": { "type": ["string", "null"] },
+        "company_address": { "type": ["string", "null"] },
+        "telephone": { "type": ["string", "null"] },
+        "email": { "type": ["string", "null"] },
+        "uen": { "type": ["string", "null"] },
+        "gst_registration_number": { "type": ["string", "null"] },
+        "document_number": { "type": ["string", "null"] },
+        "po_date": { "type": ["string", "null"] },
+        "required_delivery_date": { "type": ["string", "null"] },
+        "buyer": { "type": ["string", "null"] },
+        "department": { "type": ["string", "null"] },
+        "supplier_code": { "type": ["string", "null"] },
+        "supplier_reference": { "type": ["string", "null"] },
+        "cost_centre": { "type": ["string", "null"] },
+        "requisition_number": { "type": ["string", "null"] },
+        "currency": { "type": ["string", "null"] },
+        "payment_terms": { "type": ["string", "null"] },
+        "page": { "type": ["string", "null"] }
+      },
+      "required": [
+        "company_name", "company_address", "telephone", "email", "uen", "gst_registration_number",
+        "document_number", "po_date", "required_delivery_date", "buyer", "department", "supplier_code",
+        "supplier_reference", "cost_centre", "requisition_number", "currency", "payment_terms", "page"
+      ],
+      "additionalProperties": false
+    },
+    "supplier": {
+      "type": "object",
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "address": { "type": ["string", "null"] },
+        "contact_name": { "type": ["string", "null"] },
+        "telephone": { "type": ["string", "null"] },
+        "email": { "type": ["string", "null"] }
+      },
+      "required": ["name", "address", "contact_name", "telephone", "email"],
+      "additionalProperties": false
+    },
+    "deliver_to": {
+      "type": "object",
+      "properties": {
+        "name": { "type": ["string", "null"] },
+        "address": { "type": ["string", "null"] },
+        "contact_name": { "type": ["string", "null"] },
+        "telephone": { "type": ["string", "null"] },
+        "delivery_hours": { "type": ["string", "null"] }
+      },
+      "required": ["name", "address", "contact_name", "telephone", "delivery_hours"],
+      "additionalProperties": false
+    },
+    "row_data": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "line_number": { "type": ["string", "null"] },
+          "item_code": { "type": ["string", "null"] },
+          "description": { "type": ["string", "null"] },
+          "qty": { "type": ["string", "null"] },
+          "uom": { "type": ["string", "null"] },
+          "unit_price": { "type": ["string", "null"] },
+          "discount_percent": { "type": ["string", "null"] },
+          "amount": { "type": ["string", "null"] }
+        },
+        "required": ["line_number", "item_code", "description", "qty", "uom", "unit_price", "discount_percent", "amount"],
+        "additionalProperties": false
+      }
+    },
+    "totals": {
+      "type": "object",
+      "properties": {
+        "subtotal": { "type": ["string", "null"] },
+        "discount": { "type": ["string", "null"] },
+        "net_amount": { "type": ["string", "null"] },
+        "gst_rate": { "type": ["string", "null"] },
+        "gst_amount": { "type": ["string", "null"] },
+        "grand_total": { "type": ["string", "null"] },
+        "amount_in_words": { "type": ["string", "null"] }
+      },
+      "required": ["subtotal", "discount", "net_amount", "gst_rate", "gst_amount", "grand_total", "amount_in_words"],
+      "additionalProperties": false
+    },
+    "footer": {
+      "type": "object",
+      "properties": {
+        "purchase_terms": { "type": ["string", "null"] },
+        "remark": { "type": ["string", "null"] },
+        "approval_status": { "type": ["string", "null"] },
+        "prepared_by": { "type": ["string", "null"] },
+        "prepared_role": { "type": ["string", "null"] },
+        "prepared_at": { "type": ["string", "null"] },
+        "reviewed_by": { "type": ["string", "null"] },
+        "reviewed_role": { "type": ["string", "null"] },
+        "reviewed_at": { "type": ["string", "null"] },
+        "approved_by": { "type": ["string", "null"] },
+        "approved_role": { "type": ["string", "null"] },
+        "approved_at": { "type": ["string", "null"] }
+      },
+      "required": [
+        "purchase_terms", "remark", "approval_status", "prepared_by", "prepared_role", "prepared_at",
+        "reviewed_by", "reviewed_role", "reviewed_at", "approved_by", "approved_role", "approved_at"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": ["doc_info", "supplier", "deliver_to", "row_data", "totals", "footer"],
+  "additionalProperties": false
+}

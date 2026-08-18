@@ -1,0 +1,71 @@
+{
+  "doc_info": {
+    "company_name": "NEXABYTE TECHNOLOGIES PTE. LTD.",
+    "company_address": "18 Kallang Avenue, #05-21, Singapore 339407",
+    "telephone": "+65 6748 2288",
+    "email": "purchasing@nexabyte.sg",
+    "uen": "202612345N",
+    "gst_registration_number": "202612345N",
+    "document_number": "PO2608-00152",
+    "po_date": "18 Aug 2026",
+    "required_delivery_date": "28 Aug 2026",
+    "buyer": "Michelle Lim",
+    "department": "Purchasing",
+    "supplier_code": "SUP-00128",
+    "supplier_reference": "QT-260815-0187",
+    "cost_centre": "IT-OPS",
+    "requisition_number": "PR2608-0058",
+    "currency": "SGD",
+    "payment_terms": "30 Days",
+    "page": "1 of 1"
+  },
+  "supplier": {
+    "name": "TECHSOURCE DISTRIBUTION PTE. LTD.",
+    "address": "61 Ubi Road 1\n#04-18 Oxley Bizhub\nSingapore 408727",
+    "contact_name": "Jason Tan",
+    "telephone": "+65 6635 8821",
+    "email": "sales@techsource.sg"
+  },
+  "deliver_to": {
+    "name": "NEXABYTE TECHNOLOGIES PTE. LTD.",
+    "address": "18 Kallang Avenue, #05-21\nSingapore 339407",
+    "contact_name": "Warehouse Receiving",
+    "telephone": "+65 6748 2288",
+    "delivery_hours": "Mon-Fri, 9:00 AM-5:00 PM"
+  },
+  "row_data": [
+    { "line_number": "1", "item_code": "NB-ASU-001", "description": "ASUS Vivobook 15, i5 / 16GB / 512GB SSD", "qty": "2", "uom": "PCS", "unit_price": "999.00", "discount_percent": "0.00", "amount": "1,998.00" },
+    { "line_number": "2", "item_code": "NB-LEN-001", "description": "Lenovo IdeaPad Slim 5, Ryzen 7 / 16GB / 1TB SSD", "qty": "2", "uom": "PCS", "unit_price": "1,199.00", "discount_percent": "0.00", "amount": "2,398.00" },
+    { "line_number": "3", "item_code": "MON-27-001", "description": "27-inch IPS QHD Monitor", "qty": "4", "uom": "PCS", "unit_price": "329.00", "discount_percent": "0.00", "amount": "1,316.00" },
+    { "line_number": "4", "item_code": "DOCK-USBC-001", "description": "USB-C Docking Station, Dual Display", "qty": "5", "uom": "PCS", "unit_price": "159.00", "discount_percent": "0.00", "amount": "795.00" },
+    { "line_number": "5", "item_code": "KBM-WL-001", "description": "Wireless Keyboard & Mouse Combo", "qty": "10", "uom": "SET", "unit_price": "59.00", "discount_percent": "0.00", "amount": "590.00" },
+    { "line_number": "6", "item_code": "CAM-FHD-001", "description": "1080p USB Webcam", "qty": "6", "uom": "PCS", "unit_price": "59.00", "discount_percent": "0.00", "amount": "354.00" },
+    { "line_number": "7", "item_code": "SW-8G-001", "description": "8-Port Gigabit Ethernet Switch", "qty": "5", "uom": "PCS", "unit_price": "69.00", "discount_percent": "0.00", "amount": "345.00" },
+    { "line_number": "8", "item_code": "EXT-SSD1T-001", "description": "1TB Portable External SSD", "qty": "5", "uom": "PCS", "unit_price": "159.00", "discount_percent": "0.00", "amount": "795.00" },
+    { "line_number": "9", "item_code": "PRN-LASER-001", "description": "Mono Laser Printer with Duplex", "qty": "2", "uom": "PCS", "unit_price": "279.00", "discount_percent": "0.00", "amount": "558.00" },
+    { "line_number": "10", "item_code": "UPS-1000-001", "description": "1080VA Line Interactive UPS", "qty": "3", "uom": "PCS", "unit_price": "179.00", "discount_percent": "0.00", "amount": "537.00" }
+  ],
+  "totals": {
+    "subtotal": "9,686.00",
+    "discount": "0.00",
+    "net_amount": "9,686.00",
+    "gst_rate": "9%",
+    "gst_amount": "871.74",
+    "grand_total": "10,557.74",
+    "amount_in_words": "Singapore Dollars Ten Thousand Five Hundred\nFifty-Seven and Cents Seventy-Four Only."
+  },
+  "footer": {
+    "purchase_terms": "Please quote our PO number on all correspondence and documents.\nNo substitutions allowed without prior written approval.\nInvoice must match the PO in quantity and price.\nAll deliveries must be made to the address stated above.\nReport any delays or issues immediately.",
+    "remark": "Please ensure all laptops and desktop systems are supplied with original manufacturer warranty. Serial numbers must be indicated on the Delivery Order where applicable.",
+    "approval_status": "APPROVED ELECTRONICALLY",
+    "prepared_by": "Michelle Lim",
+    "prepared_role": "Purchasing Executive",
+    "prepared_at": "18 Aug 2026 10:14 AM",
+    "reviewed_by": "Adrian Koh",
+    "reviewed_role": "Purchasing Manager",
+    "reviewed_at": "18 Aug 2026 11:32 AM",
+    "approved_by": "Daniel Wong",
+    "approved_role": "Finance Manager",
+    "approved_at": "18 Aug 2026 01:05 PM"
+  }
+}

@@ -8,7 +8,7 @@ export interface UseDocumentsResult {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
-  upload: (file: File, persist: boolean) => Promise<void>;
+  upload: (file: File, persist: boolean) => Promise<DocumentRecord>;
   remove: (id: string) => Promise<void>;
   setPersistence: (id: string, persist: boolean) => Promise<void>;
   select: (id: string | undefined) => void;
@@ -48,8 +48,10 @@ export function useDocuments(service?: DocumentService): UseDocumentsResult {
 
   const upload = useCallback(
     async (file: File, persist: boolean) => {
-      await svc.upload(file, { persist });
+      const uploaded = await svc.upload(file, { persist });
       await refresh();
+      setActiveId(uploaded.id);
+      return uploaded;
     },
     [svc, refresh],
   );

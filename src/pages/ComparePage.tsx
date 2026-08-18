@@ -3,6 +3,7 @@ import { useRunHistory } from "../benchmarks/useRunHistory";
 import { summarizeSuite, type SuiteSummary } from "../benchmarks/summary";
 import { getDb } from "../storage/db";
 import type { BenchmarkRun, BenchmarkSuite } from "../storage/types";
+import { useI18n } from "../i18n";
 
 interface CompareRow {
   suite: BenchmarkSuite;
@@ -20,6 +21,7 @@ const defaultRunsLoader: RunsLoader = async (suite) => {
 const pct = (v: number | undefined): string => (v === undefined ? "—" : (v * 100).toFixed(1) + "%");
 
 export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
+  const { t } = useI18n();
   const history = useRunHistory();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [rows, setRows] = useState<CompareRow[]>([]);
@@ -56,15 +58,15 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
   if (history.suites.length < 2) {
     return (
       <section aria-labelledby="compare-title">
-        <h1 id="compare-title">Compare</h1>
+        <h1 id="compare-title">{t("Compare")}</h1>
         <div className="profile-form">
-          <h2>Nothing to compare yet</h2>
+          <h2>{t("Nothing to compare yet")}</h2>
           <p className="empty-state">
-            Run at least two compatible benchmarks to compare models, providers, prompts, or input modes.
+            {t("Run at least two compatible benchmarks to compare models, providers, prompts, or input modes.")}
           </p>
           <div className="toolbar">
             <a href="#/new-benchmark" className="btn btn--primary">
-              Run a benchmark
+            {t("Run a benchmark")}
             </a>
           </div>
         </div>
@@ -80,8 +82,8 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
 
   return (
     <section aria-labelledby="compare-title">
-      <h1 id="compare-title">Compare</h1>
-      <p>Select benchmarks to compare side by side. Only the same test configuration makes stability claims comparable.</p>
+      <h1 id="compare-title">{t("Compare")}</h1>
+      <p>{t("Select benchmarks to compare side by side. Only the same test configuration makes stability claims comparable.")}</p>
 
       <ul className="doc-list">
         {history.suites.map((s) => (
@@ -91,7 +93,7 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
               <span className="doc-card__name">{s.name ?? s.id.slice(0, 8)}</span>
             </label>
             <span className="doc-card__meta">
-              {s.identity.model} · {s.identity.inputMode} · {s.status}
+              {s.identity.model} · {s.identity.inputMode} · {t(s.status)}
             </span>
           </li>
         ))}
@@ -99,8 +101,7 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
 
       {mismatchedKeys.length > 0 ? (
         <p role="status" className="schema-bad">
-          Selected benchmarks differ in {mismatchedKeys.join(", ")} — stability claims across them are not directly
-          comparable, but you can still view the numbers side by side.
+          {t("Selected benchmarks differ in")} {mismatchedKeys.join(", ")} — {t("stability claims across them are not directly comparable, but you can still view the numbers side by side.")}
         </p>
       ) : null}
 
@@ -117,16 +118,16 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
           onClick={() => void compare()}
           disabled={selected.size < 2}
         >
-          Compare selected
+          {t("Compare selected")}
         </button>
       </div>
 
       {rows.length > 0 ? (
-        <div className="compare-wrap" role="region" aria-label="Comparison table">
+        <div className="compare-wrap" role="region" aria-label={t("Comparison table")}>
           <table className="summary-table">
             <thead>
               <tr>
-                <th>Metric</th>
+                <th>{t("Metric")}</th>
                 {rows.map((row) => (
                   <th key={row.suite.id}>
                     {row.suite.identity.model}
@@ -137,13 +138,13 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
             </thead>
             <tbody>
               <tr>
-                <th>Status</th>
+                <th>{t("Status")}</th>
                 {rows.map((row) => (
-                  <td key={row.suite.id}>{row.suite.status}</td>
+                  <td key={row.suite.id}>{t(row.suite.status)}</td>
                 ))}
               </tr>
               <tr>
-                <th>Attempted</th>
+                <th>{t("Attempted")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>
                     {row.summary.attemptedRuns}/{row.summary.requestedRuns}
@@ -151,43 +152,43 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
                 ))}
               </tr>
               <tr>
-                <th>Exact pass</th>
+                <th>{t("Exact pass")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>{pct(row.summary.exactPassRate)}</td>
                 ))}
               </tr>
               <tr>
-                <th>Schema-valid</th>
+                <th>{t("Schema-valid")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>{pct(row.summary.schemaValidRate)}</td>
                 ))}
               </tr>
               <tr>
-                <th>Avg leaf accuracy</th>
+                <th>{t("Avg leaf accuracy")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>{pct(row.summary.avgLeafAccuracy)}</td>
                 ))}
               </tr>
               <tr>
-                <th>Row accuracy</th>
+                <th>{t("Row accuracy")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>{pct(row.summary.rowAccuracy)}</td>
                 ))}
               </tr>
               <tr>
-                <th>Consistency</th>
+                <th>{t("Consistency")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>{pct(row.summary.consistencyRate)}</td>
                 ))}
               </tr>
               <tr>
-                <th>Unique variants</th>
+                <th>{t("Unique variants")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>{row.summary.uniqueVariants}</td>
                 ))}
               </tr>
               <tr>
-                <th>Latency avg / p95</th>
+                <th>{t("Latency avg / p95")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>
                     {row.summary.latency.avg === undefined ? "—" : Math.round(row.summary.latency.avg) + " ms"} /{" "}
@@ -196,7 +197,7 @@ export function ComparePage({ runsLoader }: { runsLoader?: RunsLoader }) {
                 ))}
               </tr>
               <tr>
-                <th>Cost total</th>
+                <th>{t("Cost total")}</th>
                 {rows.map((row) => (
                   <td key={row.suite.id}>
                     {row.summary.cost.totalUsd === undefined ? "unknown" : "$" + row.summary.cost.totalUsd.toFixed(6)}

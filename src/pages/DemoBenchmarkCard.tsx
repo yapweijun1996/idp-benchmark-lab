@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BenchmarkRunner } from "../benchmarks/runner";
 import { summarizeSuite, type SuiteSummary } from "../benchmarks/summary";
 import { browserExecuteDeps } from "../documents/runtimeDeps";
-import { DEMO_NAME } from "../demo/fixture";
+import { PdfPreview } from "../documents/PdfPreview";
+import { DEMO_NAME, loadDemoDocumentBlob } from "../demo/fixture";
 import { seedDemoFixture } from "../demo/seedDemoFixture";
 import { getDb } from "../storage/db";
 import { setApiKey } from "../providers/keys";
 import { adapterFor } from "../providers/registry";
 import { useProviderConfigs } from "../providers/useProviderConfigs";
 import type { BenchmarkRun, InputMode, ProviderKind } from "../storage/types";
+import { useI18n } from "../i18n";
 
 export type DemoRunnerFactory = (onRunComplete: (run: BenchmarkRun) => void) => Pick<BenchmarkRunner, "run">;
 
@@ -20,8 +22,14 @@ const KIND_LABELS: Record<ProviderKind, string> = {
 
 const DEFAULT_MODEL: Record<ProviderKind, string> = {
   openai: "gpt-4o-mini",
-  gemini: "gemini-3-flash-lite",
+  gemini: "gemini-3.5-flash-lite",
   openai_compatible: "local-model",
+};
+
+const MODEL_OPTIONS: Record<ProviderKind, readonly string[]> = {
+  openai: ["gpt-4o-mini", "gpt-4o"],
+  gemini: ["gemini-3.5-flash-lite", "gemini-3-flash-lite", "gemini-3-pro"],
+  openai_compatible: ["local-model"],
 };
 
 export type RunCount = 1 | 3 | 5;
@@ -45,6 +53,7 @@ const pct = (v: number | undefined): string => (v === undefined ? "—" : (v * 1
 const fmtValue = (v: unknown): string => (v === undefined ? "(missing)" : JSON.stringify(v));
 
 export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunnerFactory } = {}) {
+  const { t } = useI18n();
   const providers = useProviderConfigs();
   const [kind, setKind] = useState<ProviderKind>("gemini");
   const [model, setModel] = useState(DEFAULT_MODEL.gemini);
@@ -55,6 +64,26 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
   const [progress, setProgress] = useState<{ completed: number; total: number } | null>(null);
   const [result, setResult] = useState<DemoResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [demoPdf, setDemoPdf] = useState<Blob | null>(null);
+  const [demoPdfError, setDemoPdfError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void loadDemoDocumentBlob()
+      .then((blob) => {
+        if (!cancelled) {
+          setDemoPdf(blob);
+        }
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) {
+          setDemoPdfError(e instanceof Error ? e.message : String(e));
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const changeKind = (next: ProviderKind) => {
     setKind(next);
@@ -65,11 +94,11 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
     setError(null);
     setResult(null);
     if (!apiKey.trim()) {
-      setError("Enter an API key first.");
+      setError(t("Enter an API key first."));
       return;
     }
     if (kind === "openai_compatible" && !baseUrl.trim()) {
-      setError("Enter a base URL for the custom endpoint first.");
+      setError(t("Enter a base URL for the custom endpoint first."));
       return;
     }
     setRunning(true);
@@ -114,7 +143,7 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
 
       setResult({ summary, model: model.trim(), providerLabel: KIND_LABELS[kind], runCount, failures });
       if (suite.status === "failed") {
-        setError("Every run failed — see the run detail in Runs & Results for the provider error.");
+        setError(t("Every run failed — see the run detail in Runs & Results for the provider error."));
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -125,19 +154,34 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
   };
 
   return (
-    <div className="profile-form" role="region" aria-label="Demo benchmark">
-      <h2>Try the demo</h2>
-      <p>A ready-made sample — no setup required.</p>
-      <p className="doc-card__meta">Demo sample: {DEMO_NAME}</p>
+    <div id="home-demo" className="profile-form home-demo-card" role="region" aria-label={t("Demo benchmark")}>
+      <h2>{t("Try the demo")}</h2>
+      <p>{t("A ready-made sample — no setup required.")}</p>
+      <p className="doc-card__meta">{t("Demo sample")}: {DEMO_NAME}</p>
+      <div className="preview-panel demo-pdf-preview">
+        <h3>{t("Document preview")}</h3>
+        <p className="doc-card__meta">{t("This is the PDF that will be sent to the selected AI provider.")}</p>
+        {demoPdf ? (
+          <PdfPreview blob={demoPdf} scale={0.9} />
+        ) : demoPdfError ? (
+          <p role="alert" className="pdf-preview__status pdf-preview__status--error">
+            {t("Failed to load the demo PDF preview")}: {demoPdfError}
+          </p>
+        ) : (
+          <p role="status" className="pdf-preview__status">
+            {t("Loading document preview…")}
+          </p>
+        )}
+      </div>
       <ul className="doc-list demo-ready-list">
-        <li>✓ Sample PDF</li>
-        <li>✓ Extraction prompt</li>
-        <li>✓ JSON schema</li>
-        <li>✓ Expected result</li>
+        <li>✓ {t("Sample PDF")}</li>
+        <li>✓ {t("Extraction prompt")}</li>
+        <li>✓ {t("JSON schema")}</li>
+        <li>✓ {t("Expected result")}</li>
       </ul>
 
       <fieldset className="mode-picker">
-        <legend>Choose AI</legend>
+        <legend>{t("Choose AI")}</legend>
         {(["gemini", "openai", "openai_compatible"] as const).map((k) => (
           <label key={k}>
             <input type="radio" name="demo-provider-kind" checked={kind === k} onChange={() => changeKind(k)} />
@@ -148,12 +192,26 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
 
       <div className="golden-grid">
         <label className="field">
-          <span>Model</span>
-          <input type="text" value={model} onChange={(e) => setModel(e.target.value)} />
+          <span>{t("Model")}</span>
+          <input
+            type="text"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-expanded="false"
+            aria-controls={`demo-model-options-${kind}`}
+            list={`demo-model-options-${kind}`}
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+          />
+          <datalist id={`demo-model-options-${kind}`}>
+            {MODEL_OPTIONS[kind].map((option) => (
+              <option key={option} value={option} />
+            ))}
+          </datalist>
         </label>
         {kind === "openai_compatible" ? (
           <label className="field">
-            <span>Base URL</span>
+            <span>{t("Base URL")}</span>
             <input
               type="text"
               placeholder="https://api.example.com/v1"
@@ -163,7 +221,7 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
           </label>
         ) : null}
         <label className="field">
-          <span>API key (memory-only, not saved unless you opt in on Settings later)</span>
+          <span>{t("API key (memory-only, not saved unless you opt in on Settings later)")}</span>
           <input
             type="password"
             autoComplete="off"
@@ -174,7 +232,7 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
       </div>
 
       <fieldset className="mode-picker">
-        <legend>Runs</legend>
+        <legend>{t("Runs")}</legend>
         {([1, 3, 5] as const).map((n) => (
           <label key={n}>
             <input
@@ -190,7 +248,7 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
 
       <div className="toolbar">
         <button type="button" className="btn btn--primary" onClick={() => void run()} disabled={running}>
-          {running ? `Running… (${progress?.completed ?? 0}/${progress?.total ?? runCount})` : "Run Benchmark"}
+          {running ? `${t("Running…")} (${progress?.completed ?? 0}/${progress?.total ?? runCount})` : t("Run Benchmark")}
         </button>
       </div>
 
@@ -203,8 +261,7 @@ export function DemoBenchmarkCard({ runnerFactory }: { runnerFactory?: DemoRunne
       {result ? <DemoResultPanel result={result} /> : null}
 
       <p className="doc-card__meta demo-secondary-cta">
-        Want to test your own document?{" "}
-        <a href="#/new-benchmark">Upload my document</a>
+        {t("Want to test your own document?")} <a href="#/new-benchmark">{t("Upload my document")}</a>
       </p>
     </div>
   );
@@ -224,23 +281,24 @@ function collectFailures(runs: BenchmarkRun[]): Failure[] {
 }
 
 function DemoResultPanel({ result }: { result: DemoResult }) {
+  const { t } = useI18n();
   const { summary, model, providerLabel, runCount, failures } = result;
   return (
-    <div className="progress-panel" role="region" aria-label="Demo result">
-      <h3>Result</h3>
+    <div className="progress-panel" role="region" aria-label={t("Demo result")}>
+      <h3>{t("Result")}</h3>
       <p className="doc-card__meta">
-        Provider: {providerLabel} · Model: {model} · Runs: {runCount}
+        {t("Provider")}: {providerLabel} · {t("Model")}: {model} · {t("Runs")}: {runCount}
       </p>
       <table className="summary-table">
         <tbody>
           <tr>
-            <th>Schema valid</th>
+            <th>{t("Schema valid")}</th>
             <td>
               {summary.attemptedRuns > 0
                 ? Math.round((summary.schemaValidRate ?? 0) * summary.attemptedRuns) + "/" + summary.attemptedRuns
                 : "—"}
             </td>
-            <th>Exact match</th>
+            <th>{t("Exact match")}</th>
             <td>
               {summary.attemptedRuns > 0
                 ? Math.round((summary.exactPassRate ?? 0) * summary.attemptedRuns) + "/" + summary.attemptedRuns
@@ -248,19 +306,19 @@ function DemoResultPanel({ result }: { result: DemoResult }) {
             </td>
           </tr>
           <tr>
-            <th>Field accuracy</th>
+            <th>{t("Field accuracy")}</th>
             <td>{pct(summary.avgLeafAccuracy)}</td>
-            <th>Row accuracy</th>
+            <th>{t("Row accuracy")}</th>
             <td>{pct(summary.rowAccuracy)}</td>
           </tr>
           <tr>
-            <th>Stability</th>
+            <th>{t("Stability")}</th>
             <td>{pct(summary.consistencyRate)}</td>
-            <th>Unique variants</th>
+            <th>{t("Unique variants")}</th>
             <td>{summary.uniqueVariants}</td>
           </tr>
           <tr>
-            <th>Average latency</th>
+            <th>{t("Average latency")}</th>
             <td colSpan={3}>
               {summary.latency.avg === undefined ? "—" : Math.round(summary.latency.avg) + " ms"}
             </td>
@@ -270,16 +328,16 @@ function DemoResultPanel({ result }: { result: DemoResult }) {
 
       {failures.length > 0 ? (
         <div className="demo-failures">
-          <h4>Failures</h4>
+          <h4>{t("Failures")}</h4>
           <ul className="doc-list">
             {failures.map((f, i) => (
               <li key={i} className="doc-card">
                 <span className="doc-card__main">
                   <span className="doc-card__name">
-                    Run {f.runNumber} · {f.path}
+                    {t("Run")} {f.runNumber} · {f.path}
                   </span>
                   <span className="doc-card__meta">
-                    Expected: {fmtValue(f.expected)} · Actual: {fmtValue(f.actual)}
+                    {t("Expected")}: {fmtValue(f.expected)} · {t("Actual")}: {fmtValue(f.actual)}
                   </span>
                 </span>
               </li>
@@ -289,7 +347,7 @@ function DemoResultPanel({ result }: { result: DemoResult }) {
       ) : null}
 
       <p className="doc-card__meta">
-        <a href="#/runs">Inspect raw outputs in Runs &amp; Results</a>
+        <a href="#/runs">{t("Inspect raw outputs in Runs & Results")}</a>
       </p>
     </div>
   );

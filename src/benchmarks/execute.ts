@@ -8,6 +8,7 @@ import { evaluateOutput, type RunEvaluation } from "../evaluation/metrics";
 import { PricingService } from "../cost/pricingService";
 import { getApiKey } from "../providers/keys";
 import { adapterFor } from "../providers/registry";
+import { isDemoGatewayConfig } from "../providers/demoGateway";
 import type { IdpDatabase } from "../storage/db";
 import type {
   DocumentRecord,
@@ -43,6 +44,10 @@ export interface ExecuteInput {
   document: DocumentRecord;
   profile: ExtractionProfile;
   config: ProviderConfig;
+  /** Optional prompt draft for this run; the saved profile remains unchanged. */
+  promptOverride?: string;
+  /** Optional JSON schema draft for this run; the saved profile remains unchanged. */
+  schemaOverride?: unknown;
   mode: InputMode;
   temperature?: number;
   thinking?: string;
@@ -83,8 +88,9 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
   const { db, getBlob } = deps;
   const { document, profile, config } = input;
 
-  const apiKey = getApiKey(config.id);
-  if (!apiKey) {
+  const demoMode = isDemoGatewayConfig(config);
+  const apiKey = getApiKey(config.id) ?? "";
+  if (!apiKey && !demoMode) {
     throw new RunFailure({
       category: "auth",
       message: "No API key for this provider config. Enter it on the Providers page.",
@@ -105,12 +111,14 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
 
   const startedAt = performance.now();
   const blob = await resolveBlob(deps, getBlob, document);
-  const prompt = composePrompt(profile.basePrompt, profile.extractionContract, profile.jsonSchema);
+  const schema = input.schemaOverride ?? profile.jsonSchema;
+  const extractionContract = input.schemaOverride === undefined ? profile.extractionContract : topLevelFields(schema);
+  const prompt = composePrompt(input.promptOverride ?? profile.basePrompt, extractionContract, schema);
   const request = await buildRequest(deps, input, blob, prompt);
 
   const response = await adapter.extract(request, { config, apiKey, signal: input.signal });
 
-  const schemaCheck = validateData(response.json, profile.jsonSchema);
+  const schemaCheck = validateData(response.json, schema);
   const pricing = new PricingService(db);
   const snapshot = config.pricingSnapshotId
     ? await pricing.get(config.pricingSnapshotId)
@@ -137,6 +145,12 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
     outputHash,
     evaluation,
   };
+}
+
+function topLevelFields(schema: unknown): string[] {
+  if (!schema || typeof schema !== "object" || Array.isArray(schema)) return [];
+  const properties = (schema as { properties?: unknown }).properties;
+  return properties && typeof properties === "object" && !Array.isArray(properties) ? Object.keys(properties) : [];
 }
 
 async function resolveBlob(
@@ -166,7 +180,7 @@ async function buildRequest(
   const { config, mode, temperature, thinking, renderSettings } = input;
   if (mode === "native_pdf") {
     const documentBytes = await blobToArrayBuffer(blob);
-    return { mode, documentBytes, documentMimeType: "application/pdf", prompt, temperature, thinking };
+    return { mode, documentBytes, documentMimeType: "application/pdf", documentName: input.document.name, prompt, temperature, thinking };
   }
   const adapter = deps.adapters?.[config.kind] ?? adapterFor(config.kind);
   if (!adapter.capabilities(config).imageInput) {
@@ -198,7 +212,7 @@ async function buildRequest(
   try {
     const settings = renderSettings ?? DEFAULT_RENDER_SETTINGS;
     const images = await renderDocumentPages(pdf, settings, deps.pageRenderer ?? missingRenderer());
-    return { mode, images, prompt, temperature, thinking };
+    return { mode, images, documentName: input.document.name, prompt, temperature, thinking };
   } finally {
     void task.destroy();
   }

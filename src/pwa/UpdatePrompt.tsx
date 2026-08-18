@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useRegisterSW } from "virtual:pwa-register/react";
+import { useI18n } from "../i18n";
 
 /**
  * Notifies the user when a new build is available and lets them choose
@@ -7,6 +8,7 @@ import { useRegisterSW } from "virtual:pwa-register/react";
  * active benchmark is not destroyed without warning.
  */
 export function UpdatePrompt() {
+  const { t } = useI18n();
   const { needRefresh, updateServiceWorker } = useRegisterSW();
   const [dismissed, setDismissed] = useState(false);
 
@@ -16,7 +18,7 @@ export function UpdatePrompt() {
 
   return (
     <div role="status" className="update-prompt">
-      <span>A new app build is available.</span>
+      <span>{t("A new app build is available.")}</span>
       <button
         type="button"
         onClick={() => {
@@ -24,10 +26,10 @@ export function UpdatePrompt() {
           setDismissed(true);
         }}
       >
-        Update &amp; reload
+        {t("Update & reload")}
       </button>
       <button type="button" onClick={() => setDismissed(true)}>
-        Dismiss
+        {t("Dismiss")}
       </button>
     </div>
   );

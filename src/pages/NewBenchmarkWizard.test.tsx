@@ -14,6 +14,20 @@ vi.mock("../profiles/useProfiles", () => ({ useProfiles: vi.fn() }));
 vi.mock("../providers/useProviderConfigs", () => ({ useProviderConfigs: vi.fn() }));
 vi.mock("../golden/useGoldens", () => ({ useGoldens: vi.fn() }));
 vi.mock("../providers/registry", () => ({ adapterFor: vi.fn() }));
+vi.mock("../demo/seedDemoFixture", () => ({
+  DEMO_DOCUMENT_ID: "demo-document-popular-po",
+  DEMO_PROFILE_ID: "demo-profile-popular-po",
+  NEXABYTE_DOCUMENT_ID: "demo-document-nexabyte-po",
+  seedDemoFixture: vi.fn(() => Promise.resolve({
+    documentId: "demo-document-popular-po",
+    profileId: "demo-profile-popular-po",
+    goldenId: "demo-golden-popular-po",
+    providerConfigId: "demo-provider-gpt-gateway",
+  })),
+}));
+vi.mock("../documents/PdfPreview", () => ({
+  PdfPreview: () => <div data-testid="pdf-preview">PDF preview</div>,
+}));
 
 const useDocumentsMock = vi.mocked(useDocuments);
 const useProfilesMock = vi.mocked(useProfiles);
@@ -34,8 +48,33 @@ const profile: ExtractionProfile = {
   name: "PO",
   version: 1,
   basePrompt: "x",
-  extractionContract: {},
-  jsonSchema: {},
+  extractionContract: ["doc_info", "row_data", "footer"],
+  jsonSchema: {
+    type: "object",
+    properties: {
+      doc_info: {
+        type: "object",
+        properties: {
+          document_number: { type: ["string", "null"] },
+          date: { type: ["string", "null"] },
+        },
+      },
+      row_data: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            stock_code: { type: ["string", "null"] },
+            qty: { type: ["string", "null"] },
+          },
+        },
+      },
+      footer: {
+        type: "object",
+        properties: { remark: { type: ["string", "null"] } },
+      },
+    },
+  },
   promptSha256: "p",
   schemaSha256: "s",
   createdAt: "2026-08-15T00:00:00.000Z",
@@ -50,11 +89,11 @@ function docsResult(): UseDocumentsResult {
     loading: false,
     error: null,
     refresh: vi.fn(() => Promise.resolve()),
-    upload: vi.fn(() => Promise.resolve()),
+    upload: vi.fn(() => Promise.resolve({ ...document, id: "uploaded-doc" })),
     remove: vi.fn(() => Promise.resolve()),
     setPersistence: vi.fn(() => Promise.resolve()),
     select: vi.fn(),
-    getBlob: vi.fn(() => Promise.resolve(undefined)),
+    getBlob: vi.fn(() => Promise.resolve(new Blob(["pdf"], { type: "application/pdf" }))),
     updatePageCount: vi.fn(() => Promise.resolve()),
   };
 }
@@ -122,7 +161,6 @@ beforeEach(() => {
 
 /** Drives the wizard from step 0 through step 3 (Choose AI), selecting the fixture doc/template/provider. */
 function advanceToRunSettings() {
-  fireEvent.click(screen.getByRole("radio", { name: /po\.pdf/i }));
   fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
   fireEvent.click(screen.getByRole("radio", { name: /PO \(v1\)/i }));
@@ -141,35 +179,121 @@ function advanceToReview() {
 }
 
 describe("NewBenchmarkWizard", () => {
-  it("renders the first step with document choices", () => {
+  it("renders the demo document ready to test", () => {
     render(<NewBenchmarkWizard />);
-    expect(screen.getByRole("heading", { name: /choose a document to test/i })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /po\.pdf/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /test document/i })).toBeInTheDocument();
+    expect(screen.getByText("po.pdf")).toBeInTheDocument();
+  });
+
+  it("shows a PDF preview for the selected document", async () => {
+    render(<NewBenchmarkWizard />);
+    expect(await screen.findByRole("heading", { name: /^preview$/i })).toBeInTheDocument();
+    expect(await screen.findByTestId("pdf-preview")).toHaveTextContent("PDF preview");
+    fireEvent.click(screen.getByRole("button", { name: /open full-screen pdf preview/i }));
+    expect(screen.getByRole("dialog", { name: /pdf preview/i })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /close full-screen pdf preview/i }));
+    expect(screen.queryByRole("dialog", { name: /pdf preview/i })).not.toBeInTheDocument();
+  });
+
+  it("edits fields visually and keeps Advanced JSON Schema synchronized", () => {
+    const profileState = profilesResult();
+    useProfilesMock.mockReturnValue(profileState);
+    render(<NewBenchmarkWizard />);
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    fireEvent.click(screen.getByRole("radio", { name: /PO \(v1\)/i }));
+    const prompt = screen.getByRole("textbox", { name: /extraction prompt/i });
+    expect(prompt).toHaveValue("x");
+
+    fireEvent.change(prompt, { target: { value: "Extract only the printed purchase order fields." } });
+    expect(prompt).toHaveValue("Extract only the printed purchase order fields.");
+    expect(screen.getByText(/changes here don't modify the saved library template/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /requested output fields/i })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Document info" })).toBeInTheDocument();
+    expect(screen.getByText("doc_info")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Line items" })).toBeInTheDocument();
+    expect(screen.getByText("row_data[]")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("document_number")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("qty")).toBeInTheDocument();
+    expect(screen.getByLabelText("Required status doc_info.document_number")).toHaveValue("optional");
+
+    fireEvent.change(screen.getByDisplayValue("document_number"), { target: { value: "po_number" } });
+    fireEvent.change(screen.getByLabelText("Field type doc_info.po_number"), { target: { value: "number" } });
+    fireEvent.change(screen.getByLabelText("Required status doc_info.po_number"), { target: { value: "required" } });
+    expect(screen.getByDisplayValue("po_number")).toBeInTheDocument();
+    expect(screen.getByLabelText("Field type doc_info.po_number")).toHaveValue("number");
+    expect(screen.getByLabelText("Required status doc_info.po_number")).toHaveValue("required");
+
+    fireEvent.click(screen.getAllByRole("button", { name: /add field/i })[0]);
+    expect(screen.getByDisplayValue("new_field")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /delete field doc_info\.po_number/i }));
+    expect(screen.queryByDisplayValue("po_number")).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: /add section/i }));
+    expect(screen.getByRole("heading", { name: /new section/i })).toBeInTheDocument();
+    expect(profileState.update).not.toHaveBeenCalled();
+
+    const schema = screen.getByLabelText("JSON schema for this benchmark");
+    expect((schema as HTMLTextAreaElement).value).toContain('"row_data"');
+    fireEvent.change(schema, {
+      target: {
+        value: '{"type":"object","properties":{"doc_info":{"type":"object","properties":{"invoice_id":{"type":"string"}}}}}',
+      },
+    });
+    expect(screen.getByDisplayValue("invoice_id")).toBeInTheDocument();
+    expect(screen.queryByText("row_data[]")).not.toBeInTheDocument();
+
+    fireEvent.change(schema, { target: { value: "{broken" } });
+    expect(screen.getByText(/schema has 1 error/i)).toBeInTheDocument();
+    expect(screen.getByText(/visual builder is paused/i)).toBeInTheDocument();
   });
 
   it("cannot continue or jump ahead without a document, template, or provider", () => {
     render(<NewBenchmarkWizard />);
-    expect(screen.getByRole("button", { name: /continue/i })).toBeDisabled();
+    // The active/demo document is selected automatically so its preview is immediately visible.
+    expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
     // Stepper buttons past the current one are disabled until their prerequisite is met.
-    expect(screen.getByRole("button", { name: /what to extract/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /what to extract/i })).toBeEnabled();
     expect(screen.getByRole("button", { name: /choose ai/i })).toBeDisabled();
 
-    fireEvent.click(screen.getByRole("radio", { name: /po\.pdf/i }));
     expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
   });
 
   it("preserves selections when navigating back and forward", () => {
     render(<NewBenchmarkWizard />);
-    fireEvent.click(screen.getByRole("radio", { name: /po\.pdf/i }));
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
     expect(screen.getByRole("heading", { name: /what should the ai extract/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /back/i }));
-    expect(screen.getByRole("heading", { name: /choose a document to test/i })).toBeInTheDocument();
-    expect(screen.getByRole("radio", { name: /po\.pdf/i })).toBeChecked();
+    expect(screen.getByRole("heading", { name: /test document/i })).toBeInTheDocument();
+    expect(screen.getByText("po.pdf")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
     expect(screen.getByRole("heading", { name: /what should the ai extract/i })).toBeInTheDocument();
+  });
+
+  it("automatically selects the only eligible Golden result", () => {
+    const state = goldensResult();
+    state.goldens = [
+      {
+        id: "golden-1",
+        documentId: "doc-1",
+        profileId: "p-1",
+        profileVersion: 1,
+        version: 1,
+        json: {},
+        sha256: "g",
+        schemaValid: true,
+        createdAt: "2026-08-15T00:00:00.000Z",
+      },
+    ];
+    useGoldensMock.mockReturnValue(state);
+
+    render(<NewBenchmarkWizard />);
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    fireEvent.click(screen.getByRole("radio", { name: /PO \(v1\)/i }));
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+
+    expect(screen.getByRole("radio", { name: /expected result v1/i })).toBeChecked();
   });
 
   it("reaches Review & Run and shows evidence after a successful Quick Test", async () => {
@@ -228,7 +352,6 @@ describe("NewBenchmarkWizard", () => {
     useProviderConfigsMock.mockReturnValue(providersResult([openaiConfig]));
 
     render(<NewBenchmarkWizard />);
-    fireEvent.click(screen.getByRole("radio", { name: /po\.pdf/i }));
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
     fireEvent.click(screen.getByRole("radio", { name: /PO \(v1\)/i }));
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));

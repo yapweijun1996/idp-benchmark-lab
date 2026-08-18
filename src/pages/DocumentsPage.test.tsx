@@ -15,7 +15,7 @@ function emptyResult(): UseDocumentsResult {
     loading: false,
     error: null,
     refresh: vi.fn(() => Promise.resolve()),
-    upload: vi.fn(() => Promise.resolve()),
+    upload: vi.fn(() => Promise.resolve(record)),
     remove: vi.fn(() => Promise.resolve()),
     setPersistence: vi.fn(() => Promise.resolve()),
     select: vi.fn(),
@@ -48,21 +48,24 @@ describe("DocumentsPage", () => {
     render(<DocumentsPage />);
     expect(screen.getByText("golden-po.pdf")).toBeInTheDocument();
     expect(screen.getByText(/abcdef0123…/)).toBeInTheDocument();
-    expect(screen.getByText("session")).toBeInTheDocument();
-    expect(screen.getByText("active")).toBeInTheDocument();
+    expect(screen.getByText("Session only")).toBeInTheDocument();
+    expect(screen.getByText("Previewing")).toBeInTheDocument();
   });
 
   it("deletes a document via the Delete button and shows confirmation", async () => {
     const remove = vi.fn(() => Promise.resolve());
     useDocumentsMock.mockReturnValue({ ...emptyResult(), documents: [record], remove });
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
     render(<DocumentsPage />);
     screen.getByRole("button", { name: /delete/i }).click();
+    expect(confirm).toHaveBeenCalledWith("Delete golden-po.pdf from this browser?");
     expect(remove).toHaveBeenCalledWith("doc-1");
     expect(await screen.findByText(/✓ golden-po\.pdf deleted/i)).toBeInTheDocument();
+    confirm.mockRestore();
   });
 
   it("shows a success message after a successful upload", async () => {
-    const upload = vi.fn(() => Promise.resolve());
+    const upload = vi.fn(() => Promise.resolve({ ...record, id: "uploaded-invoice" }));
     useDocumentsMock.mockReturnValue({ ...emptyResult(), upload });
     render(<DocumentsPage />);
     const file = new File(["%PDF"], "invoice.pdf", { type: "application/pdf" });

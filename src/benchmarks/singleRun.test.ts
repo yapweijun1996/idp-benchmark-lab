@@ -152,6 +152,23 @@ describe("SingleRunService", () => {
     expect(result.suite.status).toBe("completed");
   });
 
+  it("uses a prompt override without changing the saved profile", async () => {
+    const adapter = fakeAdapter();
+    adapter.extract.mockResolvedValue({
+      raw: '{"document_number":"0004131999"}',
+      json: { document_number: "0004131999" },
+      providerCalls: 1,
+    });
+    const { service, input, profile } = await seed(adapter);
+    const promptOverride = "Extract only the printed purchase order fields.";
+    const result = await service.run({ ...input, promptOverride });
+
+    const request = adapter.extract.mock.calls[0]?.[0] as NormalizedExtractionRequest;
+    expect(request.prompt).toContain(promptOverride);
+    expect(result.suite.identity.promptSha256).not.toBe(profile.promptSha256);
+    expect((await db.extractionProfiles.get(profile.id))?.basePrompt).toBe(profileInput.basePrompt);
+  });
+
   it("records provider errors without corrupting the suite", async () => {
     const adapter = fakeAdapter();
     adapter.extract.mockRejectedValue({ category: "auth", message: "bad key", retryable: false });

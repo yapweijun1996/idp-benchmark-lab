@@ -73,6 +73,8 @@ export type PricingSnapshot = {
 
 export type InputMode = "native_pdf" | "canonical_images";
 
+export type LanguageCode = "en" | "zh" | "ms" | "ja" | "vi";
+
 export type BenchmarkIdentity = {
   documentSha256: string;
   profileId: string;
@@ -155,6 +157,7 @@ export type BenchmarkRun = {
 
 export type AppSettings = {
   id: "app";
+  language?: LanguageCode;
   defaultProviderId?: string;
   defaultConcurrency: number;
   defaultInputMode: InputMode;

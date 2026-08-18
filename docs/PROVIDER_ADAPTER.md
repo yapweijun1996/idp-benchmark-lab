@@ -39,3 +39,10 @@ type ProviderError = {
 ```
 
 Runner decides retry policy. Adapter must not retry indefinitely.
+
+The Custom OpenAI-compatible adapter supports both `chat_completions` and
+`responses` request styles. The bundled Demo GPT Gateway record is marked with
+`demoMode: true`: it runs the bundled purchase-order fixtures locally, requires
+no API key, and makes no network request. A real gateway must be saved as a
+separate custom provider configuration; its key is entered at runtime and is
+never part of the provider config, backup, or IndexedDB record.

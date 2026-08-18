@@ -3,6 +3,7 @@ import { buildFieldHeatmap } from "../evaluation/heatmap";
 import { summarizeSuite } from "../benchmarks/summary";
 import { buildFieldCsv, buildSuiteExportJson, buildSummaryCsv, downloadText } from "../export/export";
 import type { BenchmarkRun, BenchmarkSuite, GoldenAnswer } from "../storage/types";
+import { useI18n } from "../i18n";
 
 export interface SuiteDetailProps {
   suite: BenchmarkSuite;
@@ -11,6 +12,7 @@ export interface SuiteDetailProps {
 }
 
 export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
+  const { t } = useI18n();
   const [selectedRunId, setSelectedRunId] = useState<string | undefined>(undefined);
   const selected = runs.find((r) => r.id === selectedRunId);
   const heatmap = buildFieldHeatmap(runs);
@@ -53,9 +55,9 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
   };
 
   return (
-    <div className="profile-form" role="region" aria-label="Benchmark detail">
+    <div className="profile-form" role="region" aria-label={t("Benchmark detail")}>
       <h2>
-        {suite.name ?? "Benchmark"} <span className="chip chip--todo">{suite.status}</span>
+        {suite.name ?? t("Benchmark")} <span className="chip chip--todo">{t(suite.status)}</span>
       </h2>
       <p className="doc-card__meta">
         {suite.identity.model} · {suite.identity.inputMode} · {runs.length}/{suite.requestedRuns} runs
@@ -63,26 +65,26 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
 
       <div className="toolbar">
         <button type="button" className="btn" onClick={exportJson}>
-          Export JSON
+          {t("Export JSON")}
         </button>
         <button type="button" className="btn" onClick={exportSummaryCsv}>
-          Export summary CSV
+          {t("Export summary CSV")}
         </button>
         <button type="button" className="btn" onClick={exportFieldCsv}>
-          Export field CSV
+          {t("Export field CSV")}
         </button>
       </div>
 
-      <h3>Field accuracy heatmap</h3>
+      <h3>{t("Field accuracy heatmap")}</h3>
       {heatmap.length === 0 ? (
-        <p className="empty-state">No evaluated mismatches in this benchmark.</p>
+        <p className="empty-state">{t("No evaluated mismatches in this benchmark.")}</p>
       ) : (
         <table className="summary-table">
           <thead>
             <tr>
-              <th>Field path</th>
-              <th>Mismatch rate</th>
-              <th>Observed (expected → actual)</th>
+              <th>{t("Field path")}</th>
+              <th>{t("Mismatch rate")}</th>
+              <th>{t("Observed (expected → actual)")}</th>
             </tr>
           </thead>
           <tbody>
@@ -105,17 +107,17 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
         </table>
       )}
 
-      <h3>Runs</h3>
+      <h3>{t("Runs")}</h3>
       <ul className="doc-list">
         {runs.map((run) => (
           <li key={run.id} className="doc-card">
             <button type="button" className="doc-card__main" onClick={() => setSelectedRunId(run.id)}>
               <span className="doc-card__name">
-                Run {run.runNumber} <span className={stateChip(run.state)}>{run.state}</span>
+                {t("Run")} {run.runNumber} <span className={stateChip(run.state)}>{t(run.state)}</span>
               </span>
               <span className="doc-card__meta">
                 {run.latencyMs !== undefined ? run.latencyMs + " ms" : "—"} ·{" "}
-                {run.costUsd !== undefined ? "$" + run.costUsd.toFixed(6) : "cost unknown"} ·{" "}
+                {run.costUsd !== undefined ? "$" + run.costUsd.toFixed(6) : t("cost unknown")} ·{" "}
                 {run.outputHash?.slice(0, 10)}…
               </span>
             </button>
@@ -129,9 +131,10 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
 }
 
 function RunInspector({ run, golden }: { run: BenchmarkRun; golden?: GoldenAnswer }) {
+  const { t } = useI18n();
   return (
-    <div className="progress-panel" role="region" aria-label={"Run " + run.runNumber + " inspector"}>
-      <h3>Run {run.runNumber} inspector</h3>
+    <div className="progress-panel" role="region" aria-label={`${t("Run")} ${run.runNumber} ${t("inspector")}`}>
+      <h3>{t("Run")} {run.runNumber} {t("inspector")}</h3>
       {run.error ? (
         <p className="status-error">
           {run.error.category}: {run.error.message}
@@ -141,9 +144,9 @@ function RunInspector({ run, golden }: { run: BenchmarkRun; golden?: GoldenAnswe
         <table className="summary-table">
           <thead>
             <tr>
-              <th>Path</th>
-              <th>Expected</th>
-              <th>Actual</th>
+              <th>{t("Path")}</th>
+              <th>{t("Expected")}</th>
+              <th>{t("Actual")}</th>
             </tr>
           </thead>
           <tbody>
@@ -158,17 +161,17 @@ function RunInspector({ run, golden }: { run: BenchmarkRun; golden?: GoldenAnswe
         </table>
       ) : null}
       <details open>
-        <summary>Parsed JSON</summary>
+        <summary>{t("Parsed JSON")}</summary>
         <pre className="raw-pre">{JSON.stringify(run.parsedJson, null, 2)}</pre>
       </details>
       {golden ? (
         <details>
-          <summary>Expected Result (v{golden.version})</summary>
+          <summary>{t("Expected Result")} (v{golden.version})</summary>
           <pre className="raw-pre">{JSON.stringify(golden.json, null, 2)}</pre>
         </details>
       ) : null}
       <details>
-        <summary>Raw provider response</summary>
+        <summary>{t("Raw provider response")}</summary>
         <pre className="raw-pre">{run.safeRawResponse ?? "(none)"}</pre>
       </details>
     </div>

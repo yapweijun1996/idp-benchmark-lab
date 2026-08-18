@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { PDFDocumentProxy } from "pdfjs-dist";
 import { usePdfDocument } from "./usePdfDocument";
+import { useI18n } from "../i18n";
 
 interface PdfPreviewProps {
   blob: Blob;
@@ -13,6 +14,7 @@ interface PdfPreviewProps {
  * scrolls near the viewport, keeping memory bounded for large documents.
  */
 export function PdfPreview({ blob, scale = 1.5, onPageCount }: PdfPreviewProps) {
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const { numPages, loading, error, doc } = usePdfDocument(blob);
 
@@ -32,6 +34,9 @@ export function PdfPreview({ blob, scale = 1.5, onPageCount }: PdfPreviewProps) 
     if (!doc || !container) {
       return;
     }
+    // Start each document/scale render at the top so a remounted preview does
+    // not inherit a stale scroll position from a previous document.
+    container.scrollTop = 0;
     const rendered = new Set<number>();
     const observers: IntersectionObserver[] = [];
 
@@ -53,7 +58,7 @@ export function PdfPreview({ blob, scale = 1.5, onPageCount }: PdfPreviewProps) 
             }
             rendered.add(n);
             observer.disconnect();
-            void renderPage(doc, n, holder, scale);
+            void renderPage(doc, n, holder, scale, t("Failed to render page"));
           }
         },
         { rootMargin: "240px 0px" },
@@ -68,19 +73,19 @@ export function PdfPreview({ blob, scale = 1.5, onPageCount }: PdfPreviewProps) 
       }
       container.replaceChildren();
     };
-  }, [doc, scale]);
+  }, [doc, scale, t]);
 
   if (loading) {
     return (
       <p role="status" className="pdf-preview__status">
-        Loading PDF…
+        {t("Loading PDF")}…
       </p>
     );
   }
   if (error) {
     return (
       <p role="alert" className="pdf-preview__status pdf-preview__status--error">
-        Failed to load PDF: {error}
+        {t("Failed to load PDF")}: {error}
       </p>
     );
   }
@@ -91,14 +96,14 @@ export function PdfPreview({ blob, scale = 1.5, onPageCount }: PdfPreviewProps) 
   return (
     <div className="pdf-preview">
       <p className="pdf-preview__meta">
-        {numPages} page{numPages === 1 ? "" : "s"}
+        {numPages} {t(numPages === 1 ? "page" : "pages")}
       </p>
       <div ref={containerRef} className="pdf-preview__pages" />
     </div>
   );
 }
 
-async function renderPage(doc: PDFDocumentProxy, pageNumber: number, holder: HTMLElement, scale: number) {
+async function renderPage(doc: PDFDocumentProxy, pageNumber: number, holder: HTMLElement, scale: number, renderError: string) {
   try {
     const page = await doc.getPage(pageNumber);
     const viewport = page.getViewport({ scale });
@@ -121,6 +126,6 @@ async function renderPage(doc: PDFDocumentProxy, pageNumber: number, holder: HTM
     holder.appendChild(canvas);
     page.cleanup();
   } catch {
-    holder.textContent = `Failed to render page ${pageNumber}`;
+    holder.textContent = `${renderError} ${pageNumber}`;
   }
 }

@@ -30,6 +30,7 @@ afterEach(() => {
 
 const request = {
   mode: "canonical_images" as const,
+  documentName: "popular-po-demo.pdf",
   images: [{ mimeType: "image/png" as const, dataUrl: "data:image/png;base64,AAAA" }],
   prompt: "Extract JSON.",
 };
@@ -45,6 +46,65 @@ describe("customAdapter.extract", () => {
     expect(headers.Authorization).toBe("Bearer local-key-123");
     expect(headers["X-Team"]).toBe("bench");
     expect(result.json).toEqual({ a: 1 });
+  });
+
+  it("calls the Responses API and reads output_text responses", async () => {
+    const responsesConfig: ProviderContext = {
+      config: { ...config, model: "gpt-5.4-mini", settings: { apiStyle: "responses" } },
+      apiKey: "gateway-key",
+    };
+    fetchMock.mockResolvedValue(jsonResponse({ output_text: '{"a":1}', usage: { input_tokens: 4, output_tokens: 2, total_tokens: 6 } }));
+    const result = await customAdapter.extract(request, responsesConfig);
+
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("https://llm.example.com/v1/responses");
+    const body = JSON.parse(init?.body as string) as { model: string; stream: boolean; input: unknown };
+    expect(body.model).toBe("gpt-5.4-mini");
+    expect(body.stream).toBe(false);
+    expect(body.input).toBeDefined();
+    expect(result.json).toEqual({ a: 1 });
+    expect(result.usage).toEqual({ inputTokens: 4, outputTokens: 2, totalTokens: 6 });
+  });
+
+  it("runs the bundled demo locally without a key or network request", async () => {
+    const demoContext: ProviderContext = {
+      config: {
+        ...config,
+        id: "demo-provider-gpt-gateway",
+        name: "Demo GPT Gateway",
+        settings: { apiStyle: "responses", demoMode: true },
+      },
+      apiKey: "",
+    };
+    const result = await customAdapter.extract(request, demoContext);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(result.providerCalls).toBe(0);
+    expect(result.json).toMatchObject({
+      doc_info: { document_number: "0083217", date: "15.03.2024" },
+      row_data: expect.arrayContaining([expect.objectContaining({ stock_code: "910-006021", qty: "2" })]),
+    });
+  });
+
+  it("runs the bundled Nexabyte purchase order locally without a key or network request", async () => {
+    const demoContext: ProviderContext = {
+      config: {
+        ...config,
+        id: "demo-provider-gpt-gateway",
+        name: "Demo GPT Gateway",
+        settings: { apiStyle: "responses", demoMode: true },
+      },
+      apiKey: "",
+    };
+    const result = await customAdapter.extract({ ...request, documentName: "nexabyte-purchase-order.pdf" }, demoContext);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(result.providerCalls).toBe(0);
+    expect(result.json).toMatchObject({
+      doc_info: { document_number: "PO2608-00152" },
+      row_data: expect.arrayContaining([expect.objectContaining({ item_code: "NB-ASU-001", qty: "2" })]),
+      totals: { grand_total: "10,557.74" },
+    });
   });
 
   it("omits response_format when useJsonObject is false", async () => {
@@ -96,6 +156,19 @@ describe("customAdapter.testConnection", () => {
     fetchMock.mockResolvedValue(jsonResponse({ data: [] }));
     const result = await customAdapter.testConnection(ctx);
     expect(result.ok).toBe(true);
+  });
+
+  it("tests a Responses API endpoint with a minimal request", async () => {
+    const responsesConfig: ProviderContext = {
+      config: { ...config, settings: { apiStyle: "responses" } },
+      apiKey: "gateway-key",
+    };
+    fetchMock.mockResolvedValue(jsonResponse({ output_text: "pong" }));
+    const result = await customAdapter.testConnection(responsesConfig);
+    const [url, init] = fetchMock.mock.calls[0]!;
+    expect(url).toBe("https://llm.example.com/v1/responses");
+    expect(init?.method).toBe("POST");
+    expect(result).toEqual({ ok: true, message: "Custom Responses endpoint reachable; API key accepted." });
   });
 
   it("explains missing /models route with a CORS hint", async () => {

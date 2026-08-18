@@ -5,12 +5,15 @@ import { summarizeSuite, type SuiteSummary } from "../benchmarks/summary";
 import { browserExecuteDeps } from "../documents/runtimeDeps";
 import { getAppSettings } from "../storage/settings";
 import type { BenchmarkRun, BenchmarkSuite, InputMode } from "../storage/types";
+import { useI18n } from "../i18n";
 
 export interface BenchmarkSelection {
   documentId: string;
   profileId: string;
   providerConfigId: string;
   goldenId?: string;
+  promptOverride?: string;
+  schemaOverride?: unknown;
   mode: InputMode;
   temperature?: number;
   thinking?: string;
@@ -39,6 +42,7 @@ export function RepeatedBenchmarkSection({
   /** 由父级能力门禁计算：非空时禁止启动基准并展示原因。 */
   unsupportedReason?: string;
 }) {
+  const { t } = useI18n();
   const [preset, setPresetState] = useState<number>(5);
   const [concurrency, setConcurrency] = useState("1");
   const [budget, setBudget] = useState("");
@@ -71,11 +75,15 @@ export function RepeatedBenchmarkSection({
     setSummary(null);
     setError(null);
     if (!selection.documentId || !selection.profileId || !selection.providerConfigId) {
-      setError("Select a document, profile, and provider before benchmarking.");
+      setError(t("Select a document, profile, and provider before benchmarking."));
+      return;
+    }
+    if (selection.promptOverride !== undefined && !selection.promptOverride.trim()) {
+      setError(t("The extraction prompt cannot be empty."));
       return;
     }
     if (unsupportedReason) {
-      setError("Incompatible configuration: " + unsupportedReason);
+      setError(`${t("Incompatible configuration")}: ${unsupportedReason}`);
       return;
     }
     collectedRunsRef.current = [];
@@ -117,7 +125,7 @@ export function RepeatedBenchmarkSection({
     } finally {
       setRunning(false);
     }
-  }, [selection, preset, concurrency, budget, benchmarkFactory, unsupportedReason]);
+  }, [selection, preset, concurrency, budget, benchmarkFactory, unsupportedReason, t]);
 
   const stop = () => {
     runnerRef.current?.requestStop();
@@ -125,14 +133,13 @@ export function RepeatedBenchmarkSection({
 
   return (
     <div className="profile-form">
-      <h2>Repeated benchmark</h2>
+      <h2>{t("Repeated benchmark")}</h2>
       <p className="doc-card__meta">
-        Uses the document, profile, provider, golden, and input mode selected above. Every run records its own
-        evidence.
+        {t("Uses the document, profile, provider, golden, and input mode selected above. Every run records its own evidence.")}
       </p>
 
       <fieldset className="mode-picker">
-        <legend>Run count</legend>
+        <legend>{t("Run count")}</legend>
         {RUN_PRESETS.map((n) => (
           <label key={n}>
             <input
@@ -149,7 +156,7 @@ export function RepeatedBenchmarkSection({
 
       <div className="golden-grid">
         <label className="field">
-          <span>Concurrency</span>
+          <span>{t("Concurrency")}</span>
           <input
             type="number"
             min={1}
@@ -159,14 +166,14 @@ export function RepeatedBenchmarkSection({
           />
         </label>
         <label className="field">
-          <span>Hard budget cap USD (optional)</span>
+          <span>{t("Hard budget cap USD (optional)")}</span>
           <input type="number" step="0.01" min={0} value={budget} onChange={(e) => setBudget(e.target.value)} />
         </label>
       </div>
 
       {unsupportedReason ? (
         <p role="status" className="schema-bad">
-          Incompatible configuration: {unsupportedReason}
+          {t("Incompatible configuration")}: {unsupportedReason}
         </p>
       ) : null}
 
@@ -183,21 +190,21 @@ export function RepeatedBenchmarkSection({
           onClick={() => void start()}
           disabled={running || Boolean(unsupportedReason)}
         >
-          {running ? "Benchmark running…" : "Start benchmark"}
+          {running ? t("Benchmark running…") : t("Start benchmark")}
         </button>
         <button type="button" className="btn" onClick={stop} disabled={!running}>
-          Stop
+          {t("Stop")}
         </button>
       </div>
 
       {progress ? (
         <div role="status" className="progress-panel">
           <p>
-            {running ? "Running: " : ""}
-            {progress.completed} of {progress.total} runs completed · {progress.succeeded} succeeded ·{" "}
-            {progress.schemaInvalid} schema-invalid · {progress.failed} failed
+            {running ? `${t("Running")}: ` : ""}
+            {progress.completed} {t("of")} {progress.total} {t("runs completed")} · {progress.succeeded} {t("succeeded")} ·{" "}
+            {progress.schemaInvalid} {t("schema-invalid")} · {progress.failed} {t("failed")}
           </p>
-          <progress max={progress.total} value={progress.completed} aria-label="Benchmark progress" />
+          <progress max={progress.total} value={progress.completed} aria-label={t("Benchmark progress")} />
         </div>
       ) : null}
 
@@ -214,12 +221,13 @@ export function RepeatedBenchmarkSection({
 }
 
 function SummaryPanel({ summary, suite }: { summary: SuiteSummary; suite: BenchmarkSuite | null }) {
+  const { t } = useI18n();
   const pct = (v: number | undefined): string => (v === undefined ? "—" : (v * 100).toFixed(1) + "%");
   const usd = (v: number | undefined): string => (v === undefined ? "unknown" : "$" + v.toFixed(6));
   return (
-    <div className="progress-panel" role="region" aria-label="Benchmark summary">
+    <div className="progress-panel" role="region" aria-label={t("Benchmark summary")}>
       <h3>
-        Summary{" "}
+        {t("Summary")}{" "}
         <span className={"chip " + (suite?.status === "completed" ? "chip--ok" : "chip--todo")}>
           {suite?.status ?? ""}
         </span>
@@ -227,37 +235,37 @@ function SummaryPanel({ summary, suite }: { summary: SuiteSummary; suite: Benchm
       <table className="summary-table">
         <tbody>
           <tr>
-            <th>Exact pass rate</th>
+            <th>{t("Exact pass rate")}</th>
             <td>{pct(summary.exactPassRate)}</td>
-            <th>Schema-valid rate</th>
+            <th>{t("Schema-valid rate")}</th>
             <td>{pct(summary.schemaValidRate)}</td>
           </tr>
           <tr>
-            <th>Avg leaf accuracy</th>
+            <th>{t("Avg leaf accuracy")}</th>
             <td>{pct(summary.avgLeafAccuracy)}</td>
-            <th>Row accuracy</th>
+            <th>{t("Row accuracy")}</th>
             <td>{pct(summary.rowAccuracy)}</td>
           </tr>
           <tr>
-            <th>Consistency</th>
+            <th>{t("Consistency")}</th>
             <td>{pct(summary.consistencyRate)}</td>
-            <th>Unique variants</th>
+            <th>{t("Unique variants")}</th>
             <td>{summary.uniqueVariants}</td>
           </tr>
           <tr>
-            <th>Expected Result stability</th>
+            <th>{t("Expected Result stability")}</th>
             <td>{pct(summary.goldenStability)}</td>
-            <th>Error rate</th>
+            <th>{t("Error rate")}</th>
             <td>{pct(summary.errorRate)}</td>
           </tr>
           <tr>
-            <th>Latency avg / p50 / p95</th>
+            <th>{t("Latency avg / p50 / p95")}</th>
             <td>
               {summary.latency.avg === undefined ? "—" : Math.round(summary.latency.avg) + " ms"} /{" "}
               {summary.latency.p50 === undefined ? "—" : Math.round(summary.latency.p50) + " ms"} /{" "}
               {summary.latency.p95 === undefined ? "—" : Math.round(summary.latency.p95) + " ms"}
             </td>
-            <th>Cost total / avg / per-correct</th>
+            <th>{t("Cost total / avg / per-correct")}</th>
             <td>
               {usd(summary.cost.totalUsd)} / {usd(summary.cost.avgPerRun)} / {usd(summary.cost.costPerCorrect)}
             </td>
@@ -265,8 +273,8 @@ function SummaryPanel({ summary, suite }: { summary: SuiteSummary; suite: Benchm
         </tbody>
       </table>
       <p className="doc-card__meta">
-        Attempted {summary.attemptedRuns} of {summary.requestedRuns} runs · {summary.succeededRuns} succeeded ·{" "}
-        {summary.schemaInvalidRuns} schema-invalid · {summary.providerErrorRuns} provider errors
+        {t("Attempted")} {summary.attemptedRuns} {t("of")} {summary.requestedRuns} {t("runs")} · {summary.succeededRuns} {t("succeeded")} ·{" "}
+        {summary.schemaInvalidRuns} {t("schema-invalid")} · {summary.providerErrorRuns} {t("provider errors")}
       </p>
     </div>
   );

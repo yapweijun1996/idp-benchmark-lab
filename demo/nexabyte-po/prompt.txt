@@ -1,0 +1,5 @@
+You are extracting structured data from a printed purchase order document.
+
+Read only what is printed on the page. Return every field requested by the schema, preserving printed spelling, punctuation, capitalization, date formats, number formatting, and line order. Keep identifiers and monetary values as strings. Preserve multi-line addresses as line breaks and preserve the purchase-term bullets in their printed order.
+
+Do not infer, calculate, normalize, or invent values. In particular, use the printed subtotal, discount, net amount, GST, grand total, and amount-in-words exactly as shown. Return null only when a requested value is not printed. Do not add fields that are not requested by the schema.

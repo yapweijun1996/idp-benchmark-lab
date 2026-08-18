@@ -3,6 +3,57 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SettingsHubPage } from "./SettingsHubPage";
 import { getDb } from "../storage/db";
 
+vi.mock("../demo/seedDemoFixture", () => ({
+  seedDemoFixture: vi.fn(async (db: ReturnType<typeof getDb>) => {
+    await db.documents.put({
+      id: "demo-document-popular-po",
+      name: "popular-po-demo.pdf",
+      mimeType: "application/pdf",
+      size: 1,
+      sha256: "demo",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      storageMode: "indexeddb",
+    });
+    await db.extractionProfiles.put({
+      id: "demo-profile-popular-po",
+      name: "Demo: Popular Purchase Order",
+      version: 1,
+      basePrompt: "demo",
+      extractionContract: [],
+      jsonSchema: {},
+      promptSha256: "demo",
+      schemaSha256: "demo",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    });
+    await db.goldenAnswers.put({
+      id: "demo-golden-popular-po",
+      documentId: "demo-document-popular-po",
+      profileId: "demo-profile-popular-po",
+      profileVersion: 1,
+      version: 1,
+      json: {},
+      sha256: "demo",
+      schemaValid: true,
+      createdAt: "2026-01-01T00:00:00.000Z",
+    });
+    await db.providerConfigs.put({
+      id: "demo-provider-gpt-gateway",
+      kind: "openai_compatible",
+      name: "Demo GPT Gateway",
+      baseUrl: "https://gpt.yapweijun1996.com/v1",
+      model: "gpt-5.4-mini",
+      settings: { apiStyle: "responses" },
+    });
+    return {
+      documentId: "demo-document-popular-po",
+      profileId: "demo-profile-popular-po",
+      goldenId: "demo-golden-popular-po",
+      providerConfigId: "demo-provider-gpt-gateway",
+    };
+  }),
+}));
+
 beforeEach(async () => {
   const db = getDb();
   await Promise.all(db.tables.map((t) => t.clear()));
@@ -41,7 +92,7 @@ describe("SettingsHubPage", () => {
     expect(screen.getByRole("radio", { name: "20" })).toBeChecked();
   });
 
-  it("Storage tab shows record counts and requires two clicks to clear data", async () => {
+  it("Storage tab shows record counts and restores the bundled demo after clearing user data", async () => {
     const db = getDb();
     await db.documents.put({
       id: "d-1",
@@ -62,7 +113,14 @@ describe("SettingsHubPage", () => {
     expect(await db.documents.count()).toBe(1);
 
     fireEvent.click(screen.getByRole("button", { name: /yes, clear everything/i }));
-    await vi.waitFor(async () => expect(await db.documents.count()).toBe(0));
+    await vi.waitFor(async () => {
+      expect(await db.documents.get("d-1")).toBeUndefined();
+      expect(await db.documents.get("demo-document-popular-po")).toBeDefined();
+      expect(await db.extractionProfiles.get("demo-profile-popular-po")).toBeDefined();
+      expect(await db.goldenAnswers.get("demo-golden-popular-po")).toBeDefined();
+      expect(await db.providerConfigs.get("demo-provider-gpt-gateway")).toBeDefined();
+    });
+    await vi.waitFor(() => expect(screen.getByText(/bundled demo fixture was restored/i)).toBeInTheDocument());
   });
 
   it("Storage tab clear can be cancelled without deleting data", async () => {

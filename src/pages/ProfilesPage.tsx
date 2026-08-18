@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useProfiles } from "../profiles/useProfiles";
 import { validateJsonSchema } from "../profiles/schema";
 import type { ExtractionProfile } from "../storage/types";
+import { useI18n } from "../i18n";
 
 function shortHash(hash: string): string {
   return `${hash.slice(0, 10)}…`;
@@ -48,6 +49,7 @@ const EMPTY_FORM: FormState = {
 };
 
 export function ProfilesPage() {
+  const { t } = useI18n();
   const profiles = useProfiles();
   const [editingId, setEditingId] = useState<string | "new" | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -84,17 +86,17 @@ export function ProfilesPage() {
   const save = async () => {
     const contract = parseJson(form.contractText || "{}");
     if (!contract.ok) {
-      setFormError(`Extraction contract JSON: ${contract.error}`);
+      setFormError(`${t("Extraction contract JSON")}: ${contract.error}`);
       return;
     }
     const schema = parseJson(form.schemaText);
     if (!schema.ok) {
-      setFormError(`JSON schema: ${schema.error}`);
+      setFormError(`${t("JSON schema")}: ${schema.error}`);
       return;
     }
     const check = validateJsonSchema(schema.value);
     if (!check.valid) {
-      setFormError(`JSON schema invalid: ${check.errors.join("; ")}`);
+      setFormError(`${t("JSON schema invalid")}: ${check.errors.join("; ")}`);
       return;
     }
     const input = {
@@ -112,7 +114,7 @@ export function ProfilesPage() {
       const saved = editingId === "new" ? await profiles.create(input) : editingId ? await profiles.update(editingId, input) : null;
       setEditingId(null);
       setFormError(null);
-      setSavedMessage(saved ? `✓ Extraction Template saved as version ${saved.version}` : null);
+      setSavedMessage(saved ? `✓ ${t("Extraction Template saved as version")} ${saved.version}` : null);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : String(e));
     }
@@ -122,8 +124,8 @@ export function ProfilesPage() {
 
   return (
     <section aria-labelledby="profiles-title">
-      <h2 id="profiles-title">Extraction Templates</h2>
-      <p>Modular templates: base prompt + extraction contract + JSON schema + normalization policy. Each save creates a new version.</p>
+      <h2 id="profiles-title">{t("Extraction Templates")}</h2>
+      <p>{t("Modular templates: base prompt + extraction contract + JSON schema + normalization policy. Each save creates a new version.")}</p>
 
       {profiles.error ? (
         <p role="alert" className="status-error">
@@ -140,12 +142,11 @@ export function ProfilesPage() {
       {editingId === null ? (
         <>
           <button type="button" className="btn btn--primary" onClick={startCreate}>
-            New template
+            {t("New template")}
           </button>
           {profiles.profiles.length === 0 ? (
             <p className="empty-state">
-              No extraction templates yet. A template tells the AI what information to extract from a document —
-              create one to use it in a benchmark.
+              {t("No extraction templates yet. A template tells the AI what information to extract from a document — create one to use it in a benchmark.")}
             </p>
           ) : (
             <ul className="doc-list">
@@ -153,17 +154,17 @@ export function ProfilesPage() {
                 <li key={p.id} className="doc-card">
                   <button type="button" className="doc-card__main" onClick={() => startEdit(p)}>
                     <span className="doc-card__name">
-                      {p.name} <span className="chip chip--todo">v{p.version}</span>
+                    {p.name} <span className="chip chip--todo">v{p.version}</span>
                     </span>
                     <span className="doc-card__meta">
-                      prompt {shortHash(p.promptSha256)} · schema {shortHash(p.schemaSha256)}
+                    {t("prompt")} {shortHash(p.promptSha256)} · {t("schema")} {shortHash(p.schemaSha256)}
                     </span>
                   </button>
                   <button type="button" onClick={() => startEdit(p)}>
-                    Edit
+                    {t("Edit")}
                   </button>
                   <button type="button" className="btn--danger" onClick={() => void profiles.remove(p.id)}>
-                    Delete
+                    {t("Delete")}
                   </button>
                 </li>
               ))}
@@ -172,20 +173,20 @@ export function ProfilesPage() {
         </>
       ) : (
         <div className="profile-form">
-          <h3>{editing ? `Edit ${editing.name}` : "New template"}</h3>
+          <h3>{editing ? `${t("Edit")} ${editing.name}` : t("New template")}</h3>
           {editing ? (
             <p className="doc-card__meta">
-              Saving creates version {editing.version + 1} of this template.
+              {t("Saving creates version")} {editing.version + 1} {t("of this template.")}
             </p>
           ) : null}
 
           <label className="field">
-            <span>Name</span>
+            <span>{t("Name")}</span>
             <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           </label>
 
           <label className="field">
-            <span>Description (optional)</span>
+            <span>{t("Description (optional)")}</span>
             <input
               type="text"
               value={form.description}
@@ -194,7 +195,7 @@ export function ProfilesPage() {
           </label>
 
           <label className="field">
-            <span>Base prompt</span>
+            <span>{t("Base prompt")}</span>
             <textarea
               rows={6}
               value={form.basePrompt}
@@ -203,7 +204,7 @@ export function ProfilesPage() {
           </label>
 
           <label className="field">
-            <span>Extraction contract (JSON)</span>
+            <span>{t("Extraction contract (JSON)")}</span>
             <textarea
               rows={6}
               className="mono-input"
@@ -213,7 +214,7 @@ export function ProfilesPage() {
           </label>
 
           <label className="field">
-            <span>JSON schema (draft-07)</span>
+            <span>{t("JSON schema (draft-07)")}</span>
             <textarea
               rows={10}
               className="mono-input"
@@ -223,19 +224,19 @@ export function ProfilesPage() {
           </label>
           <p className={schemaCheck.valid ? "schema-ok" : "schema-bad"} role="status">
             {schemaCheck.valid
-              ? "Schema: valid draft-07"
-              : `Schema: ${schemaCheck.errors[0] ?? "invalid"}`}
+              ? t("Schema: valid draft-07")
+              : `${t("Schema")}: ${schemaCheck.errors[0] ?? t("invalid")}`}
           </p>
 
           <fieldset className="mode-picker">
-            <legend>Normalization policy (conservative only)</legend>
+            <legend>{t("Normalization policy (conservative only)")}</legend>
             <label className="checkbox">
               <input
                 type="checkbox"
                 checked={form.trimWhitespace}
                 onChange={(e) => setForm({ ...form, trimWhitespace: e.target.checked })}
               />
-              Trim outer whitespace
+              {t("Trim outer whitespace")}
             </label>
             <label className="checkbox">
               <input
@@ -243,7 +244,7 @@ export function ProfilesPage() {
                 checked={form.normalizeLineEndings}
                 onChange={(e) => setForm({ ...form, normalizeLineEndings: e.target.checked })}
               />
-              Normalize line endings
+              {t("Normalize line endings")}
             </label>
           </fieldset>
 
@@ -255,10 +256,10 @@ export function ProfilesPage() {
 
           <div className="toolbar">
             <button type="button" className="btn btn--primary" onClick={() => void save()}>
-              {editing ? "Save new version" : "Create template"}
+              {editing ? t("Save new version") : t("Create template")}
             </button>
             <button type="button" className="btn" onClick={cancel}>
-              Cancel
+              {t("Cancel")}
             </button>
           </div>
         </div>

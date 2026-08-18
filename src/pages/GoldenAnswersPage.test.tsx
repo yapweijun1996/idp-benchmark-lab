@@ -61,7 +61,7 @@ function emptyDocuments(): UseDocumentsResult {
     loading: false,
     error: null,
     refresh: vi.fn(() => Promise.resolve()),
-    upload: vi.fn(() => Promise.resolve()),
+    upload: vi.fn(() => Promise.resolve({ ...document, id: "uploaded-doc" })),
     remove: vi.fn(() => Promise.resolve()),
     setPersistence: vi.fn(() => Promise.resolve()),
     select: vi.fn(),
@@ -146,5 +146,14 @@ describe("GoldenAnswersPage", () => {
     render(<GoldenAnswersPage />);
     expect(screen.getAllByText(/^v1$/).length).toBeGreaterThan(0);
     expect(screen.getByText(/sha h/)).toBeInTheDocument();
+  });
+
+  it("shows one golden test case per document for the selected template", () => {
+    useGoldensMock.mockReturnValue({ ...emptyGoldens(), goldens: [golden], activeId: "g-1" });
+    render(<GoldenAnswersPage />);
+    fireEvent.change(screen.getByLabelText(/extraction template/i), { target: { value: "p-1" } });
+    expect(screen.getByText("Golden test set")).toBeInTheDocument();
+    expect(screen.getByText("1 / 1 ready")).toBeInTheDocument();
+    expect(screen.getByText("Ready · v1")).toBeInTheDocument();
   });
 });

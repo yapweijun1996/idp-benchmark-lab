@@ -11,6 +11,6 @@
     { "stock_code": "910-004914", "description": "LOGITECH M185 WIRELESS MOUSE GREY", "qty": "4" }
   ],
   "footer": {
-    "remark": null
+    "remark": "This purchase order lists items ordered. No totals are printed below."
   }
 }

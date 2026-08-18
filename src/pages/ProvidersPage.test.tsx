@@ -44,6 +44,16 @@ describe("ProvidersPage", () => {
     expect(screen.getByText(/limited\/test key/i)).toBeInTheDocument();
   });
 
+  it("renders provider model fields as editable comboboxes", () => {
+    render(<ProvidersPage />);
+    const models = screen.getAllByRole("combobox", { name: /^model$/i });
+    expect(models).toHaveLength(3);
+    expect(models[0]).toHaveValue("gpt-4o-mini");
+    expect(models[1]).toHaveValue("gemini-3.5-flash-lite");
+    expect(models[2]).toHaveValue("gpt-5.4-mini");
+    expect(screen.getByLabelText(/base url/i)).toHaveValue("https://gpt.yapweijun1996.com/v1");
+  });
+
   it("saves a config and keeps the key in the tab only", async () => {
     render(<ProvidersPage />);
     // 第二张卡片是 Gemini
@@ -77,5 +87,24 @@ describe("ProvidersPage", () => {
     const testButtons = screen.getAllByRole("button", { name: /test connection/i });
     fireEvent.click(testButtons[0]!);
     await vi.waitFor(() => expect(screen.getAllByText(/enter an api key first/i).length).toBeGreaterThan(0));
+  });
+
+  it("gives provider removal a clear danger action and confirmation", () => {
+    const result = emptyResult();
+    result.configs = [{ id: "cfg-1", kind: "gemini", name: "Gemini", model: "gemini-3.5-flash-lite", settings: {} }];
+    const remove = vi.fn(() => Promise.resolve());
+    result.remove = remove;
+    useProviderConfigsMock.mockReturnValue(result);
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+
+    render(<ProvidersPage />);
+
+    const removeButton = screen.getByRole("button", { name: "Remove Gemini provider" });
+    expect(removeButton).toHaveClass("btn", "btn--danger");
+    fireEvent.click(removeButton);
+
+    expect(confirm).toHaveBeenCalledWith("Remove the Gemini provider configuration from this browser?");
+    expect(remove).toHaveBeenCalledWith("cfg-1");
+    confirm.mockRestore();
   });
 });

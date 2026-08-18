@@ -73,20 +73,20 @@ describe("DashboardPage", () => {
     expect(screen.getAllByText("66.7%").length).toBeGreaterThan(0);
   });
 
-  it("shows the demo-first benchmark card for first-time users with no benchmarks", async () => {
+  it("shows the guided benchmark entry point for first-time users with no benchmarks", async () => {
     useRunHistoryMock.mockReturnValue({
       suites: [],
       loading: false,
       refresh: vi.fn(() => Promise.resolve()),
     });
     render(<DashboardPage />);
-    await vi.waitFor(() =>
-      expect(screen.getByRole("region", { name: /demo benchmark/i })).toBeInTheDocument(),
-    );
-    expect(screen.getByRole("button", { name: /run benchmark/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /upload my document/i })).toHaveAttribute("href", "#/new-benchmark");
-    // No duplicate "no data" messaging alongside the demo card.
-    expect(screen.queryByText(/no suites yet/i)).not.toBeInTheDocument();
+    await vi.waitFor(() => expect(screen.getByRole("region", { name: /guided benchmark/i })).toBeInTheDocument());
+    expect(screen.getByRole("heading", { name: /how it works/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/golden schema/i).length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: /run benchmark step by step/i })).toHaveAttribute("href", "#/new-benchmark");
+    expect(screen.getByRole("link", { name: /^start benchmark/i })).toHaveAttribute("href", "#/new-benchmark");
+    expect(screen.queryByRole("region", { name: /demo benchmark/i })).not.toBeInTheDocument();
+    expect(screen.getByText(/bundled sample is available in step 1/i)).toBeInTheDocument();
   });
 
   it("shows storage totals", async () => {
