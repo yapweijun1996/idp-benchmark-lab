@@ -13,6 +13,7 @@ import { executeExtraction, normalizeFailure, RunFailure, type ExecuteDeps, type
 import { DEFAULT_RENDER_SETTINGS } from "../documents/canonicalRenderer";
 import { sha256Hex } from "../documents/hash";
 import { canonicalJson } from "../evaluation/canonical";
+import { getSessionDocument } from "../documents/sessionStore";
 
 export { RunFailure };
 export type { ExecuteDeps, RunOutcome };
@@ -63,7 +64,7 @@ export class SingleRunService {
     const db = this.deps.db;
     const now = new Date().toISOString();
 
-    const document = await db.documents.get(input.documentId);
+    const document = (await db.documents.get(input.documentId)) ?? getSessionDocument(input.documentId);
     const profile = await db.extractionProfiles.get(input.profileId);
     const config = await db.providerConfigs.get(input.providerConfigId);
     const golden = input.goldenId ? await db.goldenAnswers.get(input.goldenId) : undefined;

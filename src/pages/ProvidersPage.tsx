@@ -2,7 +2,6 @@ import { useState } from "react";
 import { adapterFor } from "../providers/registry";
 import { useProviderConfigs } from "../providers/useProviderConfigs";
 import { clearApiKey, getApiKey, isKeyRememberedForTab, setApiKey } from "../providers/keys";
-import { DEMO_GATEWAY_BASE_URL, DEMO_GATEWAY_MODEL, DEMO_GATEWAY_SETTINGS, isDemoGatewayConfig } from "../providers/demoGateway";
 import type { ConnectionResult, ProviderContext } from "../providers/types";
 import type { ProviderConfig, ProviderKind } from "../storage/types";
 import { useI18n } from "../i18n";
@@ -12,19 +11,18 @@ interface CardForm {
   baseUrl: string;
   customHeaders: string;
   apiStyle: "chat_completions" | "responses";
-  demoMode: boolean;
 }
 
 const DEFAULTS: Record<ProviderKind, CardForm> = {
-  openai: { model: "gpt-4o-mini", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", demoMode: false },
-  gemini: { model: "gemini-3.5-flash-lite", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", demoMode: false },
-  openai_compatible: { model: DEMO_GATEWAY_MODEL, baseUrl: DEMO_GATEWAY_BASE_URL, customHeaders: "", apiStyle: "responses", demoMode: false },
+  openai: { model: "gpt-4o-mini", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
+  gemini: { model: "gemini-3.5-flash-lite", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
+  openai_compatible: { model: "local-model", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
 };
 
 const MODEL_OPTIONS: Record<ProviderKind, readonly string[]> = {
   openai: ["gpt-4o-mini", "gpt-4o"],
   gemini: ["gemini-3.5-flash-lite", "gemini-3-flash-lite", "gemini-3-pro"],
-  openai_compatible: [DEMO_GATEWAY_MODEL, "local-model"],
+  openai_compatible: ["local-model"],
 };
 
 export function ProvidersPage() {
@@ -80,7 +78,6 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
           baseUrl: existing.baseUrl ?? DEFAULTS[kind].baseUrl,
           customHeaders: existing.settings.customHeaders ? JSON.stringify(existing.settings.customHeaders) : "",
           apiStyle: existing.settings.apiStyle === "responses" ? "responses" : "chat_completions",
-          demoMode: isDemoGatewayConfig(existing),
         }
       : DEFAULTS[kind],
   );
@@ -89,7 +86,6 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-
   const save = async () => {
     let customHeaders: Record<string, string> = {};
     if (form.customHeaders.trim()) {
@@ -109,7 +105,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         model: form.model.trim(),
         settings: {
           customHeaders,
-          ...(kind === "openai_compatible" ? { apiStyle: form.apiStyle, ...(form.demoMode ? DEMO_GATEWAY_SETTINGS : {}) } : {}),
+          ...(kind === "openai_compatible" ? { apiStyle: form.apiStyle } : {}),
         },
       });
       if (apiKey.trim()) {
@@ -128,7 +124,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
     setMessage(null);
     try {
       const key = apiKey.trim() || getApiKey(existing?.id ?? "");
-      if (!key && !form.demoMode) {
+      if (!key) {
         setMessage(t("Enter an API key first."));
         return;
       }
@@ -143,7 +139,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         model: form.model.trim(),
         baseUrl: kind === "openai_compatible" ? form.baseUrl.trim() || undefined : undefined,
         settings: kind === "openai_compatible"
-          ? { apiStyle: form.apiStyle, ...(form.demoMode ? DEMO_GATEWAY_SETTINGS : {}) }
+          ? { apiStyle: form.apiStyle }
           : {},
       };
       const ctx: ProviderContext = { config, apiKey: key ?? "" };
@@ -163,9 +159,13 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
     kind,
     name: kind,
     model: form.model || DEFAULTS[kind].model,
-    settings: form.demoMode ? DEMO_GATEWAY_SETTINGS : {},
+    settings: {},
   });
-  const providerLabel = kind === "openai" ? "OpenAI" : kind === "gemini" ? "Gemini" : t("Custom OpenAI-compatible");
+  const providerLabel = kind === "openai"
+    ? "OpenAI"
+    : kind === "gemini"
+      ? "Gemini"
+      : t("Custom OpenAI-compatible");
   const removeProvider = () => {
     if (!existing) return;
     if (window.confirm(`${t("Remove the")} ${providerLabel} ${t("provider configuration from this browser?")}`)) {
@@ -218,31 +218,21 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
             </select>
           </label>
           <p className="doc-card__meta provider-preset-help">
-            {form.demoMode
-              ? t("Offline demo mode is ready without an API key. It runs the bundled sample locally and makes no network request.")
-              : t("Use a real gateway key for custom documents; it remains runtime-only and is never saved in app data.")}
+            {t("Configure an OpenAI-compatible endpoint; the API key remains runtime-only and is never saved in app data.")}
           </p>
-          <button
-            type="button"
-            className="btn provider-preset"
-            onClick={() => setForm({ ...form, ...DEMO_GATEWAY_SETTINGS, model: DEMO_GATEWAY_MODEL, baseUrl: DEMO_GATEWAY_BASE_URL })}
-          >
-            {t("Use offline demo preset")}
-          </button>
         </>
       ) : null}
 
       <label className="field">
-        <span>{form.demoMode ? t("API key (not required for offline demo)") : t("API key (memory-only by default)")}</span>
+        <span>{t("API key (memory-only by default)")}</span>
         <span className="key-row">
           <input
             type={reveal ? "text" : "password"}
             autoComplete="off"
             value={apiKey}
             onChange={(e) => setApiKeyState(e.target.value)}
-          disabled={form.demoMode}
           />
-          <button type="button" className="btn" onClick={() => setReveal((v) => !v)} disabled={form.demoMode}>
+          <button type="button" className="btn" onClick={() => setReveal((v) => !v)}>
             {reveal ? t("Hide") : t("Reveal")}
           </button>
         </span>

@@ -6,7 +6,6 @@ import {
   DEMO_DOCUMENT_ID,
   DEMO_PROFILE_ID,
   DEMO_GOLDEN_ID,
-  DEMO_PROVIDER_CONFIG_ID,
   NEXABYTE_DOCUMENT_ID,
   NEXABYTE_PROFILE_ID,
   NEXABYTE_GOLDEN_ID,
@@ -36,7 +35,6 @@ describe("seedDemoFixture", () => {
       documentId: DEMO_DOCUMENT_ID,
       profileId: DEMO_PROFILE_ID,
       goldenId: DEMO_GOLDEN_ID,
-      providerConfigId: DEMO_PROVIDER_CONFIG_ID,
     });
 
     const document = await db.documents.get(DEMO_DOCUMENT_ID);
@@ -50,7 +48,7 @@ describe("seedDemoFixture", () => {
     expect((golden?.json as { footer?: { remark?: unknown } }).footer?.remark).toBe(
       "This purchase order lists items ordered. No totals are printed below.",
     );
-    expect((await db.providerConfigs.get(DEMO_PROVIDER_CONFIG_ID))?.model).toBe("gpt-5.4-mini");
+    expect(await db.providerConfigs.count()).toBe(0);
     expect(await db.documents.get(NEXABYTE_DOCUMENT_ID)).toBeDefined();
     expect(await db.extractionProfiles.get(NEXABYTE_PROFILE_ID)).toBeDefined();
     expect(await db.goldenAnswers.get(NEXABYTE_GOLDEN_ID)).toBeDefined();
@@ -74,6 +72,6 @@ describe("seedDemoFixture", () => {
     expect(await db.documents.count()).toBe(2);
     expect(await db.extractionProfiles.count()).toBe(2);
     expect(await db.goldenAnswers.count()).toBe(2);
-    expect(await db.providerConfigs.count()).toBe(1);
+    expect(await db.providerConfigs.count()).toBe(0);
   });
 });

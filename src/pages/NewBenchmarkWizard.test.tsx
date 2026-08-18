@@ -22,7 +22,6 @@ vi.mock("../demo/seedDemoFixture", () => ({
     documentId: "demo-document-popular-po",
     profileId: "demo-profile-popular-po",
     goldenId: "demo-golden-popular-po",
-    providerConfigId: "demo-provider-gpt-gateway",
   })),
 }));
 vi.mock("../documents/PdfPreview", () => ({
@@ -81,7 +80,6 @@ const profile: ExtractionProfile = {
   updatedAt: "2026-08-15T00:00:00.000Z",
 };
 const config: ProviderConfig = { id: "c-1", kind: "gemini", name: "Gemini", model: "gemini-3-flash-lite", settings: {} };
-
 function docsResult(): UseDocumentsResult {
   return {
     documents: [document],
@@ -255,6 +253,20 @@ describe("NewBenchmarkWizard", () => {
     expect(screen.getByRole("button", { name: /what to extract/i })).toBeEnabled();
     expect(screen.getByRole("button", { name: /choose ai/i })).toBeDisabled();
 
+    expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
+  });
+
+  it("auto-selects the first configured provider for a custom uploaded document", () => {
+    useProviderConfigsMock.mockReturnValue(providersResult([config]));
+
+    render(<NewBenchmarkWizard />);
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    fireEvent.click(screen.getByRole("radio", { name: /PO \(v1\)/i }));
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+
+    const provider = screen.getByRole("radio", { name: /gemini/i });
+    expect(provider).toBeChecked();
     expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
   });
 

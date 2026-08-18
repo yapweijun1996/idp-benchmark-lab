@@ -11,13 +11,11 @@ import { useProviderConfigs } from "../providers/useProviderConfigs";
 import { getAppSettings } from "../storage/settings";
 import { validateJsonSchema } from "../profiles/schema";
 import { describeVisualSchema, updateVisualSchema, type VisualFieldType, type VisualSchemaAction } from "../profiles/visualSchema";
-import type { InputMode } from "../storage/types";
+import type { InputMode, ProviderConfig } from "../storage/types";
 import { RepeatedBenchmarkSection, type BenchmarkFactory } from "./RepeatedBenchmarkSection";
 import {
   DEMO_DOCUMENT_ID,
   DEMO_PROFILE_ID,
-  DEMO_PROVIDER_CONFIG_ID,
-  NEXABYTE_DOCUMENT_ID,
   seedDemoFixture,
 } from "../demo/seedDemoFixture";
 import { useI18n } from "../i18n";
@@ -90,10 +88,9 @@ export function NewBenchmarkWizard({ singleRunFactory, benchmarkFactory }: NewBe
   }, [profileId, profiles.profiles, selectedDocumentId]);
   const effectiveProfileId = profileId || autoSelectedProfileId;
   const autoSelectedProviderId = useMemo(() => {
-    const isBundledDocument = selectedDocumentId === DEMO_DOCUMENT_ID || selectedDocumentId === NEXABYTE_DOCUMENT_ID;
-    if (providerConfigId || !isBundledDocument) return "";
-    return providers.configs.some((config) => config.id === DEMO_PROVIDER_CONFIG_ID) ? DEMO_PROVIDER_CONFIG_ID : "";
-  }, [providerConfigId, providers.configs, selectedDocumentId]);
+    if (providerConfigId) return "";
+    return providers.configs[0]?.id ?? "";
+  }, [providerConfigId, providers.configs]);
   const effectiveProviderConfigId = providerConfigId || autoSelectedProviderId;
   const documentReady = selectedDocumentId !== "";
   const templateReady = effectiveProfileId !== "";
@@ -888,7 +885,7 @@ function ProviderStep({
   onSelect,
   modeSupport,
 }: {
-  configs: { id: string; name: string; model: string }[];
+  configs: ProviderConfig[];
   providerConfigId: string;
   onSelect: (id: string) => void;
   modeSupport: { supported: boolean; reason?: string } | null;
@@ -906,7 +903,12 @@ function ProviderStep({
           {configs.map((c) => (
             <li key={c.id} className="doc-card">
               <label className="doc-card__main">
-                <input type="radio" name="wizard-provider" checked={providerConfigId === c.id} onChange={() => onSelect(c.id)} />
+                <input
+                  type="radio"
+                  name="wizard-provider"
+                  checked={providerConfigId === c.id}
+                  onChange={() => onSelect(c.id)}
+                />
                 <span className="doc-card__name">{c.name}</span>
                 <span className="doc-card__meta">{c.model}</span>
               </label>

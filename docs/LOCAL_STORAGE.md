@@ -30,6 +30,6 @@ Persist each completed run. MVP may mark an interrupted running suite as `stoppe
 
 The Storage → Clear local data action removes user-created documents, templates,
 Golden Answers, provider connections, and benchmark history, then restores the
-bundled demo documents, extraction templates, Expected Results, and credential-free
-offline Demo GPT Gateway configuration. The offline demo runs the bundled purchase-order
-PDFs locally and makes no network request; no API key is restored.
+bundled demo documents, extraction templates, and Expected Results. Provider
+connections are not restored; users configure a provider and enter its API key at
+runtime when they want to run a benchmark.

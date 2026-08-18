@@ -1359,6 +1359,7 @@ h3 {
   color: var(--accent-bad);
   font-size: 13px;
 }
+
 .golden-grid {
   display: grid;
   grid-template-columns: minmax(320px, 1fr) minmax(280px, 1fr);

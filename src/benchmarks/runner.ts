@@ -12,6 +12,7 @@ import { sha256Hex } from "../documents/hash";
 import { canonicalJson } from "../evaluation/canonical";
 import { executeExtraction, normalizeFailure, RunFailure, type ExecuteDeps } from "./execute";
 import type { SingleRunInput } from "./singleRun";
+import { getSessionDocument } from "../documents/sessionStore";
 
 export const RUN_PRESETS = [5, 10, 20, 50, 100] as const;
 export type RunPreset = (typeof RUN_PRESETS)[number];
@@ -76,7 +77,7 @@ export class BenchmarkRunner {
     const db = this.deps.db;
     const now = new Date().toISOString();
 
-    const document = await db.documents.get(config.documentId);
+    const document = (await db.documents.get(config.documentId)) ?? getSessionDocument(config.documentId);
     const profile = await db.extractionProfiles.get(config.profileId);
     const configRecord = await db.providerConfigs.get(config.providerConfigId);
     const golden = config.goldenId ? await db.goldenAnswers.get(config.goldenId) : undefined;

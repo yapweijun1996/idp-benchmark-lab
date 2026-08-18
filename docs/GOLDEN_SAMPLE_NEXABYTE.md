@@ -8,6 +8,6 @@ The fixture intentionally keeps identifiers, dates, quantities, prices, percenta
 approval timestamps as printed strings. The Expected Result is stored in `demo/nexabyte-po/golden.json`
 and is validated against `demo/nexabyte-po/schema.json` before the fixture is seeded into IndexedDB.
 
-The credential-free Demo GPT Gateway recognizes both bundled purchase-order PDFs and returns their
-local Expected Result without a network request. A real provider can also use the preset document,
-prompt, schema, and Golden Answer for cross-provider comparison.
+The preset document, prompt, schema, and Golden Answer can be used with any configured provider for
+cross-provider comparison. Provider credentials remain runtime-only and are never included in the
+fixture or its seeded IndexedDB records.

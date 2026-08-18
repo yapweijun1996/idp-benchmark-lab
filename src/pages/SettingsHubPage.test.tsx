@@ -37,19 +37,10 @@ vi.mock("../demo/seedDemoFixture", () => ({
       schemaValid: true,
       createdAt: "2026-01-01T00:00:00.000Z",
     });
-    await db.providerConfigs.put({
-      id: "demo-provider-gpt-gateway",
-      kind: "openai_compatible",
-      name: "Demo GPT Gateway",
-      baseUrl: "https://gpt.yapweijun1996.com/v1",
-      model: "gpt-5.4-mini",
-      settings: { apiStyle: "responses" },
-    });
     return {
       documentId: "demo-document-popular-po",
       profileId: "demo-profile-popular-po",
       goldenId: "demo-golden-popular-po",
-      providerConfigId: "demo-provider-gpt-gateway",
     };
   }),
 }));
@@ -118,7 +109,7 @@ describe("SettingsHubPage", () => {
       expect(await db.documents.get("demo-document-popular-po")).toBeDefined();
       expect(await db.extractionProfiles.get("demo-profile-popular-po")).toBeDefined();
       expect(await db.goldenAnswers.get("demo-golden-popular-po")).toBeDefined();
-      expect(await db.providerConfigs.get("demo-provider-gpt-gateway")).toBeDefined();
+      expect(await db.providerConfigs.get("demo-provider-gpt-gateway")).toBeUndefined();
     });
     await vi.waitFor(() => expect(screen.getByText(/bundled demo fixture was restored/i)).toBeInTheDocument());
   });

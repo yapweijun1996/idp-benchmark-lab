@@ -4,6 +4,7 @@ import { ProfileService, type ProfileInput } from "../profiles/service";
 import { GoldenService } from "../golden/service";
 import { setApiKey, clearApiKey } from "../providers/keys";
 import { SingleRunService, type SingleRunInput } from "./singleRun";
+import { DocumentService } from "../documents/service";
 import type { ProviderAdapter, NormalizedExtractionRequest } from "../providers/types";
 import type { DocumentRecord, ProviderConfig } from "../storage/types";
 
@@ -150,6 +151,29 @@ describe("SingleRunService", () => {
     expect(result.run.state).toBe("schema_invalid");
     expect(result.run.schemaValid).toBe(false);
     expect(result.suite.status).toBe("completed");
+  });
+
+  it("runs a session-only upload registered by another service instance", async () => {
+    const adapter = fakeAdapter();
+    adapter.extract.mockResolvedValue({
+      raw: '{"document_number":"0004131999"}',
+      json: { document_number: "0004131999" },
+      providerCalls: 1,
+    });
+    const { input, profile, config } = await seed(adapter);
+    await db.documents.delete("doc-1");
+
+    const documents = new DocumentService(db);
+    const uploaded = await documents.upload(new File(["%PDF"], "uploaded.pdf", { type: "application/pdf" }), { persist: false });
+    const service = new SingleRunService({ db, adapters: { gemini: adapter } });
+    const result = await service.run({ ...input, documentId: uploaded.id, goldenId: undefined });
+
+    expect(result.run.state).toBe("succeeded");
+    expect(result.suite.identity.documentSha256).toBe(uploaded.sha256);
+    expect(adapter.extract).toHaveBeenCalled();
+    await documents.remove(uploaded.id);
+    expect(await db.providerConfigs.get(config.id)).toBeDefined();
+    expect(await db.extractionProfiles.get(profile.id)).toBeDefined();
   });
 
   it("uses a prompt override without changing the saved profile", async () => {

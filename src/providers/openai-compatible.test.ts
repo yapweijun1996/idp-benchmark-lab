@@ -66,47 +66,6 @@ describe("customAdapter.extract", () => {
     expect(result.usage).toEqual({ inputTokens: 4, outputTokens: 2, totalTokens: 6 });
   });
 
-  it("runs the bundled demo locally without a key or network request", async () => {
-    const demoContext: ProviderContext = {
-      config: {
-        ...config,
-        id: "demo-provider-gpt-gateway",
-        name: "Demo GPT Gateway",
-        settings: { apiStyle: "responses", demoMode: true },
-      },
-      apiKey: "",
-    };
-    const result = await customAdapter.extract(request, demoContext);
-
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(result.providerCalls).toBe(0);
-    expect(result.json).toMatchObject({
-      doc_info: { document_number: "0083217", date: "15.03.2024" },
-      row_data: expect.arrayContaining([expect.objectContaining({ stock_code: "910-006021", qty: "2" })]),
-    });
-  });
-
-  it("runs the bundled Nexabyte purchase order locally without a key or network request", async () => {
-    const demoContext: ProviderContext = {
-      config: {
-        ...config,
-        id: "demo-provider-gpt-gateway",
-        name: "Demo GPT Gateway",
-        settings: { apiStyle: "responses", demoMode: true },
-      },
-      apiKey: "",
-    };
-    const result = await customAdapter.extract({ ...request, documentName: "nexabyte-purchase-order.pdf" }, demoContext);
-
-    expect(fetchMock).not.toHaveBeenCalled();
-    expect(result.providerCalls).toBe(0);
-    expect(result.json).toMatchObject({
-      doc_info: { document_number: "PO2608-00152" },
-      row_data: expect.arrayContaining([expect.objectContaining({ item_code: "NB-ASU-001", qty: "2" })]),
-      totals: { grand_total: "10,557.74" },
-    });
-  });
-
   it("omits response_format when useJsonObject is false", async () => {
     const noJsonConfig: ProviderContext = {
       config: { ...config, settings: { useJsonObject: false } },

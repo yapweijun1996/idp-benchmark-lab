@@ -8,7 +8,6 @@ import { evaluateOutput, type RunEvaluation } from "../evaluation/metrics";
 import { PricingService } from "../cost/pricingService";
 import { getApiKey } from "../providers/keys";
 import { adapterFor } from "../providers/registry";
-import { isDemoGatewayConfig } from "../providers/demoGateway";
 import type { IdpDatabase } from "../storage/db";
 import type {
   DocumentRecord,
@@ -30,6 +29,7 @@ import {
   type PageRenderer,
 } from "../documents/canonicalRenderer";
 import type { PdfLoader } from "../documents/usePdfDocument";
+import { getSessionDocumentBlob } from "../documents/sessionStore";
 
 export interface ExecuteDeps {
   db: IdpDatabase;
@@ -88,9 +88,8 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
   const { db, getBlob } = deps;
   const { document, profile, config } = input;
 
-  const demoMode = isDemoGatewayConfig(config);
   const apiKey = getApiKey(config.id) ?? "";
-  if (!apiKey && !demoMode) {
+  if (!apiKey) {
     throw new RunFailure({
       category: "auth",
       message: "No API key for this provider config. Enter it on the Providers page.",
@@ -159,7 +158,7 @@ async function resolveBlob(
   document: DocumentRecord,
 ): Promise<Blob> {
   const impl =
-    getBlob ?? (async (doc) => (await deps.db.documents.get(doc.id))?.blob ?? doc.blob);
+    getBlob ?? (async (doc) => (await deps.db.documents.get(doc.id))?.blob ?? getSessionDocumentBlob(doc.id) ?? doc.blob);
   const blob = await impl(document);
   if (!blob) {
     throw new RunFailure({

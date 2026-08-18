@@ -21,9 +21,8 @@ export default function App() {
   const toggleNav = useCallback(() => setNavOpen((v) => !v), []);
 
   useEffect(() => {
-    // Keep the bundled, credential-free demo available on every route, not
-    // only after visiting New Benchmark. This also migrates older demo
-    // provider records to offline demo mode.
+    // Keep the bundled demo fixture and GPT gateway preset available on every
+    // route, not only after visiting New Benchmark.
     void seedDemoFixture().catch(() => undefined);
   }, []);
 

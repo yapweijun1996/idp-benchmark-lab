@@ -14,8 +14,7 @@ import {
   loadDemoDocumentBlob,
   loadNexabyteDocumentBlob,
 } from "./fixture";
-import type { DocumentRecord, ExtractionProfile, GoldenAnswer, ProviderConfig } from "../storage/types";
-import { DEMO_GATEWAY_BASE_URL, DEMO_GATEWAY_MODEL, DEMO_GATEWAY_SETTINGS } from "../providers/demoGateway";
+import type { DocumentRecord, ExtractionProfile, GoldenAnswer } from "../storage/types";
 
 export const DEMO_DOCUMENT_ID = "demo-document-popular-po";
 export const DEMO_PROFILE_ID = "demo-profile-popular-po";
@@ -23,7 +22,6 @@ export const DEMO_GOLDEN_ID = "demo-golden-popular-po";
 export const NEXABYTE_DOCUMENT_ID = "demo-document-nexabyte-po";
 export const NEXABYTE_PROFILE_ID = "demo-profile-nexabyte-po";
 export const NEXABYTE_GOLDEN_ID = "demo-golden-nexabyte-po";
-export const DEMO_PROVIDER_CONFIG_ID = "demo-provider-gpt-gateway";
 
 const STABLE_CREATED_AT = "2026-01-01T00:00:00.000Z";
 
@@ -43,7 +41,6 @@ export interface DemoFixtureIds {
   documentId: string;
   profileId: string;
   goldenId: string;
-  providerConfigId: string;
 }
 
 interface BundledFixture {
@@ -154,30 +151,14 @@ export async function seedDemoFixture(
     loadBlob: loadNexabyteBlob,
   });
 
-  const existingProvider = await db.providerConfigs.get(DEMO_PROVIDER_CONFIG_ID);
-  const provider: ProviderConfig = existingProvider
-    ? {
-        ...existingProvider,
-        kind: "openai_compatible",
-        name: "Demo GPT Gateway",
-        baseUrl: DEMO_GATEWAY_BASE_URL,
-        model: DEMO_GATEWAY_MODEL,
-        settings: { ...existingProvider.settings, ...DEMO_GATEWAY_SETTINGS },
-      }
-    : {
-        id: DEMO_PROVIDER_CONFIG_ID,
-        kind: "openai_compatible",
-        name: "Demo GPT Gateway",
-        baseUrl: DEMO_GATEWAY_BASE_URL,
-        model: DEMO_GATEWAY_MODEL,
-        settings: DEMO_GATEWAY_SETTINGS,
-      };
-  await db.providerConfigs.put(provider);
+  // Remove the retired built-in gateway from browsers that used an older
+  // version. Users can still configure any OpenAI-compatible endpoint in
+  // Settings, but the demo fixture no longer creates a provider for them.
+  await db.providerConfigs.delete("demo-provider-gpt-gateway");
 
   return {
     documentId: DEMO_DOCUMENT_ID,
     profileId: DEMO_PROFILE_ID,
     goldenId: DEMO_GOLDEN_ID,
-    providerConfigId: DEMO_PROVIDER_CONFIG_ID,
   };
 }

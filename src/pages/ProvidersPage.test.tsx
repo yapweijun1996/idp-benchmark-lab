@@ -50,8 +50,8 @@ describe("ProvidersPage", () => {
     expect(models).toHaveLength(3);
     expect(models[0]).toHaveValue("gpt-4o-mini");
     expect(models[1]).toHaveValue("gemini-3.5-flash-lite");
-    expect(models[2]).toHaveValue("gpt-5.4-mini");
-    expect(screen.getByLabelText(/base url/i)).toHaveValue("https://gpt.yapweijun1996.com/v1");
+    expect(models[2]).toHaveValue("local-model");
+    expect(screen.getByLabelText(/base url/i)).toHaveValue("");
   });
 
   it("saves a config and keeps the key in the tab only", async () => {

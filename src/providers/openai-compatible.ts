@@ -7,7 +7,6 @@ import type {
   ProviderContext,
   ProviderError,
 } from "./types";
-import { isDemoGatewayConfig, runOfflineDemoGateway } from "./demoGateway";
 
 interface CustomSettings {
   customHeaders?: Record<string, string>;
@@ -40,17 +39,6 @@ export const customAdapter: ProviderAdapter = {
   kind: "openai_compatible",
 
   capabilities(config) {
-    if (isDemoGatewayConfig(config)) {
-      return {
-        nativePdf: true,
-        imageInput: true,
-        structuredOutput: true,
-        tokenUsage: false,
-        providerReportedCost: false,
-        temperature: false,
-        thinking: false,
-      };
-    }
     const overrides = (config.settings?.capabilityOverrides ?? {}) as Partial<ProviderCapabilities>;
     return {
       nativePdf: false,
@@ -65,9 +53,6 @@ export const customAdapter: ProviderAdapter = {
   },
 
   async testConnection(ctx: ProviderContext) {
-    if (isDemoGatewayConfig(ctx.config)) {
-      return { ok: true, message: "Offline demo provider ready — no API key or network request required." };
-    }
     const base = baseUrlOf(ctx);
     const s = settingsOf(ctx);
     const headers = buildHeaders(ctx);
@@ -115,9 +100,6 @@ export const customAdapter: ProviderAdapter = {
   },
 
   async extract(request: NormalizedExtractionRequest, ctx: ProviderContext): Promise<NormalizedExtractionResponse> {
-    if (isDemoGatewayConfig(ctx.config)) {
-      return runOfflineDemoGateway(request);
-    }
     const base = baseUrlOf(ctx);
     const s = settingsOf(ctx);
     if (request.mode !== "canonical_images") {

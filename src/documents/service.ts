@@ -2,6 +2,7 @@ import { getDb, type IdpDatabase } from "../storage/db";
 import type { DocumentRecord } from "../storage/types";
 import { blobToArrayBuffer } from "./blob";
 import { sha256Hex } from "./hash";
+import { registerSessionDocument, removeSessionDocument, updateSessionDocument } from "./sessionStore";
 
 export class DocumentError extends Error {
   readonly code: "invalid_type" | "not_found" | "missing_blob";
@@ -52,6 +53,7 @@ export class DocumentService {
 
     const record: DocumentRecord = { ...base, storageMode: "session" };
     this.session.set(record.id, { record, blob: file });
+    registerSessionDocument(record, file);
     return record;
   }
 
@@ -87,6 +89,7 @@ export class DocumentService {
 
   async remove(id: string): Promise<void> {
     this.session.delete(id);
+    removeSessionDocument(id);
     await this.db.documents.delete(id);
   }
 
@@ -95,6 +98,7 @@ export class DocumentService {
     const sessionDoc = this.session.get(id);
     if (sessionDoc) {
       sessionDoc.record = { ...sessionDoc.record, pageCount };
+      updateSessionDocument(sessionDoc.record);
       return;
     }
     const persisted = await this.db.documents.get(id);
@@ -120,12 +124,14 @@ export class DocumentService {
       const record: DocumentRecord = { ...existing, storageMode: "indexeddb", blob };
       await this.db.documents.put(record);
       this.session.delete(id);
+      removeSessionDocument(id);
       return record;
     }
 
     await this.db.documents.delete(id);
     const record: DocumentRecord = { ...existing, storageMode: "session", blob: undefined };
     this.session.set(id, { record, blob });
+    registerSessionDocument(record, blob);
     return record;
   }
 }
