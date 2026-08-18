@@ -20,8 +20,16 @@ const DEFAULTS: Record<ProviderKind, CardForm> = {
 };
 
 const MODEL_OPTIONS: Record<ProviderKind, readonly string[]> = {
-  openai: ["gpt-5.4-mini", "gpt-4o-mini", "gpt-4o"],
-  gemini: ["gemini-3.5-flash-lite", "gemini-3-flash-lite", "gemini-3-pro"],
+  openai: ["gpt-5.6", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.4-mini", "gpt-4o-mini", "gpt-4o"],
+  gemini: [
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.1-flash-lite",
+    "gemini-flash-latest",
+    "gemini-3-flash-lite",
+    "gemini-3-pro",
+  ],
   openai_compatible: ["local-model"],
 };
 
