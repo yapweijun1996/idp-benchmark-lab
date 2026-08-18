@@ -304,6 +304,8 @@ describe("NewBenchmarkWizard", () => {
           id: "r-1",
           state: "succeeded",
           schemaValid: true,
+          exactMatch: false,
+          leafAccuracy: 0.94,
           latencyMs: 123,
           costUsd: 0.0001,
           providerCalls: 1,
@@ -325,6 +327,8 @@ describe("NewBenchmarkWizard", () => {
     await vi.waitFor(() => expect(runMock).toHaveBeenCalled());
     expect(await screen.findByText(/succeeded/)).toBeInTheDocument();
     expect(screen.getByText(/latency 123 ms/)).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: "Accuracy" })).toHaveTextContent("Field accuracy94.0%");
+    expect(screen.getByRole("region", { name: "Accuracy" })).toHaveTextContent("No match");
     expect(screen.getAllByText(/0004131999/).length).toBeGreaterThan(0);
     expect(screen.getByText(/✓ quick test completed/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /run again/i })).toBeInTheDocument();

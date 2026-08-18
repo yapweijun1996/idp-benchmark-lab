@@ -1567,6 +1567,36 @@ details summary {
   color: var(--text-muted);
   font-weight: 600;
 }
+.run-result-accuracy {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.run-result-accuracy > div {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-alt);
+}
+
+.run-result-accuracy span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.run-result-accuracy strong {
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  .run-result-accuracy {
+    grid-template-columns: 1fr;
+  }
+}
 .chip--warn {
   background: #fdf3e7;
   color: var(--accent-warn);

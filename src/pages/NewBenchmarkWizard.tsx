@@ -1102,6 +1102,8 @@ function RunResultPanel({ result }: { result: SingleRunResult }) {
   const run = result.run;
   const usage = run.usage as UsageLike | undefined;
   const costText = run.costUsd !== undefined ? "$" + run.costUsd.toFixed(6) : "unknown";
+  const accuracyText = run.leafAccuracy === undefined ? "—" : `${(run.leafAccuracy * 100).toFixed(1)}%`;
+  const hasAccuracy = run.leafAccuracy !== undefined || run.exactMatch !== undefined;
   return (
     <div className="profile-form" role="region" aria-label={t("Run result")}>
       <h2>
@@ -1117,6 +1119,20 @@ function RunResultPanel({ result }: { result: SingleRunResult }) {
           {usage.totalTokens ?? "?"}
         </p>
       ) : null}
+      <section className="run-result-accuracy" aria-label={t("Accuracy")}>
+        <div>
+          <span>{t("Field accuracy")}</span>
+          <strong>{hasAccuracy ? accuracyText : t("Not scored")}</strong>
+        </div>
+        <div>
+          <span>{t("Exact match")}</span>
+          <strong>{run.exactMatch === undefined ? "—" : run.exactMatch ? `✓ ${t("Pass")}` : `× ${t("No match")}`}</strong>
+        </div>
+        <div>
+          <span>{t("Schema valid")}</span>
+          <strong>{run.schemaValid === undefined ? "—" : run.schemaValid ? `✓ ${t("Valid")}` : `× ${t("Invalid")}`}</strong>
+        </div>
+      </section>
       <details>
         <summary>{t("Raw provider response")}</summary>
         <pre className="raw-pre">{run.safeRawResponse ?? `(${t("none")})`}</pre>
