@@ -177,9 +177,10 @@ async function buildRequest(
   prompt: string,
 ): Promise<NormalizedExtractionRequest> {
   const { config, mode, temperature, thinking, renderSettings } = input;
+  const effectiveThinking = thinking ?? configuredThinking(config);
   if (mode === "native_pdf") {
     const documentBytes = await blobToArrayBuffer(blob);
-    return { mode, documentBytes, documentMimeType: "application/pdf", documentName: input.document.name, prompt, temperature, thinking };
+    return { mode, documentBytes, documentMimeType: "application/pdf", documentName: input.document.name, prompt, temperature, thinking: effectiveThinking };
   }
   const adapter = deps.adapters?.[config.kind] ?? adapterFor(config.kind);
   if (!adapter.capabilities(config).imageInput) {
@@ -211,10 +212,17 @@ async function buildRequest(
   try {
     const settings = renderSettings ?? DEFAULT_RENDER_SETTINGS;
     const images = await renderDocumentPages(pdf, settings, deps.pageRenderer ?? missingRenderer());
-    return { mode, images, documentName: input.document.name, prompt, temperature, thinking };
+    return { mode, images, documentName: input.document.name, prompt, temperature, thinking: effectiveThinking };
   } finally {
     void task.destroy();
   }
+}
+
+/** Returns the provider-card default when a run has no per-run override. */
+export function configuredThinking(config: ProviderConfig): string | undefined {
+  const key = config.kind === "openai" ? "reasoningEffort" : config.kind === "gemini" ? "thinkingLevel" : undefined;
+  const value = key ? config.settings[key] : undefined;
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 function missingRenderer(): PageRenderer {

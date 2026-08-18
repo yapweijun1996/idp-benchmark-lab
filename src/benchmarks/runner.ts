@@ -10,7 +10,7 @@ import type {
 import { DEFAULT_RENDER_SETTINGS } from "../documents/canonicalRenderer";
 import { sha256Hex } from "../documents/hash";
 import { canonicalJson } from "../evaluation/canonical";
-import { executeExtraction, normalizeFailure, RunFailure, type ExecuteDeps } from "./execute";
+import { configuredThinking, executeExtraction, normalizeFailure, RunFailure, type ExecuteDeps } from "./execute";
 import type { SingleRunInput } from "./singleRun";
 import { getSessionDocument } from "../documents/sessionStore";
 
@@ -288,7 +288,7 @@ export class BenchmarkRunner {
       goldenSha256: golden?.sha256,
       providerKind: configRecord.kind,
       model: configRecord.model,
-      thinking: config.thinking,
+      thinking: config.thinking ?? configuredThinking(configRecord),
       temperature: config.temperature,
       inputMode: config.mode,
       rendererSettings:

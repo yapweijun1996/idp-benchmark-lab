@@ -71,6 +71,29 @@ describe("ProvidersPage", () => {
     });
   });
 
+  it("saves OpenAI reasoning effort and Gemini thinking level", async () => {
+    const result = emptyResult();
+    useProviderConfigsMock.mockReturnValue(result);
+    render(<ProvidersPage />);
+
+    fireEvent.change(screen.getByLabelText(/^reasoning effort$/i), { target: { value: "high" } });
+    fireEvent.change(screen.getByLabelText(/^thinking level$/i), { target: { value: "low" } });
+    const saveButtons = screen.getAllByRole("button", { name: /save config/i });
+    fireEvent.click(saveButtons[0]!);
+    fireEvent.click(saveButtons[1]!);
+
+    await vi.waitFor(() => {
+      expect(result.save).toHaveBeenNthCalledWith(1, expect.objectContaining({
+        kind: "openai",
+        settings: expect.objectContaining({ reasoningEffort: "high" }),
+      }));
+      expect(result.save).toHaveBeenNthCalledWith(2, expect.objectContaining({
+        kind: "gemini",
+        settings: expect.objectContaining({ thinkingLevel: "low" }),
+      }));
+    });
+  });
+
   it("saves a config and keeps the key in the tab only", async () => {
     render(<ProvidersPage />);
     // 第二张卡片是 Gemini

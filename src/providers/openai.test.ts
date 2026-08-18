@@ -30,7 +30,7 @@ afterEach(() => {
 describe("openaiAdapter.capabilities", () => {
   it("declares images but not native PDF", () => {
     const caps = openaiAdapter.capabilities(config);
-    expect(caps).toMatchObject({ nativePdf: false, imageInput: true, structuredOutput: true, tokenUsage: true });
+    expect(caps).toMatchObject({ nativePdf: false, imageInput: true, structuredOutput: true, tokenUsage: true, thinking: true });
   });
 });
 
@@ -63,6 +63,16 @@ describe("openaiAdapter.extract", () => {
     expect(result.json).toEqual({ document_number: "0004131999" });
     expect(result.usage).toEqual({ inputTokens: 100, outputTokens: 20, totalTokens: 120 });
     expect(result.providerCalls).toBe(1);
+  });
+
+  it("maps reasoning effort to the request", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ choices: [{ message: { content: '{"ok":true}' } }] }),
+    );
+    await openaiAdapter.extract({ ...request, thinking: "high" }, ctx);
+
+    const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string);
+    expect(body.reasoning_effort).toBe("high");
   });
 
   it("rejects native PDF mode explicitly", async () => {

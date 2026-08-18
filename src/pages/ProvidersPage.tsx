@@ -11,13 +11,18 @@ interface CardForm {
   baseUrl: string;
   customHeaders: string;
   apiStyle: "chat_completions" | "responses";
+  reasoningEffort: string;
+  thinkingLevel: string;
 }
 
 const DEFAULTS: Record<ProviderKind, CardForm> = {
-  openai: { model: "gpt-5.4-mini", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
-  gemini: { model: "gemini-3.5-flash-lite", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
-  openai_compatible: { model: "local-model", baseUrl: "", customHeaders: "", apiStyle: "chat_completions" },
+  openai: { model: "gpt-5.4-mini", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "" },
+  gemini: { model: "gemini-3.5-flash-lite", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "" },
+  openai_compatible: { model: "local-model", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "" },
 };
+
+const REASONING_EFFORT_OPTIONS = ["none", "low", "medium", "high", "xhigh", "max"] as const;
+const THINKING_LEVEL_OPTIONS = ["minimal", "low", "medium", "high"] as const;
 
 const MODEL_OPTIONS: Record<ProviderKind, readonly string[]> = {
   openai: ["gpt-5.6", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.4-mini", "gpt-4o-mini", "gpt-4o"],
@@ -86,6 +91,8 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
           baseUrl: existing.baseUrl ?? DEFAULTS[kind].baseUrl,
           customHeaders: existing.settings.customHeaders ? JSON.stringify(existing.settings.customHeaders) : "",
           apiStyle: existing.settings.apiStyle === "responses" ? "responses" : "chat_completions",
+          reasoningEffort: typeof existing.settings.reasoningEffort === "string" ? existing.settings.reasoningEffort : "",
+          thinkingLevel: typeof existing.settings.thinkingLevel === "string" ? existing.settings.thinkingLevel : "",
         }
       : DEFAULTS[kind],
   );
@@ -94,6 +101,21 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const buildSettings = (customHeaders: Record<string, string>): Record<string, unknown> => {
+    const settings: Record<string, unknown> = { ...existing?.settings, customHeaders };
+    if (kind === "openai") {
+      if (form.reasoningEffort) settings.reasoningEffort = form.reasoningEffort;
+      else delete settings.reasoningEffort;
+      delete settings.thinkingLevel;
+    } else if (kind === "gemini") {
+      if (form.thinkingLevel) settings.thinkingLevel = form.thinkingLevel;
+      else delete settings.thinkingLevel;
+      delete settings.reasoningEffort;
+    } else {
+      settings.apiStyle = form.apiStyle;
+    }
+    return settings;
+  };
   const save = async () => {
     let customHeaders: Record<string, string> = {};
     if (form.customHeaders.trim()) {
@@ -111,10 +133,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         name: kind === "openai" ? "OpenAI" : kind === "gemini" ? "Gemini" : "Custom OpenAI-compatible",
         baseUrl: kind === "openai_compatible" ? form.baseUrl.trim() || undefined : undefined,
         model: form.model.trim(),
-        settings: {
-          customHeaders,
-          ...(kind === "openai_compatible" ? { apiStyle: form.apiStyle } : {}),
-        },
+        settings: buildSettings(customHeaders),
       });
       if (apiKey.trim()) {
         setApiKey(saved.id, apiKey.trim(), { rememberForTab: remember });
@@ -146,9 +165,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         name: kind,
         model: form.model.trim(),
         baseUrl: kind === "openai_compatible" ? form.baseUrl.trim() || undefined : undefined,
-        settings: kind === "openai_compatible"
-          ? { apiStyle: form.apiStyle }
-          : {},
+        settings: buildSettings({}),
       };
       const ctx: ProviderContext = { config, apiKey: key ?? "" };
       const result = await adapterFor(kind).testConnection(ctx);
@@ -203,6 +220,26 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
           ))}
         </datalist>
       </label>
+
+      {kind === "openai" ? (
+        <label className="field">
+          <span>{t("Reasoning effort")}</span>
+          <select value={form.reasoningEffort} onChange={(e) => setForm({ ...form, reasoningEffort: e.target.value })}>
+            <option value="">{t("Provider default")}</option>
+            {REASONING_EFFORT_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
+        </label>
+      ) : null}
+
+      {kind === "gemini" ? (
+        <label className="field">
+          <span>{t("Thinking level")}</span>
+          <select value={form.thinkingLevel} onChange={(e) => setForm({ ...form, thinkingLevel: e.target.value })}>
+            <option value="">{t("Provider default")}</option>
+            {THINKING_LEVEL_OPTIONS.map((option) => <option key={option} value={option}>{option}</option>)}
+          </select>
+        </label>
+      ) : null}
 
       {kind === "openai_compatible" ? (
         <label className="field">

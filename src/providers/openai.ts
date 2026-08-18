@@ -18,7 +18,7 @@ function capabilities(): ProviderCapabilities {
     tokenUsage: true,
     providerReportedCost: false,
     temperature: true,
-    thinking: false,
+    thinking: true,
   };
 }
 
@@ -78,6 +78,9 @@ export const openaiAdapter: ProviderAdapter = {
     };
     if (request.temperature !== undefined) {
       body.temperature = request.temperature;
+    }
+    if (request.thinking) {
+      body.reasoning_effort = request.thinking;
     }
 
     const result = await fetchJson(

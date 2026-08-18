@@ -9,7 +9,7 @@ import type {
 } from "../storage/types";
 import type { NormalizedExtractionResponse } from "../providers/types";
 import type { CanonicalRenderSettings } from "../documents/canonicalRenderer";
-import { executeExtraction, normalizeFailure, RunFailure, type ExecuteDeps, type RunOutcome } from "./execute";
+import { configuredThinking, executeExtraction, normalizeFailure, RunFailure, type ExecuteDeps, type RunOutcome } from "./execute";
 import { DEFAULT_RENDER_SETTINGS } from "../documents/canonicalRenderer";
 import { sha256Hex } from "../documents/hash";
 import { canonicalJson } from "../evaluation/canonical";
@@ -182,7 +182,7 @@ export class SingleRunService {
       goldenSha256: golden?.sha256,
       providerKind: config.kind,
       model: config.model,
-      thinking: input.thinking,
+      thinking: input.thinking ?? configuredThinking(config),
       temperature: input.temperature,
       inputMode: input.mode,
       rendererSettings:

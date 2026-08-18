@@ -986,7 +986,7 @@ function RunSettingsStep({
           <input type="number" step="0.1" value={temperature} onChange={(e) => onTemperature(e.target.value)} />
         </label>
         <label className="field">
-          <span>{t("Reasoning effort (optional, Gemini)")}</span>
+          <span>{t("Reasoning / thinking level override (optional)")}</span>
           <input type="text" value={thinking} onChange={(e) => onThinking(e.target.value)} />
         </label>
       </details>

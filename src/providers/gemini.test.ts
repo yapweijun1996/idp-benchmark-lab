@@ -66,6 +66,16 @@ describe("geminiAdapter.extract (native pdf)", () => {
     expect(result.usage).toEqual({ inputTokens: 10, outputTokens: 2, totalTokens: 12 });
   });
 
+  it("maps thinking level to generation config", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ candidates: [{ content: { parts: [{ text: '{"ok":true}' }] } }] }),
+    );
+    await geminiAdapter.extract({ ...request, thinking: "high" }, ctx);
+
+    const body = JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string);
+    expect(body.generationConfig.thinkingLevel).toBe("high");
+  });
+
   it("requires PDF bytes for native mode", async () => {
     await expect(geminiAdapter.extract({ ...request, documentBytes: undefined }, ctx)).rejects.toMatchObject({
       category: "invalid_request",
