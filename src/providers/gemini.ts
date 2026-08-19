@@ -90,7 +90,7 @@ function generationConfig(request: NormalizedExtractionRequest): Record<string, 
     config.temperature = request.temperature;
   }
   if (request.thinking) {
-    config.thinkingLevel = request.thinking;
+    config.thinkingConfig = { thinkingLevel: request.thinking };
   }
   return config;
 }
