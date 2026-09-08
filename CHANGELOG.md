@@ -1,5 +1,20 @@
 # CHANGELOG
 
+Entries below record delivery history and the claims made at that time. They are not current production acceptance. The 2026-09-08 review supersedes earlier blanket completion/security/test claims; see [PROJECT_STATUS.md](PROJECT_STATUS.md) for the current decision.
+
+## Current corrections to historical delivery claims
+
+The dated test counts remain historical observations, not the present baseline. Current source/review evidence also corrects these earlier claims:
+
+- IndexedDB has a version-1 schema declaration, but no later forward-upgrade handler.
+- Profile and Expected Result saves increment a version field while overwriting the same record ID; suite identity is not a complete immutable snapshot.
+- The dedicated API-key store defaults to memory, but Custom auth headers and credential echoes can enter persisted evidence/backups.
+- Stop and budget checks do not cover every retry/concurrent attempt, so the current control is not a hard cap.
+- Backup validation is structural but shallow, and normalized metrics are computed without being retained/displayed.
+- The reviewed checkout has package version 0.1.0 and no local Git tag; old release labels do not establish current release acceptance.
+
+The authoritative current verification totals and open work are in [PROJECT_STATUS.md](PROJECT_STATUS.md) and [TASK.md](TASK.md).
+
 ## 2026-08-15 — Documentation Seed
 
 Created the docs-first implementation handoff for `idp-benchmark-lab`.
@@ -20,7 +35,7 @@ Implementation status: not started.
 
 - Installable PWA: generated icon set (favicon/180/192/512/maskable), web manifest, `registerType: prompt` with explicit update/reload prompt.
 - Service worker precaches app shell only (17 entries); runtime caching of provider traffic/PDFs/keys/results is explicitly disabled per SECURITY.md.
-- GitHub Pages Actions workflow (`actions/checkout@v6`, `setup-node@v6`, `configure-pages@v6`, `upload-pages-artifact@v4`, `deploy-pages@v5`) with lint/typecheck/test/build gates.
+- GitHub Pages Actions workflow (`actions/checkout@v4`, `setup-node@v4`, `configure-pages@v5`, `upload-pages-artifact@v3`, `deploy-pages@v4`) with lint/typecheck/test/build gates.
 - IndexedDB/Dexie schema v1: 8 stores matching DATA_MODEL.md, forward-only migration, unique `[suiteId+runNumber]` index enforcing no duplicate run numbers.
 - 11 tests passing (app shell + storage layer); lint, typecheck, build green.
 
@@ -183,3 +198,25 @@ Implementation status: not started.
   bundled-PDF blob fetch, real seeding, real `BenchmarkRunner`/adapter request) with only the
   Gemini network call intercepted, then confirms the run is visible in Runs & Results.
 - 270 unit/integration tests + 7 e2e specs passing; lint, typecheck, build green.
+
+## 2026-08-18 — Guided sample workflow, localization, and provider updates
+
+- Reworked the active first-time Home into a guided entry that opens New Benchmark; the earlier inline `DemoBenchmarkCard` remains in source but is no longer mounted.
+- Added the bundled Nexabyte PO beside the synthetic Popular PO and auto-seeded both document/template/Expected Result sets. Removed the built-in demo gateway and its provider auto-configuration; users now configure a provider and runtime key explicitly.
+- Expanded the wizard with inline prompt editing and a visual schema editor synchronized with advanced JSON Schema for the current run.
+- Added English, Mandarin, Malay, Japanese, and Vietnamese selection with persisted preference and fallback behavior.
+- Added accuracy details to wizard results, editable model suggestions, a default OpenAI model, Custom `chat_completions`/`responses` selection, OpenAI reasoning effort, and Gemini thinking-level controls.
+
+## 2026-08-19 — Gemini thinking payload correction
+
+- Mapped the normalized thinking value to `generationConfig.thinkingConfig.thinkingLevel` and updated adapter tests.
+
+## 2026-09-08 — Production review and documentation reconciliation
+
+- Recorded a production NO-GO review of code revision `26b0ae9`, with dated test results, ten isolated reproductions, and live-verification limits.
+- Replaced obsolete inline Home demo instructions with the active Home → New Benchmark wizard flow.
+- Kept historical TASK-000..056 delivery records and added TASK-057..069 for review, remediation, production acceptance and documentation reconciliation.
+- Clarified current gaps in budget/Stop, secret handling, historical identity, backup validation, failed-response evidence, pricing, normalized metrics, release tests and dependencies without relaxing the product requirements.
+- Updated status, architecture, design, epics, provider behavior, security, testing, deployment, dependency inventory, fixture boundaries, and detailed acceptance references. The reviewed checkout has package version 0.1.0 but no local release tag.
+- Recorded additional current limitations: partial localization fallback, newest-20 history views, Home's unsupported three-run recommendation, ephemeral-key cleanup, provider pricing association, and IndexedDB version-1 migration needs (TASK-058/061/064/070).
+- Application code, dependency lockfile and workflow behavior are unchanged; this documentation change does not fix defects or pause automatic deployment.

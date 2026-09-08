@@ -1,16 +1,16 @@
 # Implementation Prompt for Coding Agent
 
-Act as the lead engineer for a new GitHub project named **IDP Benchmark Lab** (`idp-benchmark-lab`).
+Act as the lead engineer maintaining **IDP Benchmark Lab** (`idp-benchmark-lab`). The application already exists. Current priority is the production-readiness remediation in [TASK.md](TASK.md), based on the [2026-09-08 review](docs/reviews/2026-09-08-production-readiness.md); do not restart scaffolding or infer release readiness from historical completed tasks.
 
 ## First action
 
-Read all root documentation, especially README.md, DESIGN.md, SPEC.md, EPIC.md, ROADMAP.md, TASK.md, ARCHITECTURE.md, SECURITY.md, TESTING.md, DECISIONS.md, AGENTS.md.
+Read the current task, AGENTS.md, README.md, PROJECT_STATUS.md, TASK.md, SPEC.md, ARCHITECTURE.md and DECISIONS.md, then the relevant design/security/testing documents and review findings.
 
 Treat current repository code/tests as source of truth once implementation exists. Do not claim features without verification.
 
 ## Objective
 
-Build a static PWA demo/spike that allows a user to:
+Complete and verify the static PWA demo/spike against these requirements, preserving working behavior:
 
 1. Upload/preview PDF locally.
 2. Create modular extraction profile: prompt + contract + JSON schema.
@@ -50,7 +50,7 @@ Repeated Golden PO tests showed Vendor Article No. values moving into `remark` o
 
 ## Sequence
 
-Follow ROADMAP.md. Start with static shell + IndexedDB + Pages deployment, then Golden single-run, then repeated runner, then analytics.
+Follow the current task and ROADMAP.md remediation order: credential boundaries and per-attempt budget/Stop, immutable evidence/import/failed responses, then deterministic release gates, post-MVP UX/history reconciliation, and production acceptance. Select the smallest coherent task from TASK-058..068 or TASK-070. Requirements here and in SPEC.md remain targets; documentation reconciliation (TASK-069) is not an implementation fix.
 
 ## Completion rule
 

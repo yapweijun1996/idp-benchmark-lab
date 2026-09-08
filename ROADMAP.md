@@ -1,146 +1,53 @@
 # ROADMAP — IDP Benchmark Lab
 
-## Phase 0 — Documentation Seed
-Status: COMPLETE
+## Current priority — Production-readiness remediation
 
-## Phase 1 — PWA Foundation
-Status: NEXT
+Status: OPEN; production decision **NO-GO** following the 2026-09-08 review of `26b0ae9`.
 
-Deliver:
-- repository scaffold
-- Vite + React + TypeScript
-- responsive shell
-- IndexedDB
-- manifest/service worker
-- GitHub Pages deployment
+[TASK.md](TASK.md) owns task status and acceptance; [PROJECT_STATUS.md](PROJECT_STATUS.md) owns the dated verification baseline. The [review](docs/reviews/2026-09-08-production-readiness.md) provides evidence. Historical phase delivery below is not a current release certificate.
 
-Exit: static app auto-deploys; no provider integration required yet.
+Execution order:
 
-## Phase 2 — Golden Single-Run Extraction
+1. Protect credentials and enforce budget/Stop before every network attempt (TASK-058..060).
+2. Freeze historical inputs and pricing, validate backups, preserve failed evidence, and expose normalized metrics (TASK-061..065).
+3. Restore deterministic unit/current-wizard E2E gates, resolve dependency advisories, and reconcile post-MVP UX/history behavior (TASK-066/067/070).
+4. Complete authorized real-origin provider, browser, PWA, storage-migration, stress and interruption acceptance (TASK-068).
 
-Deliver:
-- PDF upload/preview
-- extraction profile
-- JSON schema editor
-- Golden Answer editor
-- Gemini/OpenAI/Custom adapters
-- single-run inspector
+Exit: all remediation/verification gates have recorded evidence and the production release decision is explicitly reassessed. Documentation reconciliation is TASK-069; it does not close implementation findings.
 
-Exit: one document can be extracted and compared to Golden JSON.
+## Historical delivery phases
 
-## Phase 3 — Benchmark Harness
+| Phase | Delivered scope | Current qualification |
+| --- | --- | --- |
+| 0 — Documentation seed | Product scope, contracts and planning documents | Reconciled with current code/review; requirements retained |
+| 1 — PWA foundation | React/Vite/TypeScript shell, IndexedDB, manifest/service worker, Pages workflow | Local build verified; live Pages/PWA lifecycle acceptance outstanding |
+| 2 — Single extraction | Local PDF preview, profiles/schema/Golden, adapters and single-run inspector | Failed-response evidence and historical-version guarantees need correction |
+| 3 — Benchmark harness | Repeated queue, concurrency, retry, Stop, cost/budget and run records | Per-attempt Stop/budget controls do not yet meet acceptance |
+| 4 — Evaluation | Exact/schema/field/row metrics, variants, heatmap, latency/cost | Normalized results calculated but not persisted/displayed |
+| 5 — Compare and portability | Comparison, JSON/CSV export, backup/import | Credential handling, restore validation and immutable inputs need correction |
+| 6 — Spike hardening/release | v0.1.0 delivery recorded in the historical task ledger | Current unit/browser gates fail; security and production QA remain open |
+| 7 — Guided UI | Six-item task navigation, six-step wizard, terminology and settings | Current primary workflow; browser extraction tests must target it |
+| 8 — Inline Home demo | Bundled fixtures, demo card, runtime PDF renderer wiring | The inline card is no longer mounted by Home; samples are available through the wizard |
 
-Deliver:
-- repeated runner
-- queue/concurrency
-- retry/backoff
-- stop
-- budget cap
-- persisted run evidence
-- usage/cost
+## Post-Phase 8 implementation changes
 
-Exit: repeated test completes safely and persists all evidence.
+The current code also includes changes that were not reflected in the original phase plan:
 
-## Phase 4 — Evaluation Dashboard
+- a guided Home → New Benchmark experience with inline prompt and visual/advanced schema overrides;
+- two auto-seeded bundled document/template/Expected Result sets, without an auto-created provider or offline gateway;
+- English, Mandarin, Malay, Japanese, and Vietnamese selection with partial-translation fallback;
+- editable provider model suggestions, Custom `chat_completions`/`responses` style, OpenAI reasoning effort, and Gemini thinking level;
+- accuracy details in the wizard result view;
+- corrected Gemini `thinkingConfig.thinkingLevel` request mapping.
 
-Deliver:
-- exact/schema/field/row metrics
-- strict vs normalized
-- variants/hashes
-- field heatmap
-- latency/cost
-- run diff inspector
+These are delivered spike capabilities, not production acceptance. TASK-070 owns the remaining Home preset, history pagination, localization coverage, and retired-demo cleanup.
 
-Exit: benchmark clearly identifies accuracy and stability problems.
+## Current user journey
 
-## Phase 5 — Compare & Portability
+Home offers Start benchmark and routes into New Benchmark. The six steps are Document → What to Extract → Expected Result → Choose AI → Run Settings → Review & Run. Users can select a bundled sample or upload a PDF, choose a configured provider, and run a Quick Test or repeated Benchmark. Provider configuration/runtime key entry is available in Settings → AI Providers. Execution records persist locally, while the current Home/Runs/Compare query exposes only the newest 20 suites.
 
-Deliver:
-- provider/model/settings comparison
-- input mode comparison
-- prompt/schema version comparison
-- export/import
-- reusable Golden Sets
-
-## Phase 6 — Spike Hardening
-
-Deliver:
-- accessibility
-- cross-browser QA
-- 100-run stress test
-- recovery tests
-- security audit
-- docs/code reconciliation
-- v0.1.0 release
-
-## Phase 7 — UI/UX Redesign (post-v0.1.0)
-
-Status: IMPLEMENTATION AND QA COMPLETE — closure pending review
-
-The v0.1.0 entity-first sidebar (Dashboard/Documents/Extraction Profiles/Golden Answers/
-Providers/Benchmarks/Compare/Settings) asked users to already know the workflow before finding
-the right screen. Phase 7 replaces it with a task-oriented IA and a guided benchmark wizard; see
-DESIGN.md for the current navigation and screens.
-
-Deliver:
-- 6-item task-oriented nav (Home/New Benchmark/Runs & Results/Compare/Library/Settings) with
-  legacy-route redirects for old bookmarks
-- guided 6-step benchmark wizard (Document → What to Extract → Expected Result → Choose AI →
-  Run Settings → Review & Run) replacing the flat Benchmark Builder form
-- Home/Compare/Library empty-state and onboarding rewrite (what/why/next + CTA)
-- Settings hub restructure (AI Providers/General/Storage/Backup & Restore/Privacy & Security/About)
-- user-facing terminology sweep (Golden Answer → Expected Result, Extraction Profile →
-  Extraction Template, Suite → Benchmark in UI copy, IndexedDB/sessionStorage jargon → plain
-  language) — internal type/table names deliberately left unchanged
-- persisted `defaultRunCount` setting (Settings → General), read by the wizard's benchmark step
-- inline feedback states across upload/save/validate/connect/run/stop/import/export flows
-- mobile/tablet responsive pass, accessibility QA, documentation reconciliation
-
-Exit: a first-time user can go from Home to a completed benchmark without prior knowledge of the
-app's entity model, and existing evidence/export/BYOK guarantees are unchanged.
-
-Deliberately out of scope for this phase (not oversights): inline in-wizard resource creation
-(create a template/expected result without leaving the wizard) — the wizard still links out to
-Library; and a unified provider "Connect & Test" button — `ProvidersPage` keeps Save config and
-Test connection as two explicit actions, since collapsing them changes an existing, tested
-interaction contract for a phase scoped to navigation/wording/feedback, not new workflows.
-
-## Phase 8 — Demo-First Home
-
-Status: COMPLETE
-
-Phase 7 still asked a first-time visitor to understand Document → Library → Template → Expected
-Result → Provider → Settings → Benchmark → Suite → Results before seeing any value. Phase 8 makes
-the value visible in one click: Home's first-time state is now a **Try Demo** card, not an
-onboarding checklist — see DESIGN.md "Home — demo-first" for the full behavior.
-
-Deliver:
-- bundled purchase-order fixtures (`demo/popular-po/` and `demo/nexabyte-po/`: PDFs + matching
-  prompt/schema/expected-result) generated by
-  `scripts/generate-demo-pdf.mjs`, dependency-free
-- `src/demo/fixture.ts` + `src/demo/seedDemoFixture.ts`: idempotent fixture loading/seeding, fixed
-  ids, safe to call on every Home mount
-- `src/pages/DemoBenchmarkCard.tsx`: provider/model/API-key picker with automatic input-mode
-  derivation from the chosen provider's capabilities, 1/3/5 run count, inline result summary +
-  failures list + link into Runs & Results, and a subordinate "test your own document" link into
-  the existing wizard
-- reused `BenchmarkRunner` unmodified — the demo is not a separate benchmark engine
-- fixed a real pre-existing gap found while wiring this: canonical_images mode (required by
-  OpenAI / OpenAI-compatible, since neither accepts native PDF) had no `pdfLoader`/`pageRenderer`
-  wired anywhere in production — it only ever worked in tests that injected fakes. Added
-  `src/documents/runtimeDeps.ts` (`browserExecuteDeps()`) and wired it into the wizard, the
-  repeated-benchmark section, and the demo card, so all three provider kinds now actually work
-  end-to-end, not just Gemini.
-
-Exit: a completely new visitor can open the site, see a ready-made benchmark, choose a
-provider/model, enter a key, run it, and see accuracy/stability/failures — without uploading
-anything or visiting Library/Settings first.
-
-Deliberately out of scope for this phase (not oversights): `ProvidersPage`/Settings' own
-Save-config/Test-connection flow is unchanged — the demo card is a separate, minimal, one-off
-picker purpose-built for the zero-setup path, not a redesign of the persistent Providers screen.
+`DemoBenchmarkCard.tsx` and the older Home-targeted E2E cases still exist, but they do not describe the active entry point. See [DESIGN.md](DESIGN.md) for the current UI and [TESTING.md](TESTING.md) for verification gaps.
 
 ## Deferred
 
-Backend/server mode, multi-user collaboration, ERP posting, automatic prompt optimization, agentic correction loops, RAG, batch APIs, remote workers.
-Also deferred until the UI/UX phase closes (per explicit sequencing): Agentic Workflow, ERP integration.
+Backend/server mode, multi-user collaboration, ERP posting, automatic prompt optimization, agentic correction loops, RAG, batch APIs and remote workers remain outside the current remediation scope. Do not add them to solve these local correctness and acceptance gaps.

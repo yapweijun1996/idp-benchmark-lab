@@ -4,16 +4,21 @@ A static, BYOK (Bring Your Own Key) PWA demo/spike for benchmarking Intelligent 
 
 ## Project status
 
-**Status:** v0.1.0 released — Phases 1-6 complete (PWA foundation, single-run extraction, benchmark harness, evaluation dashboard, compare & portability, hardening/release). Phase 7 (task-oriented navigation, guided benchmark wizard, terminology cleanup) and Phase 8 (demo-first Home — a ready-to-run bundled sample, no upload/setup required to see value; see ROADMAP.md) complete.  
-**Date:** 2026-08-17  
+**Status:** package version 0.1.0 demo/spike; **not ready for production (NO-GO)**. The reviewed checkout has no local release tag. The 2026-09-08 review found defects in budget/Stop enforcement, credential persistence/export, historical evidence, and backup validation, plus failing release tests. Previous phase/task completion records describe delivery history, not current production acceptance.
+
+**Reviewed code:** `26b0ae9`
+
+**Date:** 2026-09-08
+
 **Repository:** `idp-benchmark-lab`
 
-**Try it now:** open the app — Home already has a sample document, prompt, schema, and expected
-result loaded. Choose an AI provider, paste an API key, pick 1/3/5 runs, and click Run Benchmark to
-see accuracy and stability immediately. No PDF upload or Library/Settings setup required for the
-demo; uploading your own document is a secondary, optional path.
+**Try it:** Home → **Start benchmark** → the **New Benchmark** wizard. Select one of two auto-seeded bundled samples or upload a PDF, review or override the extraction fields/schema and Expected Result, choose a configured AI provider, then use Quick Test or a 5/10/20/50/100-run Benchmark. Provider configuration and runtime API-key entry are available in Settings → AI Providers. The old inline Home demo card is not the active entry point.
 
-All MVP functional requirements (FR-001..FR-020) are implemented and covered by unit, integration, accessibility, security-audit, and browser-smoke tests. The repository code, tests, and provider adapters are the source of truth; documentation is updated in the same change whenever behavior changes.
+Use non-sensitive samples and restricted test credentials during evaluation. Do not rely on the current hard-budget control, secret-free backups, or immutable historical evidence. Requirements below remain the target; they are not a claim that every acceptance criterion passes.
+
+See [current status and verification](PROJECT_STATUS.md), [remediation tasks](TASK.md), and the [production-readiness review](docs/reviews/2026-09-08-production-readiness.md). Live provider/CORS and deployed Pages acceptance remain unverified by this review.
+
+The current shell offers English, Mandarin, Malay, Japanese, and Vietnamese. Translation coverage is incremental and falls back to English or the source key when a page string is missing; it is not yet a fully verified localization release.
 
 ## Core question
 
@@ -77,10 +82,11 @@ If documentation conflicts with code, inspect the code and tests, determine inte
 - `TESTING.md` — test strategy
 - `PWA.md` — offline/static PWA behavior
 - `DEPLOYMENT.md` — GitHub Pages deployment
+- `docs/DEPENDENCIES.md` — resolved toolchain, advisory status, and update policy
 - `DECISIONS.md` — architecture decisions
 - `CHANGELOG.md` — release notes
 - `MANIFEST.md` — documentation file inventory
 - `PROJECT_STATUS.md` — status, blockers, next steps
 - `AGENTS.md` — implementation rules for coding agents
 - `IMPLEMENTATION_PROMPT.md` — ready-to-use coding-agent prompt
-- `docs/` — detailed contracts, metrics, security, Golden sample, deployment notes
+- `docs/` — detailed contracts, metrics, security, samples, deployment notes, and dated reviews

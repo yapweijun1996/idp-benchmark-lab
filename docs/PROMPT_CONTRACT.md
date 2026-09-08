@@ -4,6 +4,8 @@
 
 Support user-adjustable extraction fields without rewriting application code.
 
+This document defines the required prompt semantics. The current editor stores version/hash fields, but profile updates overwrite the same record ID and wizard overrides are not retained as complete immutable profile snapshots. TASK-061 must close that historical-evidence gap; see [BENCHMARK_IDENTITY.md](BENCHMARK_IDENTITY.md).
+
 Composition:
 
 ```text
@@ -48,4 +50,4 @@ For extraction-only profiles, use printed values only. Do not calculate subtotal
 
 ## Versioning
 
-Every profile stores version, prompt hash, and schema hash. Prompt/schema changes create a new benchmark identity.
+Every profile stores version, prompt hash, and schema hash. A newly started benchmark records changed prompt/schema hashes, but the current save path does not retain the prior profile record. The required end state is an immutable effective prompt/schema snapshot or separately retained version for every suite (TASK-061).

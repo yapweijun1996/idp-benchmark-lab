@@ -4,6 +4,18 @@
 
 Records the currently verified benchmark behavior that motivated IDP Benchmark Lab. It is not a replacement for the source PDF.
 
+## Fixture boundaries
+
+Do not combine three different samples under the label "Popular PO":
+
+| Evidence set | Rows | Source | Current use |
+| --- | ---: | --- | --- |
+| Golden Popular PO regression | 13 | User-provided purchase order; source PDF is not committed | `src/test/fixtures/golden-popular-po.ts` and `examples/golden-popular-po.golden.json` protect the field-isolation lessons below |
+| Bundled Popular PO demo | 5 | Synthetic PDF and JSON in `demo/popular-po/` | Auto-seeded document/template/Expected Result offered by the New Benchmark wizard |
+| Bundled Nexabyte PO demo | 10 | Synthetic PDF and JSON in `demo/nexabyte-po/` | Second auto-seeded multi-section wizard sample; documented separately in `GOLDEN_SAMPLE_NEXABYTE.md` |
+
+The bundled samples are not copies of the user-provided 13-row source and must not be used to claim its visual ground truth. `seedDemoFixture` inserts their stored records but does not run AJV validation itself; fixture/schema agreement is enforced by tests.
+
 ## Verified high-level fields
 
 - document number: `0004131999`

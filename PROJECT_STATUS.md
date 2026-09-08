@@ -1,96 +1,52 @@
 # PROJECT STATUS — IDP Benchmark Lab
 
-## Current status
+## Current decision
 
-**v0.1.0 released (all 56 tasks complete). Phase 7 (task-oriented IA, guided wizard, terminology)
-and Phase 8 (demo-first Home) complete — see ROADMAP.md.**  
-Phase 6 hardening delivered: evaluation/adapter/storage/stop-budget test coverage verified, Playwright browser smoke (4 specs against the production build), axe-core accessibility gate, security audit tests (app-shell-only SW whitelist, key non-persistence, backup secret rejection), and docs/code reconciliation (README status, ARCHITECTURE modules, TESTING additions).
+**NO-GO for production.** The static package-version 0.1.0 demo/spike exists; the reviewed checkout has no local release tag, and production acceptance is incomplete. This status is based on the 2026-09-08 local review of `26b0ae9`, not a check of the currently deployed Pages site. Updating documentation does not fix the reviewed defects.
 
-Phase 7 replaced the v0.1.0 entity-first sidebar with a task-oriented IA (Home/New Benchmark/
-Runs & Results/Compare/Library/Settings), a guided 6-step benchmark wizard, a user-facing
-terminology sweep, a persisted default run-count setting, and inline feedback states across
-upload/save/validate/connect/run/stop/import/export flows — see ROADMAP.md Phase 7 and
-DESIGN.md for details.
+The current entry point is Home → New Benchmark. The six-step wizard offers bundled samples or a local PDF, extraction fields/schema, Expected Result, AI provider, run settings, and review/execution. The former inline Home demo card remains in source but is not mounted by the active Home page.
 
-Phase 8 replaced the first-time Home experience with a bundled, ready-to-run demo (sample PDF +
-prompt + schema + expected result already loaded) so a new visitor can see a real accuracy/
-stability result within one click, with custom-document benchmarking demoted to a secondary
-"Upload my document" link. Along the way, fixed a real pre-existing gap: canonical_images mode
-(needed by OpenAI/OpenAI-compatible, which don't accept native PDF) had no PDF renderer wired
-anywhere in production — see ROADMAP.md Phase 8.
+Delivered post-MVP behavior includes two bundled sample sets, a visual schema editor, editable provider model IDs, OpenAI reasoning effort, Gemini thinking level, and a five-language selector (`en/zh/ms/ja/vi`). Localization is partial and falls back to English/source keys. Runs & Results and Compare currently load only the newest 20 suites, and Home's "3 repeated runs" guidance conflicts with the supported 5/10/20/50/100 presets. These are tracked in TASK-070.
 
-Lint/typecheck/build green; 270 unit/integration tests passing; 7/7 e2e specs passing
-(production build, real Chromium).  
-Date: 2026-08-17
+## Verified baseline
 
-## Completed discovery
+| Check | Result on 2026-09-08 |
+| --- | --- |
+| Lint | PASS with 2 Fast Refresh warnings in `src/i18n.tsx` |
+| Typecheck | PASS |
+| Production build | PASS; PWA generated with 17 precache entries; main JS 1.08 MB (327 KB gzip) and over-500-KB chunk warning |
+| Existing unit/integration suite | 293 passed, 1 failed across 52 files; 9 unhandled post-teardown React errors |
+| Existing Chromium browser suite | 5 passed, 3 failed |
+| Isolated review probes | 10 defects/scenarios reproduced; not fixes |
+| Dependency audit | Four high-severity affected dependency entries, including parent chains; application exploitability not established |
 
-- project purpose and repo name defined
-- static PWA + GitHub Pages requirement confirmed
-- BYOK confirmed
-- providers: OpenAI, Gemini, Custom OpenAI-compatible
-- PDF upload/extract workflow defined
-- modular prompt/schema requirement defined
-- Golden Answer defined
-- run presets 5/10/20/50/100 defined
-- accuracy vs stability separated
-- cost/usage tracking required
-- field-level drift/variant analysis required
-- hard budget cap + Stop required
-- direct structured JSON root preferred
-- strict source-field isolation identified
+The pricing test fails because it compares today's timestamp with a fixed 2026-08-20 date. The nine unhandled errors are late state updates after the `App.a11y` test environment is torn down; passing assertions may therefore be false positives. Browser failures target the removed Home demo controls and occur before testing extraction. Port 4173 was unavailable on the review machine; the same browser cases ran against the built app on temporary port 52173. No application code or lockfile changed during review.
 
-## Experimental findings motivating project
+## Work required before release
 
-On the Golden Popular PO:
-- Vendor Article No. moved into `remark` in some runs
-- after prompt changes, it moved into `stock_desc` in another run
-- `M650 M WL WHITE` sometimes became `M650 MWL WHITE`
-- changing thinking level changes benchmark identity
-- structured-output schema changed response shape
+| Area | Current gap | Task |
+| --- | --- | --- |
+| Credentials | Custom auth headers and response/error echoes can persist and enter exports | TASK-058 |
+| Budget | First/unknown-cost requests and concurrency can exceed the cap | TASK-059 |
+| Stop | Retries can start after Stop during backoff | TASK-060 |
+| Historical evidence | Mutable Golden/profile references and incomplete input/configuration snapshots | TASK-061 |
+| Backup import | ID-only malformed records can replace valid data | TASK-062 |
+| Failed responses | Malformed output loses raw evidence/usage and is classified as provider_error | TASK-063 |
+| Pricing | Prices are resolved per response instead of frozen with a suite | TASK-064 |
+| Normalized metrics | Calculated by the evaluator but not persisted/displayed with strict results | TASK-065 |
+| Release gates | Date-sensitive unit test, obsolete browser flow, missing E2E/PR workflow gates | TASK-066 |
+| Dependencies | Review and resolve current affected dependency paths | TASK-067 |
+| UX/history consistency | Partial localization, 3-vs-5 run guidance, latest-20 truncation, and retired demo source/tests | TASK-070 |
+| Production acceptance | Real-origin provider, browser, PWA and interruption evidence outstanding | TASK-068 |
 
-A single good extraction is not enough evidence.
+Detailed reproduction evidence, source locations, and bounded corrections are in the [review](docs/reviews/2026-09-08-production-readiness.md). [TASK.md](TASK.md) owns remediation status; [TESTING.md](TESTING.md) owns validation procedures; [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) owns the dated dependency/toolchain snapshot.
 
-## Completed work
+## Evidence limits
 
-- documentation seed (TASK-000)
-- repository scaffold, Vite/React/TS strict toolchain (TASK-001)
-- responsive app shell with hash routing and unit tests (TASK-002, TASK-003)
-- PWA manifest, app-shell-only service worker, icon set, explicit update prompt (TASK-004)
-- GitHub Pages Actions deployment workflow with CI gates (TASK-005)
-- IndexedDB/Dexie schema v1: 8 stores, forward-only migration, unique [suiteId+runNumber] (TASK-006)
+Live paid provider calls, CORS from the Pages origin, deployed revision/Actions status, Firefox/Safari, large-document stress, interruption recovery, and the complete PWA offline/update lifecycle were not verified. Mocked adapter tests and a successful build do not establish these outcomes.
 
-## Pending work
+KB-MCP was consulted. Retrieved material primarily concerned other IDP/KB projects and did not establish acceptance for this repository; the review relies on local code and observable tests.
 
-All v0.1.0 tasks in `TASK.md` are done. Phase 7 and Phase 8 are both complete — see ROADMAP.md.
-Noted as deliberate scope decisions rather than open work: inline in-wizard resource creation
-(B.2, skipped by design), a unified provider Connect+Test button on `ProvidersPage` (kept as two
-separate actions), and demo-run persistence into Library/Runs & Results (kept as-is — the demo
-reuses the exact same `BenchmarkRunner`, so its runs are real, inspectable history, not a
-sandboxed/throwaway mode).
+## Next action
 
-Post-release follow-ups: push to GitHub and enable Pages, real-provider Golden PO validation run
-(now easy to try via the Home demo card against a real key), interrupted-suite resume, Agentic
-Workflow, ERP integration.
-
-## Risks
-
-1. Provider browser CORS.
-2. BYOK key visible in browser runtime.
-3. Provider API/pricing drift.
-4. Native PDF behavior differs by provider.
-5. Rate limits and 100-run cost.
-6. Browser memory for PDF rendering.
-7. GitHub Pages/PWA base-path issues.
-
-## Immediate next steps
-
-1. Create GitHub repository.
-2. Copy this documentation into root.
-3. Give `IMPLEMENTATION_PROMPT.md` to coding agent.
-4. Scaffold/deploy PWA shell.
-5. Implement IndexedDB/PDF preview.
-6. Implement Golden single-run path.
-7. Add repeated benchmark harness.
-8. Add metrics/cost dashboard.
-9. Reconcile docs with real code before release.
+Repair credential boundaries and per-attempt budget/Stop enforcement first, then immutable evidence and import validation. Restore deterministic tests, reconcile the active workflow/history behavior, and complete production acceptance before changing the NO-GO decision. Preserve the static/BYOK architecture; a backend or full rewrite is not required.

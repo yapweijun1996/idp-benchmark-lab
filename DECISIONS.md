@@ -1,5 +1,7 @@
 # DECISIONS — ADR Summary
 
+These decisions remain the intended architecture. The [2026-09-08 review](docs/reviews/2026-09-08-production-readiness.md) found implementation gaps in immutable identity (ADR-005), persisted normalized metrics (ADR-006), safe raw evidence (ADR-007), and credential non-persistence (ADR-012). No ADR is relaxed by the documentation update; fixes are tracked in [TASK.md](TASK.md).
+
 ## ADR-001 Static GitHub Pages PWA
 MVP has no application backend. Trade-off: browser-visible BYOK keys and provider CORS limitations.
 
@@ -44,3 +46,15 @@ Missing printed subtotal/GST/total remains `null` unless a profile explicitly re
 
 ## ADR-015 Canonical schema stores document values as strings
 Quantities, prices, and amounts are strings in the canonical schema to avoid `5` vs `5.00` drift and locale formatting differences. Comparison stays character-sensitive. Numeric output is allowed only when the profile schema explicitly declares number types.
+
+## ADR-016 Guided wizard is the primary entry point
+Home routes users into the six-step New Benchmark wizard. Bundled samples are normal document/template/Expected Result records and reuse the same execution engine; the retained inline `DemoBenchmarkCard` is not an active alternative workflow and should be removed or deliberately restored under TASK-070.
+
+## ADR-017 No built-in provider gateway
+The app does not create an offline/demo gateway or application-owned provider endpoint. Bundled samples do not include a provider config. Users configure OpenAI, Gemini, or a Custom OpenAI-compatible endpoint and provide credentials at runtime.
+
+## ADR-018 Provider settings remain explicit and model IDs editable
+Model lists are suggestions, not an authoritative registry. OpenAI reasoning effort and Gemini thinking level are stored as provider settings and normalized into the run's reasoning/thinking input; adapters translate them to provider-specific payload fields. Support must be verified for the chosen live model.
+
+## ADR-019 Localization uses explicit fallback
+The UI offers `en`, `zh`, `ms`, `ja`, and `vi`, persists the selection locally, and falls back to English or the source key when a translation is missing. This fallback keeps the app operable but is not proof of complete localization coverage (TASK-070).

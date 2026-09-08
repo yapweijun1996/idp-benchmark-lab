@@ -1,13 +1,24 @@
 {
   "project": "idp-benchmark-lab",
-  "generated_at": "2026-08-15T15:37:00+08:00",
-  "implementation_status": "not_started",
+  "updated_at": "2026-09-08T09:16:17+08:00",
+  "reviewed_revision": "26b0ae9",
+  "package_version": "0.1.0",
+  "implementation_status": "demo_spike_with_open_remediation",
+  "production_readiness": "no_go",
   "hosting_target": "GitHub Pages",
   "app_type": "static PWA demo/spike",
+  "primary_flow": "Home -> New Benchmark wizard",
   "providers": [
     "OpenAI",
     "Gemini",
     "Custom OpenAI-compatible"
+  ],
+  "languages": [
+    "en",
+    "zh",
+    "ms",
+    "ja",
+    "vi"
   ],
   "benchmark_runs": [
     5,
@@ -15,5 +26,8 @@
     20,
     50,
     100
-  ]
+  ],
+  "open_task_range": "TASK-058..068, TASK-070",
+  "status_document": "PROJECT_STATUS.md",
+  "review_document": "docs/reviews/2026-09-08-production-readiness.md"
 }

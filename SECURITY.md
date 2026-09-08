@@ -1,5 +1,11 @@
 # SECURITY — Static BYOK PWA
 
+## Current implementation gaps
+
+**Production NO-GO (2026-09-08).** The dedicated API-key store is memory-only by default with optional tab storage. However, custom authentication headers are persisted in provider settings and copied into backups; the import guard checks only top-level field names. Provider raw/parsed responses and errors are not credential-redacted before storage. Removing a provider or clearing local data does not immediately clear every corresponding in-memory/session key. Synthetic credential probes reproduced persistence/export paths; no real leak was observed.
+
+The policies below remain requirements, not guarantees of the current build. TASK-058 owns credential isolation, cleanup, redaction, and user-facing privacy claims; TASK-062 owns complete backup validation. Until verified, use restricted test credentials and non-sensitive data, avoid putting secrets in custom headers, and treat existing backups/results as potentially secret-bearing. See the [review](docs/reviews/2026-09-08-production-readiness.md).
+
 ## Threat model
 
 Public/static browser application. It cannot hide API keys from the user's own browser runtime.

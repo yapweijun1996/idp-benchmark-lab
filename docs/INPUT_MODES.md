@@ -1,5 +1,11 @@
 # Input Modes
 
+## Current implementation
+
+The saved default is `canonical_images`. Gemini supports both modes in the current adapter. OpenAI and Custom OpenAI-compatible extraction paths require canonical images. Browser runtime dependencies render pages at scale 2 as PNG by default; production code wires this path through `browserExecuteDeps()`.
+
+Capability overrides may exist in a Custom provider's settings, but the current extraction implementation still rejects non-canonical input. Do not use an override to claim native-PDF support without implementing and testing the request path.
+
 ## Native PDF
 
 The provider receives the original PDF using its supported API path.

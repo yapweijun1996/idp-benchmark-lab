@@ -1,5 +1,7 @@
 # Metrics Reference
 
+This table is the target metric contract. Current persisted/displayed metrics have gaps: normalized scores are discarded, malformed output loses evidence, exact/schema rates use all stored run rows rather than terminal runs, error rate counts only provider errors, and cost exposes only total/average/exact-correct values. [EVALUATION.md](../EVALUATION.md) is the canonical definition and distinguishes it from current summary behavior; [TASK.md](../TASK.md) tracks remediation.
+
 | Metric | Meaning |
 |---|---|
 | Exact Pass Rate | Canonical output exactly equals Golden |

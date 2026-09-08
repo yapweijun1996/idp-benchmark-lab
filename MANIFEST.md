@@ -1,8 +1,8 @@
 # Documentation Manifest
 
-Generated: 2026-08-15
+Updated: 2026-09-08
 
-Docs-first handoff package for `idp-benchmark-lab`.
+Documentation inventory for `idp-benchmark-lab`. [PROJECT_STATUS.md](PROJECT_STATUS.md) owns current readiness/evidence, [TASK.md](TASK.md) owns work status, and dated reviews preserve audit findings.
 
 Files:
 - `AGENTS.md`
@@ -28,16 +28,26 @@ Files:
 - `docs/BENCHMARK_IDENTITY.md`
 - `docs/BYOK_SECURITY.md`
 - `docs/COST_AND_PRICING.md`
+- `docs/DEPENDENCIES.md`
 - `docs/GITHUB_PAGES.md`
 - `docs/GOLDEN_SAMPLE.md`
+- `docs/GOLDEN_SAMPLE_NEXABYTE.md`
 - `docs/INPUT_MODES.md`
 - `docs/JSON_SCHEMA.md`
 - `docs/LOCAL_STORAGE.md`
 - `docs/METRICS.md`
 - `docs/PROMPT_CONTRACT.md`
 - `docs/PROVIDER_ADAPTER.md`
+- `docs/reviews/2026-09-08-production-readiness.md`
 - `examples/extraction-contract.example.json`
+- `examples/golden-popular-po.golden.json`
 - `examples/json-schema-canonical.example.json`
 - `examples/output-shape.example.json`
 - `examples/structured-output-schema-openapi.example.json`
+- `demo/popular-po/prompt.txt`
+- `demo/popular-po/schema.json`
+- `demo/popular-po/golden.json`
+- `demo/nexabyte-po/prompt.txt`
+- `demo/nexabyte-po/schema.json`
+- `demo/nexabyte-po/golden.json`
 - `package-metadata.json`

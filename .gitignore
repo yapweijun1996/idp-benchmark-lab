@@ -1,10 +1,23 @@
 # Dependencies
 node_modules/
 
+# Package-manager and runtime logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
 # Build output
 dist/
+dist-ssr/
 coverage/
 *.tsbuildinfo
+
+# Local build/test caches
+.vite/
+.vitest/
+.cache/
 
 # Playwright browser binaries
 .browsers/
@@ -18,7 +31,10 @@ playwright-report/
 
 # Editor / OS files
 .DS_Store
+Thumbs.db
 *.local
+.idea/
+.vscode/
 
 # Local agent/tooling config (e.g. Claude Code dev-server launch config)
 .claude/

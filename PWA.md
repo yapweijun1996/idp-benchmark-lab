@@ -1,5 +1,9 @@
 # PWA — Offline/Static Behavior
 
+## Verification status
+
+This document states the intended cache/offline/update behavior. The 2026-09-08 build generated a manifest and service worker with 17 app-shell precache entries and no runtime-cache routes. The review did not verify the complete browser offline/update lifecycle or interruption safety. Those remain TASK-068 acceptance work; see [PROJECT_STATUS.md](PROJECT_STATUS.md). Secret-free provider settings/results also require TASK-058 before that guarantee can be made.
+
 ## Goal
 
 Application shell and saved benchmark history remain usable offline. Provider extraction requires reachable provider/custom endpoint.
@@ -29,4 +33,6 @@ When new build exists, notify user and allow explicit update/reload. Do not dest
 
 ## Offline UX
 
-Offline user can browse results, edit prompts/schemas/golden answers, inspect locally persisted PDF, and export data. Disable Run with clear provider/network message.
+Target behavior: an offline user can browse retained local results, edit prompts/schemas/Expected Results, inspect a locally persisted PDF, and export data. Run should be disabled with a clear network message.
+
+Current behavior does not proactively gate Run with `navigator.onLine`; a failed request is normalized as a network/CORS ambiguity. Offline browsing, update/reload during an active run, service-worker scope, and retained data behavior still require browser acceptance under TASK-068.

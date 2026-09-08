@@ -19,6 +19,8 @@ The UI should answer immediately:
 
 ## Design principles
 
+These are design requirements. Known implementation gaps and release status are recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md); a principle listed here is not proof of enforcement.
+
 1. **Do not hide test configuration.** Every result shows exact model, prompt version, schema version, thinking/reasoning level, temperature, input mode, renderer config, and app build.
 2. **Accuracy and stability are separate.** A model can be consistently wrong.
 3. **Golden Answer is explicit.** Never auto-rewrite the expected answer without user confirmation.
@@ -34,13 +36,11 @@ entity-first sidebar. Each entity (document, extraction template, expected resul
 a resource picked *inside* the guided benchmark workflow, not a top-level destination — it only
 gets its own nav slot if a user needs to manage it independently of running a benchmark:
 
-- **Home** (`#/home`) — most-recent-benchmark summary for returning users; a ready-to-run **Try
-  Demo** card (bundled sample document/prompt/schema/expected-result, choose provider, choose
-  1/3/5 runs, Run) for first-time users with zero benchmarks — see "Home — demo-first" below.
+- **Home** (`#/home`) — latest-benchmark summary for returning users; sample-readiness information and a **Start benchmark** link into the wizard for first-time users.
 - **New Benchmark** (`#/new-benchmark`) — the guided wizard (see below); the primary workflow.
-- **Runs & Results** (`#/runs`) — every past benchmark, newest first; inspect one for field
-  accuracy, drift, and export.
-- **Compare** (`#/compare`) — select 2+ benchmarks and compare side by side; warns (without
+- **Runs & Results** (`#/runs`) — the most recent 20 benchmarks, newest first; inspect one for
+  field accuracy, drift, and export. Pagination/full-history access is not implemented (TASK-070).
+- **Compare** (`#/compare`) — select 2+ of the most recent 20 benchmarks and compare side by side; warns (without
   blocking) when test configurations differ.
 - **Library** (`#/library`) — tabs for Documents / Extraction Templates / Expected Results:
   reusable assets managed independently of a specific benchmark run.
@@ -56,42 +56,24 @@ Mobile/tablet collapses this into a slide-out drawer (see `styles/app.css` mobil
 
 ## Key screens
 
-### Home — demo-first (Phase 8)
+### Home — guided start
 
-First-time users (zero benchmarks) see the **Try Demo** card (`src/pages/DemoBenchmarkCard.tsx`),
-not an empty state or a setup checklist. A bundled sample — a synthetic "Popular Purchase Order"
-document plus its matching extraction prompt, JSON schema, and expected result
-(`demo/popular-po/`) — is already loaded; the card shows a "Demo ready: ✓ Sample PDF ✓ Extraction
-prompt ✓ JSON schema ✓ Expected result" checklist with nothing to upload or configure first. The
-user only chooses **AI provider/model**, pastes an **API key** (memory-only, exactly like every
-other provider entry in this app — see BYOK below), picks **1 / 3 / 5 runs**, and clicks **Run
-Benchmark**. The mode (native PDF vs. rendered images) is derived automatically from the chosen
-provider's capabilities — the user is never asked to understand input modes to run the demo.
-Results render inline: schema-valid/exact-match counts, field/row accuracy, stability, unique
-variants, average latency, and a "Failures" list (run number, field path, expected vs. actual) for
-quick mismatch inspection, plus a link into Runs & Results for full raw-output inspection. A
-secondary, clearly subordinate "Want to test your own document? → Upload my document" link is the
-only path into the full guided wizard — custom-document benchmarking is available but never
-required to see value. The demo card seeds its fixture into local storage once (idempotent, fixed
-ids) and runs through the *same* `BenchmarkRunner` as every other benchmark (`docs/` "Custom paths
-reuse the core" — see below); it is not a separate engine.
+The active `DashboardPage` shows sample-readiness cards, workflow guidance, and a link to **New Benchmark** for first-time users. The wizard's Document step offers bundled samples or an upload. Home does not expose provider/API-key inputs or execute a benchmark inline. `DemoBenchmarkCard.tsx` is retained source from the earlier Phase 8 experience, not the current Home entry point; browser tests targeting it are stale (TASK-066).
 
-Returning users (1+ benchmarks already run) see the pre-Phase-8 view: benchmark totals, the latest
-benchmark's summary table (exact pass, schema-valid, leaf accuracy, consistency, latency, cost),
-and a "Recent benchmarks" list. A "Compare results" link appears once 2+ benchmarks exist. This
-view is deliberately unchanged — once someone has real benchmark history, showing it beats
-repeating the demo pitch.
+The current Home status card recommends "3 repeated runs", while the repeated runner and saved default only support 5/10/20/50/100 (default 5). This is UI drift, not a supported three-run benchmark preset; TASK-070 must align the copy and behavior.
+
+Returning users see benchmark totals, the latest benchmark's summary, recent history and a Compare link when two or more suites exist. The primary action still opens the wizard.
 
 ### New Benchmark (guided wizard)
 
 A 6-step stepper (`src/pages/NewBenchmarkWizard.tsx`) replaces the old flat "Benchmark Builder"
 form: **Document → What to Extract → Expected Result → Choose AI → Run Settings → Review & Run**.
 Each step is unlocked only once its prerequisites are met (`maxReachable` gating); Expected
-Result is optional and skippable. Advanced settings (temperature, reasoning effort) live behind a
+Result is optional and skippable. The What to Extract step can select a saved template and apply prompt/visual-schema/advanced-JSON overrides to the current run; it does not create an immutable saved template version. Advanced settings (temperature and a normalized reasoning/thinking override) live behind a
 collapsed `<details>` disclosure. Run Settings offers **Quick Test** (single run, immediate
 feedback) or **Benchmark** (repeated runs via the embedded `RepeatedBenchmarkSection`, run count
 preset from Settings → General, defaulting to 5). Review & Run shows the full config,
-capability-gate warnings for incompatible provider/mode combinations, and estimated cost.
+capability-gate warnings for incompatible provider/mode combinations, and reports cost as unknown until the first run completes. The UI exposes a "Hard budget cap" field, but current enforcement is only a previous-run estimate and is not a guaranteed cap (TASK-059).
 
 ### Library
 
@@ -100,31 +82,32 @@ Tabs, each still their own focused screen for managing an asset outside the wiza
 - **Documents** — upload PDF, preview pages, choose local-session vs. "Save on this device"
   (IndexedDB) persistence, delete, fingerprint/size display.
 - **Extraction Templates** — name, prompt version, base prompt, extraction contract, JSON
-  schema, optional normalization policy; every save creates a new version.
+  schema, optional normalization policy; saves increment the version but currently overwrite the same record (TASK-061).
 - **Expected Results** — two-pane layout: PDF preview and editable Expected Result JSON,
-  validated against the selected template's schema and versioned on every save.
+  validated against the selected template's schema; version numbers increment on save, but historical versions are not retained (TASK-061).
 
 ### Settings
 
 Tabs: **AI Providers** (OpenAI/Gemini/Custom OpenAI-compatible cards — model, base URL where
-applicable, key input with "keep until this tab closes" opt-in, capabilities, connection test),
+applicable, API style for Custom, OpenAI reasoning effort, Gemini thinking level, key input with "keep until this tab closes" opt-in, capabilities, connection test),
 **General** (default input mode, default run count), **Storage** (per-table record counts,
-two-step confirm to clear local data), **Backup & Restore** (export/import JSON, secret-field
-rejection on import), **Privacy & Security** (static BYOK/key-handling explanation), **About**
+two-step confirm to clear local data), **Backup & Restore** (export/import JSON; current validation and secret handling have open gaps in TASK-058/062), **Privacy & Security** (static BYOK/key-handling explanation whose absolute safety copy currently overstates the implementation), **About**
 (app build).
 
 ### Runs & Results / Run Inspector
 
-Runs & Results lists every past benchmark; "Inspect" opens `SuiteDetail` — field accuracy
-heatmap, ordered run list, and a run inspector (raw provider response, parsed JSON, Expected
-Result, strict/normalized diff, schema errors, usage, cost, latency, output hash) plus JSON/CSV
-export.
+Runs & Results lists the latest 20 suites returned by `useRunHistory`; older IndexedDB records are not reachable from this view even though the active subtitle says every benchmark is shown. Pagination/full-history support and truthful copy are required by TASK-070. "Inspect" opens `SuiteDetail` — field accuracy
+heatmap, ordered run list, strict field mismatches, available raw/parsed output, current referenced Expected Result, and summary/export data. Normalized metrics are not persisted/displayed yet (TASK-065); old Expected Results must be frozen before historical inspectors can be trusted (TASK-061). Failed-response evidence remains incomplete (TASK-063).
 
 ### Compare
 
 Select 2+ benchmarks to compare side by side (exact pass, schema-valid, leaf/row accuracy,
 consistency, unique variants, cost, latency). Warns when selected benchmarks' test configuration
 (document/prompt/schema hashes) differ, without blocking the comparison.
+
+## Localization
+
+The top bar offers English, Mandarin, Malay, Japanese, and Vietnamese, and persists the selection in app settings. Translation is incremental: missing entries fall back to English or the untranslated source key. Treat this as partial localization until page coverage, formatting, accessibility, and browser QA are completed under TASK-070.
 
 ## Visual style
 

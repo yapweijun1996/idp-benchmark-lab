@@ -4,6 +4,10 @@
 
 Static auto-deploy from GitHub Actions to GitHub Pages.
 
+## Current release decision
+
+**Production NO-GO**, based on the [2026-09-08 review](docs/reviews/2026-09-08-production-readiness.md). [PROJECT_STATUS.md](PROJECT_STATUS.md) records the verified baseline and evidence limits. No deployed revision or live provider/CORS acceptance was checked. This documentation update does not disable the existing automatic deployment workflow.
+
 ## Requirements
 
 - no secrets required for build
@@ -15,8 +19,7 @@ Prefer hash routing or another Pages-safe routing strategy for the spike.
 
 ## Repository prerequisites (required BEFORE the first deploy)
 
-The deploy workflow itself is correct; a "configure-pages / Not Found" failure
-means the repository has not enabled Pages for GitHub Actions yet:
+For a `configure-pages` / `Not Found` failure, inspect the repository's Pages configuration, workflow permissions, and actual Actions error before diagnosing the cause:
 
 1. Repository → **Settings → Pages**.
 2. Under **Build and deployment → Source**, select **GitHub Actions** (not
@@ -29,9 +32,9 @@ If Pages was previously configured with the legacy branch source, switch the
 Source to GitHub Actions; otherwise the workflow's `environment: github-pages`
 reference fails with the Not Found error.
 
-## Workflow intent
+## Current workflow and missing gates
 
-On push to configured branch:
+`.github/workflows/deploy.yml` runs on push to `main` and manual dispatch:
 
 1. checkout
 2. install from lockfile
@@ -42,6 +45,10 @@ On push to configured branch:
 7. upload Pages artifact
 8. deploy Pages
 
+The reviewed workflow uses `actions/checkout@v4`, `actions/setup-node@v4`, `actions/configure-pages@v5`, `actions/upload-pages-artifact@v3`, and `actions/deploy-pages@v4`. Node is selected through the floating `lts/*` channel, while the lockfile pins package resolution; see [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
+
+The workflow does not run Playwright or validate pull requests. The reviewed unit suite has a date-sensitive failure, so a current run would stop at `npm test` before deployment; the browser suite also targets an obsolete entry point. TASK-066 must restore deterministic tests, exercise the current wizard, record the CI runtime, and require browser/PR checks. Passing an independently invoked build is insufficient for production release.
+
 At implementation time, use current official GitHub Pages Actions/versions. If a newer major of a Pages action is unavailable on your account/enterprise runner images, pin the known-good major (the workflow currently uses the v3/v4/v5 line); the failure mode of "missing" newer actions is a workflow-syntax-level error, not a Pages misconfiguration.
 
 ## Environment
@@ -49,6 +56,8 @@ At implementation time, use current official GitHub Pages Actions/versions. If a
 Build-time environment contains public config only. BYOK happens in browser after load.
 
 ## Acceptance
+
+The checks below remain unverified live-deployment criteria for TASK-068. First close TASK-058..067 and TASK-070; then record the tested revision, origin, browser and provider for the release decision.
 
 - Pages URL loads
 - refresh works with chosen routing

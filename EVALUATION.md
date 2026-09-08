@@ -7,6 +7,12 @@ Stability = does same configuration keep producing same result?
 
 Never collapse them into one score.
 
+## Implementation status
+
+Metric definitions below are the required interpretation. The evaluator calculates strict and normalized results, but stored runs and the active UI retain only strict metrics (TASK-065). Malformed JSON is currently classified as provider_error and loses response/usage evidence (TASK-063).
+
+`summarizeSuite` currently divides exact/schema-valid counts by `runs.length` (named `attemptedRuns`), including queued/running rows if a suite is inspected while interrupted, rather than only terminal `completed_runs`. Its error rate counts only `provider_error / requested_runs`; `parse_error` and `cancelled` are not included. Current cost summaries expose total, average per stored run, and cost per exact match only; cost/schema-valid and projected cost per 1,000 are not implemented. Latency is calculated only for records that retained `latencyMs`, while failed provider/parse paths can lose timing. TASK-063/065 must align persistence, denominators, and displayed/exported metrics with this contract. See [TESTING.md](TESTING.md) and the [review](docs/reviews/2026-09-08-production-readiness.md).
+
 ## Denominator definitions
 
 - `requested_runs`: the user-selected preset (5/10/20/50/100), fixed at suite creation.
