@@ -6,6 +6,7 @@ import { ProfileService } from "../profiles/service";
 import { GoldenService } from "../golden/service";
 import { BenchmarkRunner } from "./runner";
 import { SingleRunService } from "./singleRun";
+import { executeExtraction } from "./execute";
 import { setApiKey, clearAllKeys } from "../providers/keys";
 import { buildBackup, importBackup } from "../export/backup";
 import { summarizeSuite } from "./summary";
@@ -17,6 +18,37 @@ import type { BenchmarkRun } from "../storage/types";
 const databases: IdpDatabase[] = [];
 afterEach(async () => { clearAllKeys(); vi.unstubAllGlobals(); for (const db of databases.splice(0)) await db.delete(); });
 function database() { const db = new IdpDatabase(crypto.randomUUID()); databases.push(db); return db; }
+it("lets the Gateway Demo adapter classify a missing session instead of applying the generic API-key gate", async () => {
+  const db = database();
+  const profile = await new ProfileService(db).create({
+    name: "Gateway Demo profile",
+    basePrompt: "Extract the printed fields.",
+    extractionContract: ["value"],
+    jsonSchema: { type: "object", properties: { value: { type: ["string", "null"] } }, additionalProperties: false },
+  });
+  const document = { id: "demo-doc", name: "demo.pdf", mimeType: "application/pdf" as const, size: 1, sha256: "d".repeat(64), createdAt: "2026-09-08T00:00:00Z", storageMode: "session" as const };
+  const config = { id: "gateway-demo", kind: "openai_compatible" as const, name: "Gateway Demo", baseUrl: "https://gpt.yapweijun1996.com/demo/v1", model: "demo-fast", settings: { endpointProfile: "gateway_demo" } };
+  await db.documents.put(document);
+  await db.providerConfigs.put(config);
+  const adapter: ProviderAdapter = {
+    kind: "openai_compatible",
+    capabilities: () => ({ nativePdf: false, imageInput: true, structuredOutput: true, tokenUsage: true, providerReportedCost: false, temperature: false, thinking: true }),
+    testConnection: async () => ({ ok: true, message: "ok" }),
+    extract: vi.fn(async (_request, ctx) => {
+      expect(ctx.apiKey).toBe("");
+      return { raw: '{"value":null}', json: { value: null }, providerCalls: 0 };
+    }),
+  };
+  const outcome = await executeExtraction({ db, adapters: { openai_compatible: adapter }, getBlob: async () => new Blob(["%PDF"], { type: "application/pdf" }) }, {
+    document,
+    profile,
+    config,
+    mode: "canonical_images",
+    frozenImages: [{ mimeType: "image/png", dataUrl: "data:image/png;base64,aA==" }],
+  });
+  expect(outcome.response.json).toEqual({ value: null });
+  expect(adapter.extract).toHaveBeenCalledTimes(1);
+});
 it("keeps dispatched evidence redacted after credentials are cleared in flight", async () => {
   const { db, deps, input, adapter } = await fixture();
   vi.mocked(adapter.extract).mockImplementation(async () => {

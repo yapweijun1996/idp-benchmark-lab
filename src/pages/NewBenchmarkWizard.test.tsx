@@ -270,6 +270,27 @@ describe("NewBenchmarkWizard", () => {
     expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
   });
 
+  it("shows the Gateway Demo session requirement beside the default provider", () => {
+    const gatewayConfig: ProviderConfig = {
+      id: "gateway-demo",
+      kind: "openai_compatible",
+      name: "Gateway Demo",
+      model: "demo-fast",
+      baseUrl: "https://gpt.yapweijun1996.com/demo/v1",
+      settings: { endpointProfile: "gateway_demo" },
+    };
+    useProviderConfigsMock.mockReturnValue(providersResult([gatewayConfig]));
+    render(<NewBenchmarkWizard />);
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    fireEvent.click(screen.getByRole("radio", { name: /PO \(v1\)/i }));
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+    fireEvent.click(screen.getByRole("button", { name: /continue/i }));
+
+    const sessionStatus = screen.getAllByRole("status").find((node) => node.textContent?.includes("No active demo session"));
+    expect(sessionStatus).toBeDefined();
+    expect(screen.getByRole("link", { name: "Connect demo session" })).toHaveAttribute("href", "#/settings");
+  });
+
   it("preserves selections when navigating back and forward", () => {
     render(<NewBenchmarkWizard />);
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));

@@ -100,9 +100,13 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
   const { db, getBlob } = deps;
   const { document, profile, config } = input;
 
+  const gatewayDemo = isGatewayDemo(config);
   const apiKey = getApiKey(config.id) ?? "";
   const redactEvidence = captureRedactor();
-  if (!apiKey) {
+  // Gateway Demo authenticates with its short-lived origin-bound session token,
+  // which the adapter validates. Generic BYOK providers still fail closed here
+  // so a missing API key never reaches their network adapter.
+  if (!apiKey && !gatewayDemo) {
     throw new RunFailure({
       category: "auth",
       message: "No API key for this provider config. Enter it on the Providers page.",
@@ -162,7 +166,7 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
   let response: NormalizedExtractionResponse;
   let failure: NormalizedError | undefined;
   try {
-    if (isGatewayDemo(config)) {
+    if (gatewayDemo) {
       response = redactEvidence(await adapter.extract(request, { config, apiKey, signal: input.signal, requestGate: createRequestGate() }));
     } else {
       const meta: GatewayRequestMeta = { phase: "map", index: 1, total: 1 };

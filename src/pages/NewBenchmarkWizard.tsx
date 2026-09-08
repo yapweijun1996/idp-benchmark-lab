@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { checkModeSupport } from "../providers/capabilityGate";
 import { adapterFor } from "../providers/registry";
-import { gatewayDemoMessageKey, isGatewayDemo } from "../providers/demoGateway";
+import { gatewayDemoMessageKey, gatewayDemoSession, isGatewayDemo } from "../providers/demoGateway";
 import { RunFailure, SingleRunService, type SingleRunResult } from "../benchmarks/singleRun";
 import { browserExecuteDeps } from "../documents/runtimeDeps";
 import { PdfPreview } from "../documents/PdfPreview";
@@ -912,20 +912,31 @@ function ProviderStep({
         </p>
       ) : (
         <ul className="doc-list">
-          {configs.map((c) => (
-            <li key={c.id} className="doc-card">
-              <label className="doc-card__main">
-                <input
-                  type="radio"
-                  name="wizard-provider"
-                  checked={providerConfigId === c.id}
-                  onChange={() => onSelect(c.id)}
-                />
-                <span className="doc-card__name">{c.name}</span>
-                <span className="doc-card__meta">{c.model}</span>
-              </label>
-            </li>
-          ))}
+          {configs.map((c) => {
+            const demo = isGatewayDemo(c);
+            const session = demo ? gatewayDemoSession(c.id) : undefined;
+            return (
+              <li key={c.id} className="doc-card">
+                <label className="doc-card__main">
+                  <input
+                    type="radio"
+                    name="wizard-provider"
+                    checked={providerConfigId === c.id}
+                    onChange={() => onSelect(c.id)}
+                  />
+                  <span className="doc-card__name">{c.name}</span>
+                  <span className="doc-card__meta">{c.model}</span>
+                </label>
+                {demo ? (
+                  <span className="doc-card__meta" role="status">
+                    {session
+                      ? `${t("Session expires")}: ${new Date(session.expiresAt).toLocaleTimeString()}`
+                      : <>{t("No active demo session.")} <a href="#/settings">{t("Connect demo session")}</a>.</>}
+                  </span>
+                ) : null}
+              </li>
+            );
+          })}
         </ul>
       )}
       {modeSupport && !modeSupport.supported ? (
