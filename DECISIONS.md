@@ -57,7 +57,7 @@ The app does not create an offline/demo gateway or application-owned provider en
 Model lists are suggestions, not an authoritative registry. OpenAI reasoning effort and Gemini thinking level are stored as provider settings and normalized into the run's reasoning/thinking input; adapters translate them to provider-specific payload fields. Support must be verified for the chosen live model.
 
 ## ADR-019 Localization uses explicit fallback
-The UI offers `en`, `zh`, `ms`, `ja`, and `vi`, persists the selection locally, and falls back to English or the source key when a translation is missing. Coverage and fallback behavior have local regression evidence; target-device localization QA remains part of TASK-068.
+The UI offers `en`, `zh`, `ms`, `ja`, and `vi`, persists the selection locally, and uses the canonical key registry to require translations for every user-facing literal in each locale. Provider/model names, file names, hashes, and other data-derived technical values intentionally fall back to the English source key. Coverage and fallback behavior have local regression evidence; target-device localization QA remains part of TASK-068.
 
 ## ADR-020 Snapshot effective evidence before execution
 Suites own immutable effective inputs, profile/Golden versions, provider configuration, pricing and build identity. Canonical images are rendered once and frozen with the original PDF. This avoids mutable history and pixel changes between retries. Library session-only storage does not prevent a started benchmark from retaining its input as local evidence. Version-2 migration preserves records and labels legacy missing snapshots.

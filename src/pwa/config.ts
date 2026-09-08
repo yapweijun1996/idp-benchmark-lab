@@ -10,6 +10,7 @@ export const PWA_MANIFEST = {
   name: "IDP Benchmark Lab",
   short_name: "IDP Lab",
   description: "Static BYOK PWA for repeatable IDP extraction benchmarking",
+  id: "./",
   theme_color: "#1f5cff",
   background_color: "#f5f6f8",
   display: "standalone" as const,

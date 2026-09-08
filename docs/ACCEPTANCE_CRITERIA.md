@@ -2,7 +2,7 @@
 
 ## Current release gate
 
-**NO-GO as of 2026-09-08.** Checked items have bounded local implementation/regression evidence in the [remediation report](reviews/2026-09-08-production-remediation.md). Live-origin, deployed CI and target-device acceptance remain unchecked; local mocks do not certify them.
+**NO-GO as of 2026-09-08.** Checked items have bounded local implementation/regression evidence in the [remediation report](reviews/2026-09-08-production-remediation.md). The last published checkpoint has remote CI and Pages evidence; this local PWA/i18n follow-up is pending its remote rerun. Live-provider contract and target-device acceptance remain unchecked; local mocks do not certify them.
 
 Before production sign-off:
 
@@ -20,10 +20,10 @@ Document-only updates do not satisfy these implementation or runtime gates.
 
 ## Static/PWA
 - [x] static build
-- [ ] GitHub Pages Actions deploy
+- [x] GitHub Pages Actions deploy (last published checkpoint)
 - [x] valid generated PWA manifest
 - [x] service worker configuration caches app-shell types only and has no runtime routes
-- [ ] responsive desktop/tablet/mobile
+- [x] responsive desktop/tablet/mobile navigation in browser matrix
 
 ## Documents
 - [x] local PDF upload
@@ -96,3 +96,4 @@ Document-only updates do not satisfy these implementation or runtime gates.
 - [x] build (with bundle-size warning)
 - [x] browser smoke
 - [x] storage/cache security audit
+- [x] versioned update prompt, About build identity, and five-locale UI coverage

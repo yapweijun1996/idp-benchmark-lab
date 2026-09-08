@@ -141,6 +141,8 @@ describe("SettingsHubPage", () => {
     expect(screen.getByText(/memory only by default/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("tab", { name: /about/i }));
-    expect(screen.getByText(/version/i)).toBeInTheDocument();
+    expect(screen.getByText("Version v0.1.0")).toBeInTheDocument();
+    expect(screen.getByText("Build identity")).toBeInTheDocument();
+    expect(screen.getByText("0.1.0")).toBeInTheDocument();
   });
 });

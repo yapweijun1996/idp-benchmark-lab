@@ -384,7 +384,7 @@ h3 {
   bottom: 16px;
   z-index: 40;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -392,6 +392,26 @@ h3 {
   padding: 10px 14px;
   box-shadow: 0 4px 16px rgb(0 0 0 / 0.15);
   max-width: calc(100vw - 32px);
+}
+
+.update-prompt__copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  max-width: 520px;
+  line-height: 1.35;
+}
+
+.update-prompt__copy span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.update-prompt__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .update-prompt button {
@@ -412,6 +432,14 @@ h3 {
 .update-prompt button:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;
+}
+
+.about-build-details code {
+  display: block;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+  font-family: var(--mono);
+  font-size: 12px;
 }
 
 .visually-hidden {
@@ -469,6 +497,23 @@ h3 {
 
   main {
     padding: 16px;
+  }
+}
+
+@media (max-width: 640px) {
+  .update-prompt {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    flex-direction: column;
+  }
+
+  .update-prompt__actions {
+    width: 100%;
+  }
+
+  .update-prompt__actions button {
+    flex: 1;
   }
 }
 

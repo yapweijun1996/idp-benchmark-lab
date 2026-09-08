@@ -2,7 +2,7 @@
 
 Goal: push -> CI test/build -> automatic Pages deployment.
 
-Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The local follow-up series fixes the WebKit offline acceptance driver, refreshes the Actions runtime versions and current model suggestions after Actions run [34185343749](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34185343749) failed the old path; it must be pushed before Pages can rerun. Provider CORS from the deployed origin still requires the user's end-user BYOK checks.
+Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The last published checkpoint is `a45980c`; its remote Actions/Pages evidence is retained in the remediation report. The current local change set adds versioned update UX, sub-path-safe entry-point icons, PWA invariants, and complete five-locale UI coverage. Push it before relying on new Pages evidence. Provider CORS and a full image/PDF plus JSON contract from the deployed origin still require the user's end-user BYOK checks.
 
 The workflow uses the current checked releases: `checkout@v7`, `setup-node@v7`, `configure-pages@v6`, `upload-pages-artifact@v4`, `upload-artifact@v7`, and `deploy-pages@v5`, with Node 24 pinned. Package resolution comes from `package-lock.json`; the reviewed versions and advisory paths are recorded in [DEPENDENCIES.md](DEPENDENCIES.md).
 
@@ -20,10 +20,10 @@ npm audit --audit-level=high
 npm run test:e2e
 ```
 
-The workflow runs this validation on pull requests and main pushes; deployment is downstream of the complete build job and is excluded from pull requests. The local Windows WebKit offline reload limitation and live Pages/provider acceptance remain release blockers recorded in the remediation report. A documentation status change does not pause automatic deployment.
+The workflow runs this validation on pull requests and main pushes; deployment is downstream of the complete build job and is excluded from pull requests. The Windows WebKit offline reload limitation and live Pages/provider acceptance remain release blockers recorded in the remediation report. A documentation status change does not pause automatic deployment.
 
 Artifact: Vite `dist/`.
 
-Check repository base path, SPA routing, service worker scope, manifest/icon URLs, cache busting, and source maps.
+Check repository base path, SPA routing, service worker scope, manifest/icon URLs (including the relative Pages entry-point icons), cache busting, and source maps. Confirm the generated Workbox service worker has app-shell precache only and no runtime provider/PDF/evidence routes.
 
 No provider key is required in GitHub repository settings for normal operation; BYOK is entered by user in browser.

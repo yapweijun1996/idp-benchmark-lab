@@ -1139,7 +1139,7 @@ function RunResultPanel({ result }: { result: SingleRunResult }) {
         <summary>{t("Raw provider response")}</summary>
         <pre className="raw-pre">{run.safeRawResponse ?? `(${t("none")})`}</pre>
       </details>
-      <p>Normalized exact match: {run.exactMatchNormalized === undefined ? "—" : String(run.exactMatchNormalized)} · normalized leaf accuracy: {run.leafAccuracyNormalized === undefined ? "—" : `${(run.leafAccuracyNormalized * 100).toFixed(1)}%`}. Policy: {JSON.stringify(run.normalizationPolicy)}.</p>
+      <p>{t("Normalized exact match")}: {run.exactMatchNormalized === undefined ? "—" : String(run.exactMatchNormalized)} · {t("normalized leaf accuracy")}: {run.leafAccuracyNormalized === undefined ? "—" : `${(run.leafAccuracyNormalized * 100).toFixed(1)}%`}. {t("Policy")}: {JSON.stringify(run.normalizationPolicy)}.</p>
       <details open>
         <summary>{t("Parsed JSON")}</summary>
         <pre className="raw-pre">{JSON.stringify(run.parsedJson, null, 2)}</pre>

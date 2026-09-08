@@ -76,10 +76,10 @@ IndexedDB version 2 retains all eight stores. Its forward migration redacts lega
 Suite JSON/CSV and full backups apply recursive credential redaction. Import validates complete records, hashes and relationships before writes; merge also validates the resulting graph inside the write transaction.
 
 ### pwa
-Manifest/service-worker policy constants; app-shell-only precache whitelist audited by tests.
+Manifest/service-worker policy constants; app-shell-only precache whitelist audited by tests. `buildInfo` parses the injected package/revision/build identity so user-facing controls show a friendly version while technical details retain the full identity. UpdatePrompt uses the service worker refresh callback and never reloads without user acceptance.
 
 ### i18n
-English, Mandarin, Malay, Japanese, and Vietnamese selection with the preference in `AppSettings`. `COPY` plus incremental `EXTRA_COPY` entries fall back to English or the original key; coverage/fallback behavior is tested locally, while target-device QA remains part of TASK-068.
+English, Mandarin, Malay, Japanese, and Vietnamese selection with the preference in `AppSettings`. The pure `i18nCatalog` module's `COPY` and `EXTRA_COPY` tables form a canonical `I18N_KEY_REGISTRY`; coverage tests scan literal `t(...)` calls and require an explicit value for each supported locale. Provider/model names, file names, hashes, and other data-derived technical values intentionally fall back to the English source key. Target-device localization QA remains part of TASK-068.
 
 ### history query boundary
 All retained suites are exposed by a live IndexedDB query; there is no hidden latest-20 cutoff. Inspectors subscribe to changes and use frozen Golden snapshots.

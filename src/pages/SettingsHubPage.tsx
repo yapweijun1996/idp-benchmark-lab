@@ -9,6 +9,7 @@ import type { InputMode } from "../storage/types";
 import { ProvidersPage } from "./ProvidersPage";
 import { SettingsPage } from "./SettingsPage";
 import { useI18n } from "../i18n";
+import { BUILD_INFO, formatFriendlyVersion } from "../pwa/buildInfo";
 
 /** AI provider connections plus app-level settings (general, storage, backup, privacy, about). */
 export function SettingsHubPage() {
@@ -232,12 +233,15 @@ function PrivacyPanel() {
 
 function AboutPanel() {
   const { t } = useI18n();
-  const version = typeof __APP_BUILD__ !== "undefined" ? __APP_BUILD__ : "0.1.0";
   return (
     <div>
       <h2>{t("About")}</h2>
       <p>{t("IDP Benchmark Lab — a static, BYOK PWA for benchmarking document-extraction accuracy, stability, latency, and cost across AI providers.")}</p>
-      <p className="doc-card__meta">{t("Version")} {version}</p>
+      <p className="doc-card__meta">{t("Version")} {formatFriendlyVersion(BUILD_INFO.version)}</p>
+      <details className="about-build-details">
+        <summary>{t("Build identity")}</summary>
+        <code>{BUILD_INFO.buildIdentity}</code>
+      </details>
     </div>
   );
 }

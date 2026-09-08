@@ -60,19 +60,19 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
         {suite.name ?? t("Benchmark")} <span className="chip chip--todo">{t(suite.status)}</span>
       </h2>
       <p className="doc-card__meta">
-        {suite.identity.model} · {suite.identity.inputMode} · {runs.length}/{suite.requestedRuns} runs
+        {suite.identity.model} · {suite.identity.inputMode} · {runs.length}/{suite.requestedRuns} {t("runs")}
       </p>
-      {suite.legacyEvidence ? <p role="status">Historical input snapshot unavailable. The original Golden cannot be reconstructed from mutable records.</p> : null}
-      <table className="summary-table" aria-label="Strict and normalized metrics">
-        <thead><tr><th>Metric</th><th>Strict</th><th>Normalized</th></tr></thead>
+      {suite.legacyEvidence ? <p role="status">{t("Historical input snapshot unavailable. The original Golden cannot be reconstructed from mutable records.")}</p> : null}
+      <table className="summary-table" aria-label={t("Strict and normalized metrics")}>
+        <thead><tr><th>{t("Metric")}</th><th>{t("Strict")}</th><th>{t("Normalized")}</th></tr></thead>
         <tbody>{[
           ["Exact pass rate", summary.exactPassRate, summary.exactPassRateNormalized],
           ["Leaf accuracy", summary.avgLeafAccuracy, summary.avgLeafAccuracyNormalized],
           ["Row accuracy", summary.rowAccuracy, summary.rowAccuracyNormalized],
-        ].map(([label, strict, normalized]) => <tr key={String(label)}><th>{label}</th><td>{typeof strict === "number" ? `${(strict * 100).toFixed(1)}%` : "—"}</td><td>{typeof normalized === "number" ? `${(normalized * 100).toFixed(1)}%` : "—"}</td></tr>)}</tbody>
+        ].map(([label, strict, normalized]) => <tr key={String(label)}><th>{t(String(label))}</th><td>{typeof strict === "number" ? `${(strict * 100).toFixed(1)}%` : "—"}</td><td>{typeof normalized === "number" ? `${(normalized * 100).toFixed(1)}%` : "—"}</td></tr>)}</tbody>
       </table>
-      <p>Normalization policy: {JSON.stringify(suite.snapshot?.profile.normalizationPolicy ?? { trimOuterWhitespace: false, normalizeLineEndings: false })}. Exact and schema rates use {summary.completedRuns} completed runs.</p>
-      <details><summary>Frozen configuration and pricing</summary><pre>{JSON.stringify({ identity: suite.identity, provider: suite.snapshot?.provider, pricing: suite.snapshot?.pricing }, null, 2)}</pre></details>
+      <p>{t("Normalization policy")}: {JSON.stringify(suite.snapshot?.profile.normalizationPolicy ?? { trimOuterWhitespace: false, normalizeLineEndings: false })}. {t("Exact and schema rates use")} {summary.completedRuns} {t("completed runs")}.</p>
+      <details><summary>{t("Frozen configuration and pricing")}</summary><pre>{JSON.stringify({ identity: suite.identity, provider: suite.snapshot?.provider, pricing: suite.snapshot?.pricing }, null, 2)}</pre></details>
 
       <div className="toolbar">
         <button type="button" className="btn" onClick={exportJson}>
@@ -185,7 +185,7 @@ function RunInspector({ run, golden }: { run: BenchmarkRun; golden?: GoldenAnswe
         <summary>{t("Raw provider response")}</summary>
         <pre className="raw-pre">{run.safeRawResponse ?? "(none)"}</pre>
       </details>
-      <details><summary>Attempt history, usage and timing</summary><pre>{JSON.stringify(run.attempts ?? [], null, 2)}</pre></details>
+      <details><summary>{t("Attempt history, usage and timing")}</summary><pre>{JSON.stringify(run.attempts ?? [], null, 2)}</pre></details>
     </div>
   );
 }

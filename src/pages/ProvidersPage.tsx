@@ -292,7 +292,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
 
       {kind === "openai_compatible" ? (
         <label className="field">
-          <span>{t("Custom headers (JSON, optional)")} — memory only; re-enter after reload</span>
+          <span>{t("Custom headers (JSON, optional)")} — {t("Custom headers are memory-only; re-enter after reload")}</span>
           <textarea
             rows={3}
             className="mono-input"

@@ -33,6 +33,8 @@ test("PWA update waits for explicit acceptance and preserves stored data", async
     await writeFile(workerPath, original + "\n// Synthetic update lifecycle probe\n");
     await page.evaluate(async () => { await (await navigator.serviceWorker.ready).update(); });
     await expect(page.getByRole("button", { name: "Update & reload", exact: true })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByRole("status").filter({ hasText: "A new app build is available." })).toContainText("Current app version: v0.1.0");
+    await expect(page.getByRole("button", { name: "Update & reload", exact: true })).toContainText("(v0.1.0)");
     await page.getByRole("button", { name: "Update & reload", exact: true }).click();
     await expect(page.getByRole("heading", { name: "New Benchmark", exact: true })).toBeVisible();
     await expect(page.locator(".pdf-page canvas").first()).toBeVisible();

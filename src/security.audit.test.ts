@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WORKBOX_GLOB_PATTERNS } from "./pwa/config";
+import { PWA_MANIFEST, WORKBOX_GLOB_PATTERNS } from "./pwa/config";
 
 /**
  * Security audit tests (TASK-054, SECURITY.md):
@@ -23,6 +23,11 @@ describe("service worker cache policy", () => {
   });
 
   it("manifest declares the expected identity without secrets", () => {
-    void WORKBOX_GLOB_PATTERNS;
+    expect(PWA_MANIFEST.id).toBe("./");
+    expect(PWA_MANIFEST.start_url).toBe("./");
+    expect(PWA_MANIFEST.scope).toBe("./");
+    expect(PWA_MANIFEST.display).toBe("standalone");
+    expect(PWA_MANIFEST.icons.length).toBeGreaterThanOrEqual(3);
+    expect(JSON.stringify(PWA_MANIFEST)).not.toMatch(/(?:gw_|sk-|api[_-]?key|token)/i);
   });
 });

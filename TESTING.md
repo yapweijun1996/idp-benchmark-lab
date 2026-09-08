@@ -6,7 +6,7 @@ The original review at `26b0ae9` is historical. [Remediation evidence](docs/revi
 
 `src/cost/pricing.test.ts` freezes Date with Vitest fake timers and restores real timers. Sorting behavior remains unchanged. See [Vitest date mocking](https://v3.vitest.dev/guide/mocking.html#dates).
 
-Page/a11y tests await asynchronous effects, and subscription/provider hooks stop updates after unmount. Lint retains two pre-existing Fast Refresh warnings in i18n.tsx; the main build chunk remains above Vite's advisory size threshold. Neither warning is hidden or treated as a failed assertion.
+Page/a11y tests await asynchronous effects, and subscription/provider hooks stop updates after unmount. Lint retains two Fast Refresh warnings in the shared i18n.tsx module; the main build chunk remains above Vite's advisory size threshold. Warnings are visible and are not treated as failed assertions.
 
 ## Test layers
 
@@ -35,7 +35,7 @@ Test IndexedDB migrations, CRUD, suite/run persistence, import/export, and secre
 
 ### Browser/E2E
 
-Test PDF upload, extraction template creation, Expected Result, BYOK config UI, mocked single run, mocked 5-run benchmark, Stop, budget stop, Home, export, and PWA smoke.
+Test PDF upload, extraction template creation, Expected Result, BYOK config UI, mocked single run, mocked 5/100-run benchmark, Stop, budget stop, active Home → wizard flow, export, all five supported locales, responsive navigation, and PWA smoke/update behavior. The update probe runs in Chromium because it mutates one generated service-worker file; Firefox and WebKit retain the explicit skip with offline coverage.
 
 ## pdfjs-dist in jsdom tests
 
@@ -88,7 +88,7 @@ Assert no raw API key in IndexedDB, localStorage, service-worker Cache Storage, 
 
 ## Browser smoke (TASK-052)
 
-`tests/e2e/smoke.spec.ts` tests the production build, active Home → wizard entry, navigation and real PDF rendering.
+`tests/e2e/smoke.spec.ts` tests the production build, active Home → wizard entry, navigation, responsive phone/tablet widths and real PDF rendering. `tests/e2e/i18n.spec.ts` switches the active wizard through English, Mandarin, Malay, Japanese and Vietnamese and fails on raw source namespace keys. `tests/e2e/pwa.spec.ts` verifies app-shell offline behavior and an explicit update button that displays the loaded friendly version.
 
 `tests/e2e/demo.spec.ts` traverses the six-step wizard with synthetic BYOK, intercepts provider traffic, checks real PDF/image requests and redacted malformed evidence, refuses unbounded hard-cap execution, checks Stop, runs 100 requests, restores backup and recovers interrupted work without replay.
 

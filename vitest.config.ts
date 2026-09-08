@@ -22,6 +22,12 @@ export default defineConfig({
         find: /^pdfjs-dist\/build\/pdf\.worker\.min\.mjs$/,
         replacement: fileURLToPath(new URL("./src/test/pdfjs-worker-stub.mjs", import.meta.url)),
       },
+      {
+        // vite-plugin-pwa provides this virtual module in the app build; unit
+        // tests use a tiny local module so UpdatePrompt can be exercised.
+        find: "virtual:pwa-register/react",
+        replacement: fileURLToPath(new URL("./src/test/pwa-register-react-stub.ts", import.meta.url)),
+      },
     ],
   },
   test: {
