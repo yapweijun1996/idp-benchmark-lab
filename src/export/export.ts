@@ -1,4 +1,5 @@
 import type { FieldHeat } from "../evaluation/heatmap";
+import { redact, redactText } from "../providers/redaction";
 import type { SuiteSummary } from "../benchmarks/summary";
 import type { BenchmarkRun, BenchmarkSuite } from "../storage/types";
 
@@ -19,7 +20,7 @@ export interface SuiteExportBundle {
  * responses only; API keys are memory-only and never reach exports.
  */
 export function buildSuiteExportJson(bundle: SuiteExportBundle): string {
-  return JSON.stringify(bundle, null, 2);
+  return JSON.stringify(redact(bundle), null, 2);
 }
 
 /** RFC 4180-style CSV field escaping. */
@@ -27,7 +28,7 @@ export function csvEscape(value: unknown): string {
   if (value === undefined || value === null) {
     return "";
   }
-  const text = String(value);
+  const text = redactText(String(value));
   if (/[",\n\r]/.test(text)) {
     return '"' + text.replace(/"/g, '""') + '"';
   }
@@ -69,6 +70,7 @@ const SUMMARY_HEADER = [
   "latency_p95_ms",
   "cost_total_usd",
   "cost_avg_usd",
+  "exact_pass_rate_normalized", "leaf_accuracy_normalized", "row_accuracy_normalized", "completed_runs", "cost_known_subtotal_usd", "unknown_cost_runs", "cost_per_schema_valid_usd", "projected_per_1000_usd", "latency_p50_ms",
 ];
 
 /** One row per suite with the dashboard summary metrics. */
@@ -99,6 +101,7 @@ export function buildSummaryCsv(rows: SummaryCsvRow[]): string {
         s.latency.p95,
         s.cost.totalUsd,
         s.cost.avgPerRun,
+        s.exactPassRateNormalized, s.avgLeafAccuracyNormalized, s.rowAccuracyNormalized, s.completedRuns, s.cost.knownSubtotalUsd, s.cost.unknownCostRuns, s.cost.costPerSchemaValid, s.cost.projectedPer1000, s.latency.p50,
       ]),
     );
   }

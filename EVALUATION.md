@@ -9,17 +9,17 @@ Never collapse them into one score.
 
 ## Implementation status
 
-Metric definitions below are the required interpretation. The evaluator calculates strict and normalized results, but stored runs and the active UI retain only strict metrics (TASK-065). Malformed JSON is currently classified as provider_error and loses response/usage evidence (TASK-063).
+Strict and normalized exact/leaf/ordered-row metrics and normalization policy persist separately and appear in result views and exports. Malformed output is parse_error with redacted envelope, usage and attempt timing.
 
-`summarizeSuite` currently divides exact/schema-valid counts by `runs.length` (named `attemptedRuns`), including queued/running rows if a suite is inspected while interrupted, rather than only terminal `completed_runs`. Its error rate counts only `provider_error / requested_runs`; `parse_error` and `cancelled` are not included. Current cost summaries expose total, average per stored run, and cost per exact match only; cost/schema-valid and projected cost per 1,000 are not implemented. Latency is calculated only for records that retained `latencyMs`, while failed provider/parse paths can lose timing. TASK-063/065 must align persistence, denominators, and displayed/exported metrics with this contract. See [TESTING.md](TESTING.md) and the [review](docs/reviews/2026-09-08-production-readiness.md).
+Exact/schema-valid rates use terminal completed runs. Error rate includes provider_error, parse_error and cancelled over requested runs. Unknown cost is distinct from the known subtotal, including partial retry evidence. Totals and derived cost rates remain unknown when any attempted/interrupted run has unknown cost. Cost per schema-valid output and projected cost per 1,000 are exposed.
 
 ## Denominator definitions
 
 - `requested_runs`: the user-selected preset (5/10/20/50/100), fixed at suite creation.
-- `attempted_runs`: runs the runner actually started. Stop/budget prevents new starts; an in-flight request finishes normally in MVP and records a terminal state.
+- `attempted_runs`: runs with at least one recorded dispatch. A pendingAttempt after interruption is explicitly uncertain and is included in unknown-cost reporting.
 - `completed_runs`: runs that reached a terminal state (`succeeded`, `schema_invalid`, `provider_error`, `parse_error`, `cancelled`). Queued/running runs are not completed.
 - `parseable_runs`: runs whose response parsed to JSON (`succeeded` + `schema_invalid`).
-- `provider_calls`: real network calls, including retries. Retries never create new run numbers and never change `requested_runs`.
+- `provider_calls`: dispatches recorded by completed attempt processing, including retries. A pendingAttempt journal entry records a possible additional call after interruption; it must not be silently counted as a confirmed receipt.
 - Any rate whose denominator is zero displays `—` (no number), never `0`.
 
 ## Canonical JSON

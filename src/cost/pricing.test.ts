@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IdpDatabase } from "../storage/db";
 import { PRICING_PRESETS, presetToSnapshot } from "./pricing";
 import { PricingService } from "./pricingService";
@@ -8,12 +8,15 @@ let service: PricingService;
 let counter = 0;
 
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date("2026-08-15T00:00:00Z"));
   counter += 1;
   db = new IdpDatabase(`idp-pricing-test-${counter}`);
   service = new PricingService(db);
 });
 
 afterEach(async () => {
+  vi.useRealTimers();
   db.close();
   await db.delete();
 });

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { SettingsPage } from "./SettingsPage";
 import { buildBackup, importBackup, BackupError } from "../export/backup";
@@ -21,7 +21,7 @@ describe("SettingsPage", () => {
     vi.mocked(buildBackup).mockResolvedValue({ formatVersion: 1, entities: {} } as never);
     render(<SettingsPage />);
     fireEvent.click(screen.getByRole("button", { name: /export project backup/i }));
-    await vi.waitFor(() => expect(vi.mocked(downloadText)).toHaveBeenCalled());
+    await waitFor(() => expect(vi.mocked(downloadText)).toHaveBeenCalled());
     expect(vi.mocked(downloadText).mock.calls[0]?.[0]).toMatch(/backup-.*\.json/);
     const confirmation = screen.getByText(/never api keys/i);
     expect(confirmation).toBeInTheDocument();
@@ -36,7 +36,7 @@ describe("SettingsPage", () => {
     const file = new File(['{"formatVersion":1,"entities":{}}'], "backup.json", { type: "application/json" });
     const input = document.getElementById("backup-import") as HTMLInputElement;
     fireEvent.change(input, { target: { files: [file] } });
-    await vi.waitFor(() => expect(screen.getByText(/imported 42 records/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/imported 42 records/i)).toBeInTheDocument());
   });
 
   it("reports rejected backups without changing data", async () => {

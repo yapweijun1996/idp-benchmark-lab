@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GoldenAnswersPage } from "./GoldenAnswersPage";
 import { useDocuments, type UseDocumentsResult } from "../documents/useDocuments";
@@ -112,9 +112,9 @@ describe("GoldenAnswersPage", () => {
     expect(screen.getByText(/no expected results yet/i)).toBeInTheDocument();
   });
 
-  it("validates the JSON against the selected template's schema", () => {
-    render(<GoldenAnswersPage />);
-    fireEvent.change(screen.getByLabelText(/document/i), { target: { value: "doc-1" } });
+  it("validates the JSON against the selected template's schema", async () => {
+    await act(async () => { render(<GoldenAnswersPage />); });
+    await act(async () => { fireEvent.change(screen.getByLabelText(/document/i), { target: { value: "doc-1" } }); });
     fireEvent.change(screen.getByLabelText(/extraction template/i), { target: { value: "p-1" } });
     fireEvent.change(screen.getByLabelText(/expected result json/i), {
       target: { value: '{"document_number":42}' },
@@ -126,13 +126,13 @@ describe("GoldenAnswersPage", () => {
     const create = vi.fn(() => Promise.resolve(golden));
     useGoldensMock.mockReturnValue({ ...emptyGoldens(), create });
     render(<GoldenAnswersPage />);
-    fireEvent.change(screen.getByLabelText(/document/i), { target: { value: "doc-1" } });
+    await act(async () => { fireEvent.change(screen.getByLabelText(/document/i), { target: { value: "doc-1" } }); });
     fireEvent.change(screen.getByLabelText(/extraction template/i), { target: { value: "p-1" } });
     fireEvent.change(screen.getByLabelText(/expected result json/i), {
       target: { value: '{"document_number":"0004131999"}' },
     });
     fireEvent.click(screen.getByRole("button", { name: /save expected result/i }));
-    await vi.waitFor(() => expect(create).toHaveBeenCalled());
+    await waitFor(() => expect(create).toHaveBeenCalled());
     expect(await screen.findByText(/✓ expected result is valid and saved/i)).toBeInTheDocument();
     expect(create).toHaveBeenCalledWith({
       documentId: "doc-1",

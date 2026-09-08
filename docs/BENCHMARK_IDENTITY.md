@@ -2,7 +2,7 @@
 
 A repeatability/stability claim is valid only when the configuration is fixed.
 
-Current implementation does not meet the complete immutable-evidence requirement: profiles/Golden Answers overwrite prior versions, historical inspectors fetch mutable IDs, complete prompt/schema overrides are not retained, custom endpoint/API settings are missing from identity, and app build identifies only the package version. TASK-061 owns remediation; see [review R4](reviews/2026-09-08-production-readiness.md#r4--p1-historical-benchmark-evidence-is-not-immutable).
+New suites store effective PDF bytes, rendered canonical images, prompt/schema overrides, complete selected profile/Golden versions, endpoint/settings, pricing and execution settings. The snapshot digest joins the existing identity fields. Build identity contains package version, Git revision and a unique UUID. Historical inspectors never dereference a mutable Golden ID for new suites; legacy missing evidence is labelled unavailable.
 
 Identity must include:
 - document SHA-256

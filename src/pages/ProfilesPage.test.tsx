@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProfilesPage } from "./ProfilesPage";
 import { useProfiles, type UseProfilesResult } from "../profiles/useProfiles";
@@ -73,7 +73,7 @@ describe("ProfilesPage", () => {
     });
 
     screen.getByRole("button", { name: /create template/i }).click();
-    await vi.waitFor(() => expect(create).toHaveBeenCalled());
+    await waitFor(() => expect(create).toHaveBeenCalled());
     expect(await screen.findByText(/✓ extraction template saved as version 1/i)).toBeInTheDocument();
   });
 

@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Static BYOK PWA for repeatable IDP extraction benchmarking",
+  "overrides": {
+    "@vite-pwa/assets-generator": { "sharp": "^0.35.3" }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

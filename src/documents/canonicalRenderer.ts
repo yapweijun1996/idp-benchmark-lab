@@ -34,7 +34,7 @@ export interface PdfSource {
 /**
  * Renders pages in order and returns provider-ready images. Deterministic:
  * identical settings + document yield identical page lists (image bytes may
- * still vary by browser; the identity records the settings, not the pixels).
+ * still vary by browser; suite snapshots retain the exact rendered pixels).
  */
 export async function renderDocumentPages(
   pdf: PdfSource,

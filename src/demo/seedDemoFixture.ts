@@ -81,7 +81,8 @@ async function seedBundledFixture(db: IdpDatabase, fixture: BundledFixture): Pro
   const existingDocument = await db.documents.get(fixture.documentId);
   if (!existingDocument) {
     const blob = await fixture.loadBlob();
-    const sha256 = await sha256Hex(await blobToArrayBuffer(blob));
+    const blobBytes = await blobToArrayBuffer(blob);
+    const sha256 = await sha256Hex(blobBytes);
     const document: DocumentRecord = {
       id: fixture.documentId,
       name: fixture.documentName,
@@ -91,7 +92,7 @@ async function seedBundledFixture(db: IdpDatabase, fixture: BundledFixture): Pro
       pageCount: 1,
       createdAt: STABLE_CREATED_AT,
       storageMode: "indexeddb",
-      blob,
+      blobBytes,
     };
     await db.documents.put(document);
   }

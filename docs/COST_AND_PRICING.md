@@ -4,11 +4,11 @@
 
 Benchmark cost must be reproducible and auditable.
 
-## Current implementation gaps
+## Implemented controls
 
-The runner estimates the next cost from the most recent successful extraction outcome that returned a known cost, permits the first/unknown-cost request, and has no reservation for concurrent requests. Retries bypass the budget/Stop gate. The UI's current "Hard budget cap" label therefore overstates its protection (TASK-059/060).
+A synchronous per-attempt budget ledger reserves a provider-contract maximum immediately before dispatch, after input preparation. It covers concurrent requests and retries; Stop is checked at the same boundary and wakes backoff waits. Unknown costs retain the full reservation. A missing or invalid bound fails closed, including the first request.
 
-Pricing is reread for each response and its applied basis is not retained with the suite (TASK-064). Pricing records and `ProviderConfig.pricingSnapshotId` exist, but the Settings UI does not provide a reliable pricing-management path and saving a provider can discard an existing association. Failed parsing can discard usage before pricing is calculated (TASK-063). These are open defects, not accepted alternatives to the rules below. See the [review](reviews/2026-09-08-production-readiness.md).
+Settings → AI Providers → Pricing and hard budget basis saves dated, sourced pricing snapshots. Suites freeze the applied snapshot; later edits affect future suites only. Cached input is subtracted from total input before applying the uncached rate; Gemini reasoning usage is included in output usage. Partial token usage never becomes a complete token-cost estimate.
 
 ## Cost source precedence
 
@@ -21,7 +21,7 @@ Unknown must never be rendered as zero.
 
 ## Pricing snapshot
 
-Each benchmark must freeze and retain a pricing snapshot with provider, model, currency, rates, effective date, and optional source note. The current implementation does not yet do this.
+Each benchmark freezes provider/model/currency, rates, effective date, source note and any verified maximum-attempt contract. A flat observed cost is an estimate, not automatically a safe maximum.
 
 Provider prices are time-sensitive. The implementation must verify current official pricing when creating/updating built-in presets and must not silently rewrite historical benchmark costs.
 

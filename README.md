@@ -4,7 +4,7 @@ A static, BYOK (Bring Your Own Key) PWA demo/spike for benchmarking Intelligent 
 
 ## Project status
 
-**Status:** package version 0.1.0 demo/spike; **not ready for production (NO-GO)**. The reviewed checkout has no local release tag. The 2026-09-08 review found defects in budget/Stop enforcement, credential persistence/export, historical evidence, and backup validation, plus failing release tests. Previous phase/task completion records describe delivery history, not current production acceptance.
+**Status:** package version 0.1.0; production **NO-GO** until external acceptance completes. Local remediation implements credential redaction, per-attempt Stop/budget gates, frozen evidence, validated backups, separate scoring and CI gates. See the [remediation evidence](docs/reviews/2026-09-08-production-remediation.md).
 
 **Reviewed code:** `26b0ae9`
 
@@ -14,9 +14,9 @@ A static, BYOK (Bring Your Own Key) PWA demo/spike for benchmarking Intelligent 
 
 **Try it:** Home → **Start benchmark** → the **New Benchmark** wizard. Select one of two auto-seeded bundled samples or upload a PDF, review or override the extraction fields/schema and Expected Result, choose a configured AI provider, then use Quick Test or a 5/10/20/50/100-run Benchmark. Provider configuration and runtime API-key entry are available in Settings → AI Providers. The old inline Home demo card is not the active entry point.
 
-Use non-sensitive samples and restricted test credentials during evaluation. Do not rely on the current hard-budget control, secret-free backups, or immutable historical evidence. Requirements below remain the target; they are not a claim that every acceptance criterion passes.
+Use non-sensitive samples and restricted BYOK credentials for live acceptance. Hard-cap execution requires a verified provider-contract maximum per attempt; missing bounds stop before any request. Starting a benchmark retains its PDF bytes and, in image mode, rendered images in local evidence and backups.
 
-See [current status and verification](PROJECT_STATUS.md), [remediation tasks](TASK.md), and the [production-readiness review](docs/reviews/2026-09-08-production-readiness.md). Live provider/CORS and deployed Pages acceptance remain unverified by this review.
+See [current status and verification](PROJECT_STATUS.md), [tasks](TASK.md), and the [original review](docs/reviews/2026-09-08-production-readiness.md). The user will push to GitHub for browser testing; this task does not publish or provision credentials.
 
 The current shell offers English, Mandarin, Malay, Japanese, and Vietnamese. Translation coverage is incremental and falls back to English or the source key when a page string is missing; it is not yet a fully verified localization release.
 

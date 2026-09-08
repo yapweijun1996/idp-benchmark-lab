@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { liveQuery } from "dexie";
 import { useRunHistory } from "../benchmarks/useRunHistory";
 import type { BenchmarkRun, BenchmarkSuite, GoldenAnswer } from "../storage/types";
 import { getDb } from "../storage/db";
@@ -14,12 +15,24 @@ export function RunsResultsPage() {
     runs: BenchmarkRun[];
     golden?: GoldenAnswer;
   } | null>(null);
+  const selectedId = inspecting?.suite.id;
+  useEffect(() => {
+    if (!selectedId) return;
+    const subscription = liveQuery(async () => {
+      const db = getDb();
+      const suite = await db.benchmarkSuites.get(selectedId);
+      if (!suite) return null;
+      const runs = await db.benchmarkRuns.where("suiteId").equals(selectedId).sortBy("runNumber");
+      return { suite, runs, golden: suite.snapshot?.golden };
+    }).subscribe((value) => setInspecting(value));
+    return () => subscription.unsubscribe();
+  }, [selectedId]);
 
   const inspectSuite = async (suite: BenchmarkSuite) => {
     const db = getDb();
     const runs = await db.benchmarkRuns.where("suiteId").equals(suite.id).toArray();
     runs.sort((a, b) => a.runNumber - b.runNumber);
-    const golden = suite.identity.goldenId ? await db.goldenAnswers.get(suite.identity.goldenId) : undefined;
+    const golden = suite.snapshot?.golden;
     setInspecting({ suite, runs, golden });
   };
 
@@ -32,7 +45,7 @@ export function RunsResultsPage() {
         <SuiteDetail suite={inspecting.suite} runs={inspecting.runs} golden={inspecting.golden} />
       ) : null}
 
-      <h2>{t("Recent runs")}</h2>
+      <h2>{t("Run history")}</h2>
       {history.suites.length === 0 ? (
         <p className="empty-state">
           {t("No runs yet. Start a")} <a href="#/new-benchmark">{t("New Benchmark")}</a> {t("to see results here.")}

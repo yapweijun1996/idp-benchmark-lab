@@ -35,7 +35,7 @@ const PER_MILLION = 1_000_000;
 function fromUsageAndSnapshot(usage: NormalizedUsage, snapshot: PricingSnapshot): CostBreakdown {
   const breakdown: CostBreakdown = {};
   if (snapshot.inputPerMillion !== undefined && usage.inputTokens !== undefined) {
-    breakdown.inputUsd = (usage.inputTokens / PER_MILLION) * snapshot.inputPerMillion;
+    breakdown.inputUsd = ((usage.inputTokens - (usage.cachedInputTokens ?? 0)) / PER_MILLION) * snapshot.inputPerMillion;
   }
   if (snapshot.cachedInputPerMillion !== undefined && usage.cachedInputTokens !== undefined) {
     breakdown.cachedInputUsd = (usage.cachedInputTokens / PER_MILLION) * snapshot.cachedInputPerMillion;
@@ -54,13 +54,16 @@ function sumUsd(breakdown: CostBreakdown): number | undefined {
 }
 
 export function estimateCost(input: CostInput): CostEstimate {
+  const valid = (n: number | undefined): n is number => n !== undefined && Number.isFinite(n) && n >= 0;
   // 1. Provider-reported monetary cost.
-  if (input.providerReportedCostUsd !== undefined) {
+  if (valid(input.providerReportedCostUsd)) {
     return { usd: input.providerReportedCostUsd, source: "provider_reported", breakdown: {} };
   }
 
   // 2. Usage × snapshot. Partial usage counts only what is known.
-  if (input.usage && input.snapshot) {
+  if (input.usage && input.snapshot && valid(input.usage.inputTokens) && valid(input.usage.outputTokens) &&
+    valid(input.snapshot.inputPerMillion) && valid(input.snapshot.outputPerMillion) &&
+    (input.usage.cachedInputTokens === undefined || (valid(input.usage.cachedInputTokens) && input.usage.cachedInputTokens <= input.usage.inputTokens && valid(input.snapshot.cachedInputPerMillion)))) {
     const breakdown = fromUsageAndSnapshot(input.usage, input.snapshot);
     const usd = sumUsd(breakdown);
     if (usd !== undefined) {
@@ -69,7 +72,7 @@ export function estimateCost(input: CostInput): CostEstimate {
   }
 
   // 3. Flat per-request cost.
-  if (input.flatPerRequest !== undefined) {
+  if (valid(input.flatPerRequest)) {
     return { usd: input.flatPerRequest, source: "flat", breakdown: {} };
   }
 

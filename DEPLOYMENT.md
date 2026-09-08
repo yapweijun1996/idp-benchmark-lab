@@ -6,7 +6,7 @@ Static auto-deploy from GitHub Actions to GitHub Pages.
 
 ## Current release decision
 
-**Production NO-GO**, based on the [2026-09-08 review](docs/reviews/2026-09-08-production-readiness.md). [PROJECT_STATUS.md](PROJECT_STATUS.md) records the verified baseline and evidence limits. No deployed revision or live provider/CORS acceptance was checked. This documentation update does not disable the existing automatic deployment workflow.
+**Production NO-GO** pending the external gates in [PROJECT_STATUS.md](PROJECT_STATUS.md). The user will push for GitHub/browser testing; this task does not deploy.
 
 ## Requirements
 
@@ -32,7 +32,7 @@ If Pages was previously configured with the legacy branch source, switch the
 Source to GitHub Actions; otherwise the workflow's `environment: github-pages`
 reference fails with the Not Found error.
 
-## Current workflow and missing gates
+## Current workflow and external gates
 
 `.github/workflows/deploy.yml` runs on push to `main` and manual dispatch:
 
@@ -47,7 +47,7 @@ reference fails with the Not Found error.
 
 The reviewed workflow uses `actions/checkout@v4`, `actions/setup-node@v4`, `actions/configure-pages@v5`, `actions/upload-pages-artifact@v3`, and `actions/deploy-pages@v4`. Node is selected through the floating `lts/*` channel, while the lockfile pins package resolution; see [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
 
-The workflow does not run Playwright or validate pull requests. The reviewed unit suite has a date-sensitive failure, so a current run would stop at `npm test` before deployment; the browser suite also targets an obsolete entry point. TASK-066 must restore deterministic tests, exercise the current wizard, record the CI runtime, and require browser/PR checks. Passing an independently invoked build is insufficient for production release.
+The workflow validates pull requests and main pushes with lint, typecheck, unit tests, build, dependency audit and all three Playwright engines. Deployment depends on the complete build job and is excluded from PRs. Repository branch protection/required checks are an external GitHub setting and were not changed or verified.
 
 At implementation time, use current official GitHub Pages Actions/versions. If a newer major of a Pages action is unavailable on your account/enterprise runner images, pin the known-good major (the workflow currently uses the v3/v4/v5 line); the failure mode of "missing" newer actions is a workflow-syntax-level error, not a Pages misconfiguration.
 

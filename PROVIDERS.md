@@ -2,7 +2,7 @@
 
 ## Current implementation status
 
-The provider boundary is implemented, but production acceptance is **NO-GO**. All requests are sent directly from the browser; no application proxy or built-in demo gateway exists. Provider/model availability and CORS from the deployed Pages origin remain unverified. Credential and pricing defects are tracked in TASK-058/064/068.
+Provider requests remain direct browser BYOK calls with isolated adapters and no proxy. Local contracts are covered by mocked request/response tests. Real model availability, billing and CORS from the user-published Pages origin remain external acceptance gates.
 
 ## MVP provider types
 
@@ -51,9 +51,9 @@ Implemented config:
 - `chat_completions` or `responses` API style
 - internal capability overrides when already present in settings
 
-The current UI does not expose capability overrides or a pricing editor. The adapter accepts canonical images only in its extraction path even though settings can contain capability overrides; do not advertise native-PDF compatibility without implementing and testing it.
+The current UI exposes a dated pricing editor but not all capability overrides. Custom extraction uses canonical images; do not advertise native PDF support from a capability flag alone.
 
-The dedicated API key is memory-only by default, with optional `sessionStorage` for the current tab. However, arbitrary `settings.customHeaders` are persisted in IndexedDB and copied to backups, can override `Authorization`, and are not recursively rejected on import. Raw/parsed provider content and error text are also not credential-redacted at the evidence boundary. Do not put secrets in custom headers or treat current exports as secret-free; TASK-058 must move secret headers to ephemeral storage, redact evidence, and clear ephemeral keys when providers/local data are removed.
+Keys default to memory with optional tab storage. All arbitrary custom headers are memory-only and may override the generated Authorization header. Persistent configuration contains no header values; recursive redaction protects raw/parsed/error evidence and exports.
 
 ## LM Studio/local endpoints
 
@@ -61,7 +61,7 @@ GitHub Pages can call a local/custom endpoint only if browser networking and COR
 
 ## Pricing
 
-Pricing is configuration, not provider logic. `ProviderConfig.pricingSnapshotId` and pricing records exist, but the Settings UI does not manage them reliably, saving a provider can drop an existing association, and execution resolves pricing again for each response. The suite does not retain the applied basis. TASK-064 must preserve provider pricing configuration and freeze a secret-free pricing snapshot at suite creation so later edits affect only future suites.
+Pricing is configuration owned by the cost module. Provider edits preserve matching pricing associations; changing model clears the association. The pricing editor creates fresh records, and suite snapshots preserve the applied values. See [cost rules](docs/COST_AND_PRICING.md).
 
 ## Provider acceptance boundary
 

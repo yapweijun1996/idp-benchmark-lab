@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PricingEditor } from "./PricingEditor";
 import { adapterFor } from "../providers/registry";
 import { useProviderConfigs } from "../providers/useProviderConfigs";
 import { clearApiKey, getApiKey, isKeyRememberedForTab, setApiKey } from "../providers/keys";
@@ -57,7 +58,7 @@ export function ProvidersPage() {
       ) : null}
 
       <div className="provider-grid">
-        {(["openai", "gemini", "openai_compatible"] as const).map((kind) => (
+        {(!providers.loading ? ["openai", "gemini", "openai_compatible"] as const : []).map((kind) => (
           <ProviderCard
             key={kind}
             kind={kind}
@@ -134,6 +135,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         baseUrl: kind === "openai_compatible" ? form.baseUrl.trim() || undefined : undefined,
         model: form.model.trim(),
         settings: buildSettings(customHeaders),
+        pricingSnapshotId: existing?.model === form.model.trim() ? existing.pricingSnapshotId : undefined,
       });
       if (apiKey.trim()) {
         setApiKey(saved.id, apiKey.trim(), { rememberForTab: remember });
@@ -273,6 +275,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         <span className="key-row">
           <input
             type={reveal ? "text" : "password"}
+            aria-label={t("API key")}
             autoComplete="off"
             value={apiKey}
             onChange={(e) => setApiKeyState(e.target.value)}
@@ -289,7 +292,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
 
       {kind === "openai_compatible" ? (
         <label className="field">
-          <span>{t("Custom headers (JSON, optional)")}</span>
+          <span>{t("Custom headers (JSON, optional)")} — memory only; re-enter after reload</span>
           <textarea
             rows={3}
             className="mono-input"
@@ -315,6 +318,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
         </button>
       </div>
 
+      {existing ? <PricingEditor config={existing} onSave={onSave} /> : null}
       {existing ? (
         <div className="provider-card__danger-zone">
           <div>

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ComparePage } from "./ComparePage";
 import { useRunHistory } from "../benchmarks/useRunHistory";
@@ -79,7 +79,7 @@ describe("ComparePage", () => {
     fireEvent.click(boxes[1]!);
     fireEvent.click(screen.getByRole("button", { name: /compare selected/i }));
 
-    await vi.waitFor(() => expect(screen.getByRole("region", { name: /comparison table/i })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("region", { name: /comparison table/i })).toBeInTheDocument());
     expect(screen.getAllByText("gemini-3-flash-lite").length).toBeGreaterThan(0);
     expect(screen.getAllByText("gemini-3-flash-lite-thinking").length).toBeGreaterThan(0);
     // A: 2/2 exact, B: 0/1 exact

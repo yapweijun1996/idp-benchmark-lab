@@ -2,7 +2,7 @@
 
 ## Verification status
 
-This document states the intended cache/offline/update behavior. The 2026-09-08 build generated a manifest and service worker with 17 app-shell precache entries and no runtime-cache routes. The review did not verify the complete browser offline/update lifecycle or interruption safety. Those remain TASK-068 acceptance work; see [PROJECT_STATUS.md](PROJECT_STATUS.md). Secret-free provider settings/results also require TASK-058 before that guarantee can be made.
+The current build precaches 18 app-shell assets including the PDF worker .mjs, with no provider/PDF/evidence runtime cache. Chromium and Firefox offline saved-PDF browsing and Chromium explicit update/reload passed locally. Windows WebKit offline reload fails with an internal browser error also reproduced by a minimal standalone service worker; Linux CI and actual Safari remain unverified.
 
 ## Goal
 
@@ -35,4 +35,4 @@ When new build exists, notify user and allow explicit update/reload. Do not dest
 
 Target behavior: an offline user can browse retained local results, edit prompts/schemas/Expected Results, inspect a locally persisted PDF, and export data. Run should be disabled with a clear network message.
 
-Current behavior does not proactively gate Run with `navigator.onLine`; a failed request is normalized as a network/CORS ambiguity. Offline browsing, update/reload during an active run, service-worker scope, and retained data behavior still require browser acceptance under TASK-068.
+Run does not use navigator.onLine as proof of provider reachability; fetch failures are reported as network/CORS ambiguity. Reload/update explicitly warns about active requests and memory credentials. Interrupted work is recovered without replay. Real Pages scope/installability and live-provider offline transitions remain TASK-068 checks.

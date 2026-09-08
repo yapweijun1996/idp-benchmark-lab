@@ -4,7 +4,7 @@
 
 MVP is a **static SPA/PWA** hosted on GitHub Pages. There is no required application backend.
 
-Production acceptance is **NO-GO** as of the [2026-09-08 review](docs/reviews/2026-09-08-production-readiness.md). Module boundaries below describe the implemented structure; guarantees identified as requirements are not all enforced yet.
+Production acceptance remains **NO-GO** for the external gates recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md). The local remediation keeps the static architecture and adapter boundary.
 
 ```text
 Browser / PWA
@@ -70,25 +70,25 @@ Canonicalization, strict equality, normalized equality, leaf/row metrics, diff, 
 Pricing snapshots, usage, calculated/unknown cost.
 
 ### storage
-IndexedDB version 1 and backup/export. Eight stores exist, but no later upgrade handler exists yet; schema remediation requires a tested forward migration. The dedicated key store is separate, but secret custom headers currently bypass that separation and provider/data deletion does not clear every ephemeral key (TASK-058/061).
+IndexedDB version 2 retains all eight stores. Its forward migration redacts legacy records, moves stored PDF Blobs to ArrayBuffer bytes and labels historical suites without snapshots as unavailable. Credentials/custom headers remain outside IndexedDB; deleting providers or clearing data clears ephemeral credentials.
 
 ### export
-Suite JSON/CSV export and full project backup/import. Current import validation checks the envelope, string IDs and top-level secret-like fields only; full entity validation and recursive secret handling remain open (TASK-058/062).
+Suite JSON/CSV and full backups apply recursive credential redaction. Import validates complete records, hashes and relationships before writes; merge also validates the resulting graph inside the write transaction.
 
 ### pwa
 Manifest/service-worker policy constants; app-shell-only precache whitelist audited by tests.
 
 ### i18n
-English, Mandarin, Malay, Japanese, and Vietnamese selection with the preference in `AppSettings`. `COPY` plus incremental `EXTRA_COPY` entries fall back to English or the original key, so localization is not a fully closed boundary yet (TASK-070).
+English, Mandarin, Malay, Japanese, and Vietnamese selection with the preference in `AppSettings`. `COPY` plus incremental `EXTRA_COPY` entries fall back to English or the original key; coverage/fallback behavior is tested locally, while target-device QA remains part of TASK-068.
 
 ### history query boundary
-Suites/runs are persisted in IndexedDB, but `useRunHistory` returns only the latest 20 suites to Home, Runs & Results, and Compare. Full-history pagination/disclosure remains TASK-070.
+All retained suites are exposed by a live IndexedDB query; there is no hidden latest-20 cutoff. Inspectors subscribe to changes and use frozen Golden snapshots.
 
 ## Benchmark identity
 
 A started benchmark must retain immutable effective inputs and identity: document, profile/prompt/schema/Golden, provider endpoint/settings/model, thinking/reasoning, temperature, input mode, renderer settings, run count, concurrency, and unique app build.
 
-Currently suites hold hashes and IDs, while profile/Golden updates overwrite the referenced records. Custom endpoint/API settings and full override values are not frozen with the suite, and app build uses package version only. TASK-061 owns this gap; the existing identity is insufficient for immutable historical evidence.
+Suite snapshots retain the effective values and actual PDF/image bytes. Their digest joins identity hashes; the app build includes Git revision and a unique UUID. Historical inspectors use snapshot Golden content, and legacy missing snapshots are labelled unavailable.
 
 Do not label results as repeatability evidence if any identity input changes.
 
@@ -108,9 +108,9 @@ draft -> running -> completed | stopped | budget_stopped | failed
 
 Default concurrency = 1. The required gate is before every network attempt, including retries: check Stop, budget/reservations, requested count and rate-limit state.
 
-Currently Stop/budget checks run in the outer worker loop; retry attempts bypass them. Budget uses the last observed run cost without concurrent reservations and continues when cost is unknown. TASK-059/060 must correct this. An already-started request is intended to finish normally and retain its terminal evidence; aborting in-flight requests is not the current graceful Stop contract.
+Stop and synchronous cost reservation run immediately before every adapter attempt, after asynchronous input preparation and durable intent recording. A missing safe contract bound blocks hard-cap execution. Graceful Stop allows existing requests to finish and retain evidence, while waking backoff and preventing further calls. Unknown billing retains the full reservation.
 
-The type model includes `parse_error`, but adapters currently throw malformed output as a provider error and discard its response/usage before persistence (TASK-063). Pricing is reread per extraction rather than frozen at suite start (TASK-064). Strict and normalized metrics are computed, but only strict metrics are persisted/displayed (TASK-065).
+Malformed output retains a redacted transport envelope and usage as parse_error. Every attempt retains timing/cost/error evidence; suite pricing is fixed at creation. Strict and normalized metrics persist separately. Browser execution locks coordinate tabs; abandoned suites recover as interrupted without automatic network replay.
 
 ## PDF modes
 

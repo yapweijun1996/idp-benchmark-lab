@@ -1,4 +1,6 @@
 import { defineConfig } from "vite";
+import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
 import pkg from "./package.json" with { type: "json" };
@@ -8,7 +10,7 @@ import { PWA_MANIFEST, WORKBOX_GLOB_PATTERNS } from "./src/pwa/config.ts";
 export default defineConfig({
   base: "./",
   define: {
-    __APP_BUILD__: JSON.stringify(pkg.version),
+    __APP_BUILD__: JSON.stringify(`${pkg.version}+${execFileSync("git", ["rev-parse", "HEAD"], { encoding: "utf8" }).trim()}.${randomUUID()}`),
   },
   plugins: [
     react(),

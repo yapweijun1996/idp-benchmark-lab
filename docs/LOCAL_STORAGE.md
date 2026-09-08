@@ -12,25 +12,25 @@ Implemented in `src/storage/db.ts`:
 - benchmarkRuns
 - appSettings
 
-The current database is version 1 and declares these stores directly; no upgrade/migration handler exists yet. Storage-shape changes for remediation require a tested forward migration (TASK-061/068).
+Database version 2 upgrades version 1 transactionally, retaining records, sanitizing credentials, converting legacy PDF Blobs to binary buffers and marking missing historical snapshots. Migration regressions include actual binary preservation.
 
 ## API keys
 
-Required: never in IndexedDB. The dedicated key store defaults to memory, but custom auth headers currently persist inside provider settings (TASK-058). Removing a provider or clearing local data also does not immediately clear all corresponding memory/session credentials. Backups/results are not yet guaranteed secret-free.
+Keys and custom headers never enter IndexedDB. Provider removal and local-data clearing also clear associated memory/session credentials. Backup restore clears credentials after commit.
 
 ## PDF blobs
 
-Default session-only; optional user-selected persistence in IndexedDB. Show document size before persistent storage.
+Default library storage is session-only; explicit persistence stores PDF ArrayBuffer bytes and reconstructs Blobs on read for browser compatibility. Starting a benchmark freezes the source PDF and canonical images into its persistent suite evidence, even when the library document was session-only.
 
 ## Backups
 
 Include format version, app version, entities, and hashes. Exclude secrets.
 
-Current import validation checks the envelope, string IDs and top-level secret-like fields. It does not validate complete records or their relationships; an ID-only malformed record can replace valid data. Full pre-write validation and nested secret handling remain open (TASK-058/062). A transaction prevents partial writes on failure, but does not make accepted malformed data valid.
+Full backups validate record shapes, IDs, references, dates, hashes, binary payloads, snapshot versions and recursive credential absence before mutation. Replace is atomic; merge additionally validates the complete resulting graph while holding the write transaction. Invalid backups do not clear existing data.
 
 ## Recovery
 
-Persist each completed run. Interrupted-suite recovery was not validated by the review and must not be advertised as implemented. TASK-068 includes restart/interruption acceptance. Future resume support is optional and must be explicit.
+Persist dispatch intent before calling the provider, then each attempt result and terminal run. A browser execution lock prevents recovery from cancelling another tab's live suite. Reload recovery marks abandoned work interrupted, retains evidence, reports unknown possible billing and never resubmits. History queries subscribe to changes.
 
 The Storage → Clear local data action removes user-created documents, templates,
 Golden Answers, provider connections, and benchmark history, then restores the

@@ -1,5 +1,8 @@
-import { render } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, cleanup, render, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { seedDemoFixture } from "./demo/seedDemoFixture";
+beforeEach(async () => { await seedDemoFixture(undefined, async () => new Blob(["%PDF mock"]), async () => new Blob(["%PDF mock"])); });
+afterEach(cleanup);
 import axe from "axe-core";
 import App from "./App";
 
@@ -9,12 +12,14 @@ import App from "./App";
  * checks as they gain features.
  */
 async function expectNoSeriousViolations(container: HTMLElement) {
-  const results = await axe.run(container, {
+  await waitFor(() => expect(container.querySelector("h1")).toBeTruthy());
+  let results!: axe.AxeResults;
+  await act(async () => { results = await axe.run(container, {
     rules: {
       // Color contrast cannot be measured reliably in jsdom without styles.
       "color-contrast": { enabled: false },
     },
-  });
+  }); });
   const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
   expect(
     serious.map((v) => v.id + ": " + v.help + " [" + v.nodes.map((n) => n.target).join(",") + "]"),

@@ -6,7 +6,7 @@ A static GitHub Pages PWA for repeatable IDP extraction benchmarking using BYOK 
 
 ## Implementation acceptance status
 
-This specification defines required behavior. It is not a completed-feature checklist. The [2026-09-08 review](docs/reviews/2026-09-08-production-readiness.md) found acceptance gaps in FR-006, FR-009..012, FR-014, FR-017..019 and release verification. Additional code review found incomplete localization, truncated history views, and UI/preset drift. Production remains **NO-GO**; see [TASK.md](TASK.md) for remediation. The requirements below are retained rather than weakened to match current defects.
+This specification defines required behavior. Local remediation and verification are recorded in the [2026-09-08 remediation report](docs/reviews/2026-09-08-production-remediation.md). Production remains **NO-GO** pending external Pages-origin/BYOK and browser/PWA acceptance; see [TASK.md](TASK.md). Requirements are not weakened to match incomplete verification.
 
 ## Functional requirements
 
@@ -75,19 +75,19 @@ Auto-deploy static build through GitHub Actions.
 These behaviors exist in the current codebase but do not override the production acceptance gaps above.
 
 ### EXT-001 Guided workflow
-Use a six-item task-oriented shell and a six-step New Benchmark wizard. The current Home page links into the wizard; it does not run the retained `DemoBenchmarkCard` inline.
+Use a six-item task-oriented shell and a six-step New Benchmark wizard. The current Home page links into the wizard; the retired inline demo card is no longer part of the source or runtime flow.
 
 ### EXT-002 Bundled samples and visual schema editing
 Auto-seed the synthetic Popular PO and Nexabyte PO documents, templates, and Expected Results. The wizard can select them, accept a local upload, edit the current run's prompt, and keep a visual field editor synchronized with the advanced JSON Schema draft. No provider config or offline gateway is auto-created.
 
 ### EXT-003 Localization
-Offer English (`en`), Mandarin (`zh`), Malay (`ms`), Japanese (`ja`), and Vietnamese (`vi`), with the preference stored in `AppSettings`. Missing translations currently fall back to English or the source key; complete page-level localization and QA remain TASK-070.
+Offer English (`en`), Mandarin (`zh`), Malay (`ms`), Japanese (`ja`), and Vietnamese (`vi`), with the preference stored in `AppSettings`. Missing translations fall back to English or the source key; coverage and fallback behavior are tested locally, while target-device localization QA remains part of TASK-068.
 
 ### EXT-004 Provider configuration controls
 Allow editable model IDs, OpenAI reasoning effort, Gemini thinking level, and Custom OpenAI-compatible `chat_completions`/`responses` style. Suggestions are not compatibility guarantees; capability and live-origin verification remain provider/model specific.
 
 ### EXT-005 History access
-Stored suites remain in IndexedDB, but the current Home/Runs/Compare hook loads only the most recent 20. Pagination or explicit retention/disclosure is required by TASK-070 before the UI can claim access to every historical benchmark.
+Stored suites remain in IndexedDB, and the current Home/Runs/Compare queries expose all retained suites through live updates. Historical inspectors use frozen suite snapshots rather than mutable source records.
 
 ## Input modes
 

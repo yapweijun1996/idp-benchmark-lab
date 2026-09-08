@@ -7,6 +7,7 @@ import { estimateCost, type CostSource } from "../cost/estimate";
 import { evaluateOutput, type RunEvaluation } from "../evaluation/metrics";
 import { PricingService } from "../cost/pricingService";
 import { getApiKey } from "../providers/keys";
+import { captureRedactor, redact } from "../providers/redaction";
 import { adapterFor } from "../providers/registry";
 import type { IdpDatabase } from "../storage/db";
 import type {
@@ -15,6 +16,7 @@ import type {
   InputMode,
   NormalizedError,
   ProviderConfig,
+  PricingSnapshot,
 } from "../storage/types";
 import type {
   NormalizedExtractionRequest,
@@ -52,9 +54,14 @@ export interface ExecuteInput {
   temperature?: number;
   thinking?: string;
   renderSettings?: CanonicalRenderSettings;
+  frozenImages?: NormalizedExtractionRequest["images"];
   signal?: AbortSignal;
   /** Golden JSON enables accuracy evaluation for this run. */
   goldenJson?: unknown;
+  /** null freezes an explicitly unavailable price instead of rereading mutable configuration. */
+  pricingSnapshot?: PricingSnapshot | null;
+  beforeAttempt?: () => void;
+  prepareAttempt?: () => Promise<void>;
 }
 
 export interface RunOutcome {
@@ -63,13 +70,13 @@ export interface RunOutcome {
   costUsd?: number;
   costSource: CostSource;
   latencyMs: number;
-  outputHash: string;
+  outputHash?: string;
   /** Accuracy evaluation against the Golden Answer, when one was supplied. */
   evaluation?: RunEvaluation;
 }
 
 export class RunFailure extends Error {
-  constructor(readonly error: NormalizedError) {
+  constructor(readonly error: NormalizedError, readonly outcome?: RunOutcome) {
     super(error.message);
     this.name = "RunFailure";
   }
@@ -89,6 +96,7 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
   const { document, profile, config } = input;
 
   const apiKey = getApiKey(config.id) ?? "";
+  const redactEvidence = captureRedactor();
   if (!apiKey) {
     throw new RunFailure({
       category: "auth",
@@ -115,11 +123,20 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
   const prompt = composePrompt(input.promptOverride ?? profile.basePrompt, extractionContract, schema);
   const request = await buildRequest(deps, input, blob, prompt);
 
-  const response = await adapter.extract(request, { config, apiKey, signal: input.signal });
+  await input.prepareAttempt?.();
+  input.beforeAttempt?.();
+  let response: NormalizedExtractionResponse;
+  let failure: NormalizedError | undefined;
+  try { response = redactEvidence(await adapter.extract(request, { config, apiKey, signal: input.signal })); }
+  catch (error) {
+    failure = redactEvidence(normalizeFailure(error));
+    const evidence = error && typeof error === "object" && "evidence" in error ? (error as ProviderError).evidence : undefined;
+    response = redactEvidence(evidence ?? { raw: "", json: undefined, providerCalls: 1 });
+  }
 
   const schemaCheck = validateData(response.json, schema);
   const pricing = new PricingService(db);
-  const snapshot = config.pricingSnapshotId
+  const snapshot = input.pricingSnapshot !== undefined ? input.pricingSnapshot ?? undefined : config.pricingSnapshotId
     ? await pricing.get(config.pricingSnapshotId)
     : await pricing.latestFor(config.kind, config.model);
   const cost = estimateCost({
@@ -130,12 +147,12 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
   });
 
   const latencyMs = Math.round(performance.now() - startedAt);
-  const outputHash = await sha256String(canonicalJson(response.json));
+  const outputHash = response.json === undefined ? undefined : await sha256String(canonicalJson(response.json));
   const evaluation =
-    input.goldenJson !== undefined
+    input.goldenJson !== undefined && response.json !== undefined
       ? evaluateOutput(input.goldenJson, response.json, { normalizationPolicy: profile.normalizationPolicy })
       : undefined;
-  return {
+  const outcome: RunOutcome = {
     response,
     schemaValid: schemaCheck.valid,
     costUsd: cost.usd,
@@ -144,6 +161,8 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
     outputHash,
     evaluation,
   };
+  if (failure) throw new RunFailure(failure, outcome);
+  return outcome;
 }
 
 function topLevelFields(schema: unknown): string[] {
@@ -157,6 +176,7 @@ async function resolveBlob(
   getBlob: ExecuteDeps["getBlob"],
   document: DocumentRecord,
 ): Promise<Blob> {
+  if (document.blob) return document.blob;
   const impl =
     getBlob ?? (async (doc) => (await deps.db.documents.get(doc.id))?.blob ?? getSessionDocumentBlob(doc.id) ?? doc.blob);
   const blob = await impl(document);
@@ -170,7 +190,7 @@ async function resolveBlob(
   return blob;
 }
 
-async function buildRequest(
+export async function buildRequest(
   deps: ExecuteDeps,
   input: ExecuteInput,
   blob: Blob,
@@ -190,6 +210,7 @@ async function buildRequest(
       retryable: false,
     });
   }
+  if (input.frozenImages) return { mode, images: structuredClone(input.frozenImages), documentName: input.document.name, prompt, temperature, thinking: effectiveThinking };
   if (!deps.pdfLoader) {
     throw new RunFailure({
       category: "invalid_request",
@@ -235,6 +256,9 @@ function missingRenderer(): PageRenderer {
 
 /** Normalizes any thrown value into a stable ProviderError. */
 export function normalizeFailure(e: unknown): NormalizedError {
+  return redact(normalizeFailureValue(e));
+}
+function normalizeFailureValue(e: unknown): NormalizedError {
   if (e instanceof RunFailure) {
     return e.error;
   }

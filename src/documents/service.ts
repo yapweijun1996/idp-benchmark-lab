@@ -46,7 +46,7 @@ export class DocumentService {
     };
 
     if (opts.persist) {
-      const record: DocumentRecord = { ...base, storageMode: "indexeddb", blob: file };
+      const record: DocumentRecord = { ...base, storageMode: "indexeddb", blobBytes: data };
       await this.db.documents.put(record);
       return record;
     }
@@ -84,7 +84,7 @@ export class DocumentService {
       return sessionDoc.blob;
     }
     const persisted = await this.db.documents.get(id);
-    return persisted?.blob;
+    return persisted?.blobBytes ? new Blob([persisted.blobBytes], { type: "application/pdf" }) : persisted?.blob;
   }
 
   async remove(id: string): Promise<void> {
@@ -121,7 +121,7 @@ export class DocumentService {
     }
 
     if (persist) {
-      const record: DocumentRecord = { ...existing, storageMode: "indexeddb", blob };
+      const record: DocumentRecord = { ...existing, storageMode: "indexeddb", blob: undefined, blobBytes: await blobToArrayBuffer(blob) };
       await this.db.documents.put(record);
       this.session.delete(id);
       removeSessionDocument(id);
@@ -129,7 +129,7 @@ export class DocumentService {
     }
 
     await this.db.documents.delete(id);
-    const record: DocumentRecord = { ...existing, storageMode: "session", blob: undefined };
+    const record: DocumentRecord = { ...existing, storageMode: "session", blob: undefined, blobBytes: undefined };
     this.session.set(id, { record, blob });
     registerSessionDocument(record, blob);
     return record;

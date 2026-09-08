@@ -1050,7 +1050,7 @@ function ReviewStep({
           </tr>
           <tr>
             <th>{t("Estimated cost")}</th>
-            <td>{t("Unknown until the first run completes — set a budget cap below to limit spend.")}</td>
+            <td>{t("Costs use a frozen pricing snapshot. Hard-budget execution requires a documented maximum cost per attempt in provider settings.")}</td>
           </tr>
         </tbody>
       </table>
@@ -1139,6 +1139,7 @@ function RunResultPanel({ result }: { result: SingleRunResult }) {
         <summary>{t("Raw provider response")}</summary>
         <pre className="raw-pre">{run.safeRawResponse ?? `(${t("none")})`}</pre>
       </details>
+      <p>Normalized exact match: {run.exactMatchNormalized === undefined ? "—" : String(run.exactMatchNormalized)} · normalized leaf accuracy: {run.leafAccuracyNormalized === undefined ? "—" : `${(run.leafAccuracyNormalized * 100).toFixed(1)}%`}. Policy: {JSON.stringify(run.normalizationPolicy)}.</p>
       <details open>
         <summary>{t("Parsed JSON")}</summary>
         <pre className="raw-pre">{JSON.stringify(run.parsedJson, null, 2)}</pre>

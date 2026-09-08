@@ -31,18 +31,18 @@ describe("estimateCost precedence", () => {
     });
     // input 2000*0.15/1e6 + cached 1000*0.075/1e6 + output 1000*0.6/1e6
     expect(estimate.source).toBe("usage_snapshot");
-    expect(estimate.usd).toBeCloseTo(0.0003 + 0.000075 + 0.0006, 9);
+    expect(estimate.usd).toBeCloseTo(0.00015 + 0.000075 + 0.0006, 9);
     expect(estimate.breakdown).toEqual({
-      inputUsd: 0.0003,
+      inputUsd: 0.00015,
       cachedInputUsd: 0.000075,
       outputUsd: 0.0006,
     });
   });
 
-  it("counts only known usage parts", () => {
+  it("does not present partial usage as a complete cost", () => {
     const estimate = estimateCost({ usage: { outputTokens: 1000 }, snapshot });
-    expect(estimate.source).toBe("usage_snapshot");
-    expect(estimate.usd).toBeCloseTo(0.0006, 9);
+    expect(estimate.source).toBe("unknown");
+    expect(estimate.usd).toBeUndefined();
     expect(estimate.breakdown.inputUsd).toBeUndefined();
   });
 

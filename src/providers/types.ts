@@ -1,7 +1,7 @@
 import type { NormalizedError, ProviderConfig, ProviderKind } from "../storage/types";
 
 // Single definition source: BenchmarkRun.error reuses this shape.
-export type ProviderError = NormalizedError;
+export type ProviderError = NormalizedError & { evidence?: NormalizedExtractionResponse };
 
 export type { ProviderConfig, ProviderKind };
 
@@ -46,6 +46,9 @@ export interface NormalizedUsage {
 }
 
 export interface NormalizedExtractionResponse {
+  parseError?: string;
+  /** Redacted full transport envelope, independent of extraction parsing. */
+  envelope?: string;
   /** Raw response text, stored as run evidence (secrets already excluded). */
   raw: string;
   json: unknown;

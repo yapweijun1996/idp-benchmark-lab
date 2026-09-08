@@ -10,5 +10,5 @@ and fixture tests validate it against `demo/nexabyte-po/schema.json`. The seedin
 
 The preset document, prompt, schema, and Expected Result can be used with any compatible configured provider for
 cross-provider comparison. The fixture and its seeded IndexedDB records contain no provider credentials. Dedicated
-API-key entry uses the runtime key store, but the current Custom-provider header persistence gap still applies; see
-[BYOK_SECURITY.md](BYOK_SECURITY.md).
+API-key entry and Custom-provider headers use the ephemeral runtime credential store; persistence and export redaction
+cover nested response/error echoes. See [BYOK_SECURITY.md](BYOK_SECURITY.md).

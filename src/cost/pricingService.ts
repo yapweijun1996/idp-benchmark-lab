@@ -15,6 +15,11 @@ export class PricingService {
   }
 
   async save(snapshot: PricingSnapshot): Promise<PricingSnapshot> {
+    for (const field of ["inputPerMillion", "cachedInputPerMillion", "outputPerMillion", "flatPerRequest", "maximumAttemptCostUsd"] as const) {
+      const value = snapshot[field];
+      if (value !== undefined && (!Number.isFinite(value) || value < 0)) throw new Error("Pricing rates must be finite and nonnegative.");
+    }
+    if (snapshot.maximumAttemptCostUsd !== undefined && !snapshot.maximumAttemptCostSource?.trim()) throw new Error("A maximum cost requires a contract source.");
     await this.db.pricingSnapshots.put(snapshot);
     return snapshot;
   }

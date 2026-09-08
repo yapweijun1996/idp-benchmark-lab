@@ -11,12 +11,20 @@ export interface LatencyStats {
 }
 
 export interface CostStats {
+  knownSubtotalUsd?: number;
+  unknownCostRuns?: number;
+  costPerSchemaValid?: number;
+  projectedPer1000?: number;
   totalUsd?: number;
   avgPerRun?: number;
   costPerCorrect?: number;
 }
 
 export interface SuiteSummary {
+  completedRuns?: number;
+  exactPassRateNormalized?: number;
+  avgLeafAccuracyNormalized?: number;
+  rowAccuracyNormalized?: number;
   requestedRuns: number;
   attemptedRuns: number;
   succeededRuns: number;
@@ -60,10 +68,13 @@ function percentile(sorted: number[], p: number): number | undefined {
  * All rate denominators follow the documented definitions.
  */
 export function summarizeSuite(runs: BenchmarkRun[], requestedRuns: number): SuiteSummary {
-  const attempted = runs.length;
+  const attempted = runs.filter((r) => r.providerCalls > 0).length;
+  const completed = runs.filter((r) => r.state !== "queued" && r.state !== "running");
+  runs = completed;
   const succeeded = runs.filter((r) => r.state === "succeeded").length;
   const schemaInvalid = runs.filter((r) => r.state === "schema_invalid").length;
   const providerErrors = runs.filter((r) => r.state === "provider_error").length;
+  const errors = runs.filter((r) => ["provider_error", "parse_error", "cancelled"].includes(r.state)).length;
   const parseable = runs.filter((r) => r.outputHash !== undefined);
 
   const exactMatches = runs.filter((r) => r.exactMatch === true).length;
@@ -95,25 +106,34 @@ export function summarizeSuite(runs: BenchmarkRun[], requestedRuns: number): Sui
     .filter((r) => r.latencyMs !== undefined)
     .map((r) => r.latencyMs!)
     .sort((a, b) => a - b);
-  const costRuns = runs.filter((r) => r.costUsd !== undefined);
-  const totalUsd =
-    costRuns.length > 0 ? costRuns.reduce((sum, r) => sum + (r.costUsd ?? 0), 0) : undefined;
+  const knownCosts = runs.flatMap((r) => r.costUsd !== undefined ? [r.costUsd] : (r.attempts ?? []).flatMap((a) => a.costUsd === undefined ? [] : [a.costUsd]));
+  const knownSubtotalUsd =
+    knownCosts.length > 0 ? knownCosts.reduce((sum, cost) => sum + cost, 0) : undefined;
+  const unknownCostRuns = runs.filter((r) => (r.providerCalls > 0 || r.pendingAttempt) && r.costUsd === undefined).length;
+  const totalUsd = unknownCostRuns === 0 ? knownSubtotalUsd : undefined;
+  const normalized = runs.filter((r) => r.exactMatchNormalized !== undefined);
+  const leavesNormalized = runs.filter((r) => r.leafAccuracyNormalized !== undefined);
+  const rowTotalNormalized = runs.reduce((sum, r) => sum + (r.rowTotalNormalized ?? 0), 0);
 
   return {
     requestedRuns,
+    completedRuns: completed.length,
     attemptedRuns: attempted,
     succeededRuns: succeeded,
     schemaInvalidRuns: schemaInvalid,
     providerErrorRuns: providerErrors,
     parseableRuns: parseable.length,
-    exactPassRate: attempted > 0 ? exactMatches / attempted : undefined,
-    schemaValidRate: attempted > 0 ? schemaValid / attempted : undefined,
+    exactPassRate: completed.length > 0 && runs.some((r) => r.exactMatch !== undefined) ? exactMatches / completed.length : undefined,
+    schemaValidRate: completed.length > 0 ? schemaValid / completed.length : undefined,
+    exactPassRateNormalized: normalized.length > 0 ? normalized.filter((r) => r.exactMatchNormalized).length / completed.length : undefined,
+    avgLeafAccuracyNormalized: leavesNormalized.length ? leavesNormalized.reduce((sum, r) => sum + r.leafAccuracyNormalized!, 0) / leavesNormalized.length : undefined,
+    rowAccuracyNormalized: rowTotalNormalized > 0 ? runs.reduce((sum, r) => sum + (r.rowMatchedNormalized ?? 0), 0) / rowTotalNormalized : undefined,
     avgLeafAccuracy,
     rowAccuracy,
     consistencyRate: stability.consistencyRate,
     goldenStability: stability.goldenStability,
     uniqueVariants: variants.length,
-    errorRate: requestedRuns > 0 ? providerErrors / requestedRuns : undefined,
+    errorRate: requestedRuns > 0 ? errors / requestedRuns : undefined,
     latency: {
       avg: latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : undefined,
       p50: percentile(latencies, 50),
@@ -123,8 +143,12 @@ export function summarizeSuite(runs: BenchmarkRun[], requestedRuns: number): Sui
     },
     cost: {
       totalUsd,
+      knownSubtotalUsd,
+      unknownCostRuns,
       avgPerRun: totalUsd !== undefined && attempted > 0 ? totalUsd / attempted : undefined,
       costPerCorrect: totalUsd !== undefined && exactMatches > 0 ? totalUsd / exactMatches : undefined,
+      costPerSchemaValid: totalUsd !== undefined && schemaValid > 0 ? totalUsd / schemaValid : undefined,
+      projectedPer1000: totalUsd !== undefined && attempted > 0 ? totalUsd / attempted * 1000 : undefined,
     },
   };
 }

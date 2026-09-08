@@ -2,11 +2,11 @@
 
 ## Current verification status
 
-The 2026-09-08 review at `26b0ae9` did **not** pass release acceptance. [PROJECT_STATUS.md](PROJECT_STATUS.md) records the dated check totals; the [review](docs/reviews/2026-09-08-production-readiness.md) contains the reproductions. Coverage requirements below are targets, not a claim that all paths are verified.
+The original review at `26b0ae9` is historical. [Remediation evidence](docs/reviews/2026-09-08-production-remediation.md) records current results, residual failures and external acceptance gaps.
 
-`src/cost/pricing.test.ts` compares a timestamp generated at test time with a fixed 2026-08-20 timestamp. The fixed date is no longer the latest, so the test fails. Use deterministic old/new timestamps or a controlled clock (TASK-066); do not change correct date sorting to satisfy the stale test.
+`src/cost/pricing.test.ts` freezes Date with Vitest fake timers and restores real timers. Sorting behavior remains unchanged. See [Vitest date mocking](https://v3.vitest.dev/guide/mocking.html#dates).
 
-The same run reports nine unhandled React state updates after the `App.a11y.test.tsx` environment is torn down, plus multiple missing-`act(...)` warnings in page tests. These must be awaited/cancelled rather than ignored because they can hide false positives. Lint exits successfully with two Fast Refresh warnings in `src/i18n.tsx`. The production build succeeds but reports a 1.08 MB main chunk (327 KB gzip) above Vite's 500 KB warning threshold.
+Page/a11y tests await asynchronous effects, and subscription/provider hooks stop updates after unmount. Lint retains two pre-existing Fast Refresh warnings in i18n.tsx; the main build chunk remains above Vite's advisory size threshold. Neither warning is hidden or treated as a failed assertion.
 
 ## Test layers
 
@@ -88,11 +88,11 @@ Assert no raw API key in IndexedDB, localStorage, service-worker Cache Storage, 
 
 ## Browser smoke (TASK-052)
 
-`tests/e2e/smoke.spec.ts` runs against the production preview build. Shell/navigation, Library/Settings routes, unknown-hash fallback, and real PDF upload/preview passed the review. The first-time Home demo-card assertion failed: Home now links to New Benchmark rather than mounting the old card.
+`tests/e2e/smoke.spec.ts` tests the production build, active Home → wizard entry, navigation and real PDF rendering.
 
-Both `tests/e2e/demo.spec.ts` cases still target the old Home API-key/provider controls and time out before extraction. They currently provide no proof that the active wizard completes the Gemini/OpenAI request-and-persistence path. TASK-066 must move these checks to the current flow, intercept only provider traffic, and verify real PDF rendering, request payloads, results and saved evidence. Do not remove failing assertions without replacing the lost acceptance coverage.
+`tests/e2e/demo.spec.ts` traverses the six-step wizard with synthetic BYOK, intercepts provider traffic, checks real PDF/image requests and redacted malformed evidence, refuses unbounded hard-cap execution, checks Stop, runs 100 requests, restores backup and recovers interrupted work without replay.
 
-Run the browser suite after `npm run build` using `npm run test:e2e`. The default preview endpoint is `127.0.0.1:4173`. During review Windows rejected that port with EACCES, so a temporary configuration changed both the preview server and Playwright baseURL to 52173. That configuration was removed; do not treat port availability as an application defect.
+Run `npm run build`, then `npm run test:e2e`. The local preview endpoint is 127.0.0.1:52173. Playwright installs Chromium, Firefox and WebKit via `npx playwright install --with-deps`; CI uses one worker following [Playwright CI guidance](https://playwright.dev/docs/ci).
 
 ## Accessibility (TASK-053)
 
@@ -100,10 +100,10 @@ Run the browser suite after `npm run build` using `npm run test:e2e`. The defaul
 
 ## Security audit (TASK-054)
 
-`src/security.audit.test.ts` asserts the service-worker precache whitelist is static app-shell extensions only (never pdf/json/txt/csv). Existing key-store and top-level backup tests do not cover nested auth headers or credential echoes in raw/parsed/error evidence; these paths failed review (TASK-058). Add persistence/export/reload checks for those paths and full invalid-backup rejection checks (TASK-062). Passing a cache whitelist test is not a full credential audit.
+`src/security.audit.test.ts` checks the app-shell cache whitelist. Additional redaction and production regression tests cover nested/serialized/malformed headers, echoes, in-flight credential clearing, migration and rejected backups. These synthetic tests do not prove arbitrary provider behavior.
 
 ## CI gates and release acceptance
 
-Current `.github/workflows/deploy.yml` runs install, lint, typecheck, unit tests and build on pushes to `main` or manual dispatch, then deploys Pages. It has no pull-request trigger or Playwright gate. The date-sensitive unit failure currently fails that test gate.
+The deploy workflow runs on PRs, main pushes and manual dispatch. Audit and all browser projects join lint/typecheck/unit/build before deployment; PRs cannot deploy. Reports are retained as CI artifacts.
 
-TASK-066 must require PR validation and current-flow browser tests before deployment. It must also make async page/a11y tests finish cleanly and test the supported 5/10/20/50/100 presets rather than the stale Home three-run guidance. Production acceptance also requires authorized real-provider checks from the Pages origin, browser compatibility, stress/interruption, storage migration, and PWA offline/update verification (TASK-068). See [acceptance criteria](docs/ACCEPTANCE_CRITERIA.md) and the [dependency/toolchain snapshot](docs/DEPENDENCIES.md). No paid provider requests are part of normal mocked CI.
+Production acceptance additionally requires the user-published Pages revision, authorized real BYOK provider/CORS checks, actual browser/PWA installability and resolution of the recorded Windows WebKit offline limitation. Normal CI uses no paid credentials. See [acceptance criteria](docs/ACCEPTANCE_CRITERIA.md).

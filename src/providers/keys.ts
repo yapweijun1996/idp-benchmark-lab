@@ -5,7 +5,17 @@
  * - never localStorage, IndexedDB, exports, logs, or Cache Storage
  */
 
+import { clearRedactionCredentials, forgetCredential, rememberCredential } from "./redaction";
 const SESSION_PREFIX = "idp:apikey:";
+const runtimeHeaders = new Map<string, Record<string, string>>();
+export function setRuntimeHeaders(id: string, headers: Record<string, string>): void {
+  Object.values(headers).forEach(rememberCredential);
+  runtimeHeaders.set(id, { ...headers });
+}
+export function getRuntimeHeaders(id: string): Record<string, string> {
+  Object.values(runtimeHeaders.get(id) ?? {}).forEach(rememberCredential);
+  return { ...runtimeHeaders.get(id) };
+}
 
 const memoryKeys = new Map<string, string>();
 
@@ -23,6 +33,7 @@ export interface KeyStoreOptions {
 }
 
 export function setApiKey(providerConfigId: string, apiKey: string, options: KeyStoreOptions): void {
+  rememberCredential(apiKey);
   memoryKeys.set(providerConfigId, apiKey);
   if (sessionStorageAvailable()) {
     if (options.rememberForTab) {
@@ -36,10 +47,13 @@ export function setApiKey(providerConfigId: string, apiKey: string, options: Key
 export function getApiKey(providerConfigId: string): string | undefined {
   const memory = memoryKeys.get(providerConfigId);
   if (memory !== undefined) {
+    rememberCredential(memory);
     return memory;
   }
   if (sessionStorageAvailable()) {
-    return window.sessionStorage.getItem(SESSION_PREFIX + providerConfigId) ?? undefined;
+    const key = window.sessionStorage.getItem(SESSION_PREFIX + providerConfigId) ?? undefined;
+    if (key) rememberCredential(key);
+    return key;
   }
   return undefined;
 }
@@ -52,6 +66,10 @@ export function isKeyRememberedForTab(providerConfigId: string): boolean {
 }
 
 export function clearApiKey(providerConfigId: string): void {
+  const previous = getApiKey(providerConfigId);
+  if (previous) forgetCredential(previous);
+  Object.values(getRuntimeHeaders(providerConfigId)).forEach(forgetCredential);
+  runtimeHeaders.delete(providerConfigId);
   memoryKeys.delete(providerConfigId);
   if (sessionStorageAvailable()) {
     window.sessionStorage.removeItem(SESSION_PREFIX + providerConfigId);
@@ -59,6 +77,8 @@ export function clearApiKey(providerConfigId: string): void {
 }
 
 export function clearAllKeys(): void {
+  clearRedactionCredentials();
+  runtimeHeaders.clear();
   memoryKeys.clear();
   if (sessionStorageAvailable()) {
     const toRemove: string[] = [];

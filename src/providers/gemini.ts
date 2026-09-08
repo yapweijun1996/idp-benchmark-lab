@@ -50,6 +50,7 @@ interface GeminiResponse {
     candidatesTokenCount?: number;
     totalTokenCount?: number;
     cachedContentTokenCount?: number;
+    thoughtsTokenCount?: number;
   };
 }
 
@@ -133,7 +134,7 @@ export const geminiAdapter: ProviderAdapter = {
       ctx.signal,
     );
     if (!result.ok) {
-      throw errorFromStatus(result.status, bodyText(result.json) || result.text);
+      throw { ...errorFromStatus(result.status, bodyText(result.json) || result.text), evidence: { raw: result.text, envelope: result.text, json: undefined, providerCalls: 1 } } satisfies ProviderError;
     }
 
     const data = (result.json ?? {}) as GeminiResponse;
@@ -143,35 +144,32 @@ export const geminiAdapter: ProviderAdapter = {
         category: "invalid_request",
         message: `Gemini blocked the request: ${blockReason}`,
         retryable: false,
+        evidence: {
+          raw: result.text, envelope: result.text, json: undefined, providerCalls: 1,
+          usage: data.usageMetadata ? {
+            inputTokens: data.usageMetadata.promptTokenCount,
+            outputTokens: data.usageMetadata.candidatesTokenCount === undefined ? undefined : data.usageMetadata.candidatesTokenCount + (data.usageMetadata.thoughtsTokenCount ?? 0),
+            cachedInputTokens: data.usageMetadata.cachedContentTokenCount,
+            totalTokens: data.usageMetadata.totalTokenCount,
+          } : undefined,
+        },
       } satisfies ProviderError;
     }
     const candidate = data.candidates?.[0];
     const text = (candidate?.content?.parts ?? [])
       .map((part) => part.text ?? "")
       .join("");
-    if (!text) {
-      throw {
-        category: "provider",
-        message: `Gemini returned no text (finishReason: ${candidate?.finishReason ?? "unknown"})`,
-        retryable: false,
-      } satisfies ProviderError;
-    }
     const json = extractJson(text);
-    if (json === undefined) {
-      throw {
-        category: "provider",
-        message: "Gemini response text was not parseable JSON",
-        retryable: false,
-      } satisfies ProviderError;
-    }
     const usage = data.usageMetadata;
     return {
       raw: text,
+      envelope: result.text,
+      parseError: json === undefined ? "Gemini response text was not parseable JSON" : undefined,
       json,
       usage: usage
         ? {
             inputTokens: usage.promptTokenCount,
-            outputTokens: usage.candidatesTokenCount,
+            outputTokens: usage.candidatesTokenCount === undefined ? undefined : usage.candidatesTokenCount + (usage.thoughtsTokenCount ?? 0),
             cachedInputTokens: usage.cachedContentTokenCount,
             totalTokens: usage.totalTokenCount,
           }

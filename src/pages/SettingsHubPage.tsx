@@ -1,3 +1,4 @@
+import { clearAllKeys } from "../providers/keys";
 import { useEffect, useRef, useState } from "react";
 import { Tabs } from "../app/Tabs";
 import { RUN_PRESETS, type RunPreset } from "../benchmarks/runner";
@@ -148,6 +149,7 @@ function StoragePanel() {
     setError(null);
     try {
       await Promise.all(db.tables.map((t) => t.clear()));
+      clearAllKeys();
       await seedDemoFixture(db);
       setConfirming(false);
       setMessage(t("Local data cleared. The bundled demo fixture was restored."));

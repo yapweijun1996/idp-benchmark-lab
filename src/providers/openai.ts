@@ -93,30 +93,27 @@ export const openaiAdapter: ProviderAdapter = {
       ctx.signal,
     );
     if (!result.ok) {
-      throw errorFromStatus(result.status, bodyText(result.json) || result.text);
+      throw { ...errorFromStatus(result.status, bodyText(result.json) || result.text), evidence: { raw: result.text, envelope: result.text, json: undefined, providerCalls: 1 } } satisfies ProviderError;
     }
 
     const data = (result.json ?? {}) as {
       choices?: { message?: { content?: unknown; refusal?: unknown } }[];
-      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number };
+      usage?: { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; prompt_tokens_details?: { cached_tokens?: number } };
     };
-    const contentText = data.choices?.[0]?.message?.content;
-    if (typeof contentText !== "string" || contentText.length === 0) {
-      throw { category: "provider", message: "OpenAI response contained no text content", retryable: false } satisfies ProviderError;
-    }
+    const contentText = typeof data.choices?.[0]?.message?.content === "string" ? data.choices[0].message.content as string : "";
     const json = extractJson(contentText);
-    if (json === undefined) {
-      throw { category: "provider", message: "OpenAI response text was not parseable JSON", retryable: false } satisfies ProviderError;
-    }
     const usage = data.usage;
     return {
       raw: contentText,
+      envelope: result.text,
+      parseError: json === undefined ? "OpenAI response text was not parseable JSON" : undefined,
       json,
       usage: usage
         ? {
             inputTokens: usage.prompt_tokens,
             outputTokens: usage.completion_tokens,
             totalTokens: usage.total_tokens,
+            cachedInputTokens: usage.prompt_tokens_details?.cached_tokens,
           }
         : undefined,
       providerCalls: 1,

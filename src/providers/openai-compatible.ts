@@ -1,3 +1,4 @@
+import { getRuntimeHeaders } from "./keys";
 import { bodyText, errorFromStatus, extractJson, fetchJson } from "./common";
 import type {
   NormalizedExtractionRequest,
@@ -152,23 +153,20 @@ export const customAdapter: ProviderAdapter = {
       body: JSON.stringify(body),
     }, ctx.signal);
     if (!result.ok) {
-      throw errorFromStatus(result.status, bodyText(result.json) || result.text);
+      throw { ...errorFromStatus(result.status, bodyText(result.json) || result.text), evidence: { raw: result.text, envelope: result.text, json: undefined, providerCalls: 1 } } satisfies ProviderError;
     }
 
     const data = (result.json ?? {}) as Record<string, unknown>;
-    const contentText = isResponses ? responseText(data) : chatCompletionText(data);
-    if (typeof contentText !== "string" || contentText.length === 0) {
-      throw { category: "provider", message: "Endpoint response contained no text content", retryable: false } satisfies ProviderError;
-    }
+    const outputText = isResponses ? responseText(data) : chatCompletionText(data);
+    const contentText = typeof outputText === "string" ? outputText : "";
     const json = extractJson(contentText);
-    if (json === undefined) {
-      throw { category: "provider", message: "Endpoint response text was not parseable JSON", retryable: false } satisfies ProviderError;
-    }
     const usage = data.usage as
       | { prompt_tokens?: number; completion_tokens?: number; total_tokens?: number; input_tokens?: number; output_tokens?: number }
       | undefined;
     return {
       raw: contentText,
+      envelope: result.text,
+      parseError: json === undefined ? "Endpoint response text was not parseable JSON" : undefined,
       json,
       usage: usage
         ? {
@@ -213,5 +211,6 @@ function buildHeaders(ctx: ProviderContext): Record<string, string> {
   return {
     Authorization: `Bearer ${ctx.apiKey}`,
     ...s.customHeaders,
+    ...getRuntimeHeaders(ctx.config.id),
   };
 }

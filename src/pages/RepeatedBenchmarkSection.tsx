@@ -234,6 +234,9 @@ function SummaryPanel({ summary, suite }: { summary: SuiteSummary; suite: Benchm
       </h3>
       <table className="summary-table">
         <tbody>
+          <tr><th>Normalized exact / leaf / row</th><td colSpan={3}>{pct(summary.exactPassRateNormalized)} / {pct(summary.avgLeafAccuracyNormalized)} / {pct(summary.rowAccuracyNormalized)}</td></tr>
+          <tr><th>Completed runs</th><td colSpan={3}>{summary.completedRuns}</td></tr>
+          <tr><th>Cost per schema-valid / projected per 1,000</th><td colSpan={3}>{usd(summary.cost.costPerSchemaValid)} / {usd(summary.cost.projectedPer1000)}</td></tr>
           <tr>
             <th>{t("Exact pass rate")}</th>
             <td>{pct(summary.exactPassRate)}</td>

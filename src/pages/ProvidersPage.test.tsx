@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ProvidersPage } from "./ProvidersPage";
 import { useProviderConfigs, type UseProviderConfigsResult } from "../providers/useProviderConfigs";
@@ -63,7 +63,7 @@ describe("ProvidersPage", () => {
     fireEvent.change(models[0]!, { target: { value: "my-openai-compatible-model" } });
     fireEvent.click(screen.getAllByRole("button", { name: /save config/i })[0]!);
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.save).toHaveBeenCalledWith(expect.objectContaining({
         kind: "openai",
         model: "my-openai-compatible-model",
@@ -82,7 +82,7 @@ describe("ProvidersPage", () => {
     fireEvent.click(saveButtons[0]!);
     fireEvent.click(saveButtons[1]!);
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.save).toHaveBeenNthCalledWith(1, expect.objectContaining({
         kind: "openai",
         settings: expect.objectContaining({ reasoningEffort: "high" }),
@@ -104,7 +104,7 @@ describe("ProvidersPage", () => {
     const saveButtons = screen.getAllByRole("button", { name: /save config/i });
     fireEvent.click(saveButtons[1]!);
 
-    await vi.waitFor(() => expect(getApiKey("new-1")).toBe("AIza-xyz"));
+    await waitFor(() => expect(getApiKey("new-1")).toBe("AIza-xyz"));
   });
 
   it("runs a connection test through the adapter", async () => {
@@ -118,7 +118,7 @@ describe("ProvidersPage", () => {
     const testButtons = screen.getAllByRole("button", { name: /test connection/i });
     fireEvent.click(testButtons[1]!);
 
-    await vi.waitFor(() => expect(testConnection).toHaveBeenCalled());
+    await waitFor(() => expect(testConnection).toHaveBeenCalled());
     expect((await screen.findAllByText(/gemini reachable/i)).length).toBeGreaterThan(0);
   });
 
@@ -126,7 +126,7 @@ describe("ProvidersPage", () => {
     render(<ProvidersPage />);
     const testButtons = screen.getAllByRole("button", { name: /test connection/i });
     fireEvent.click(testButtons[0]!);
-    await vi.waitFor(() => expect(screen.getAllByText(/enter an api key first/i).length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText(/enter an api key first/i).length).toBeGreaterThan(0));
   });
 
   it("gives provider removal a clear danger action and confirmation", () => {

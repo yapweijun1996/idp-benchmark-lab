@@ -41,8 +41,8 @@ describe("DocumentService.upload", () => {
     expect(record.storageMode).toBe("indexeddb");
     const stored = await db.documents.get(record.id);
     expect(stored?.sha256).toBe(record.sha256);
-    // fake-indexeddb structural-clones Blobs into plain objects; presence is what matters here.
-    expect(stored?.blob).toBeDefined();
+    // Binary buffers persist without relying on browser-specific Blob storage.
+    expect(stored?.blobBytes).toBeDefined();
   });
 
   it("rejects non-PDF files", async () => {

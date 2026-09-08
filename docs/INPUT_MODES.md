@@ -16,6 +16,8 @@ Use this to measure real-world provider-native document understanding.
 
 The browser renders the PDF pages locally with fixed settings and sends the same page images to each vision provider.
 
+Each suite freezes its rendered image bytes once before requests begin. Retries and concurrent runs reuse those exact images. The snapshot digest captures the pixels as well as render settings, so differences between browser renderers are visible in identity rather than silently assumed equivalent.
+
 Use this to improve fairness when comparing providers with different native PDF handling.
 
 ## Identity requirements

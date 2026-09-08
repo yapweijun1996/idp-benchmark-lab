@@ -81,7 +81,7 @@ export function DashboardPage() {
             badge={`1 ${t("page")}`}
           />
           <HomeStatusCard tone="green" icon="✓" title={t("Golden schema")} detail={t("Ready")} badge={t("Validated")} />
-          <HomeStatusCard tone="purple" icon="↻" title={t("Suggested run mode")} detail={`3 ${t("repeated runs")}`} badge={t("Recommended")} />
+          <HomeStatusCard tone="purple" icon="↻" title={t("Suggested run mode")} detail={`5 ${t("repeated runs")}`} badge={t("Recommended")} />
         </div>
 
         <div className="home-workspace-grid">

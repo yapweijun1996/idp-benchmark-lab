@@ -1,4 +1,5 @@
 import type { ProviderError } from "./types";
+import { collectCredentials, redactText } from "./redaction";
 
 const FENCED_RE = /```(?:json)?\s*\n([\s\S]*?)\n\s*```/i;
 
@@ -41,7 +42,7 @@ export function errorFromStatus(status: number, bodyText: string): ProviderError
   const category = STATUS_CATEGORY[status] ?? (status >= 500 ? "provider" : "unknown");
   return {
     category,
-    message: bodyText.slice(0, 300) || `HTTP ${status}`,
+    message: redactText(bodyText).slice(0, 300) || `HTTP ${status}`,
     status,
     retryable: category === "rate_limit" || category === "network" || (category === "provider" && status >= 500),
   };
@@ -51,7 +52,7 @@ export function errorFromStatus(status: number, bodyText: string): ProviderError
 export function networkError(detail: string): ProviderError {
   return {
     category: "network",
-    message: `Network/CORS failure: ${detail}. In the browser, CORS blocks and offline states both appear as fetch failures; check the provider's CORS policy for custom endpoints.`,
+    message: `Network/CORS failure: ${redactText(detail)}. In the browser, CORS blocks and offline states both appear as fetch failures; check the provider's CORS policy for custom endpoints.`,
     retryable: true,
   };
 }
@@ -68,6 +69,7 @@ export interface FetchResult {
  * propagates untouched so the runner can mark the run cancelled.
  */
 export async function fetchJson(url: string, init: RequestInit, signal?: AbortSignal): Promise<FetchResult> {
+  collectCredentials(Object.fromEntries(new Headers(init.headers).entries()));
   let response: Response;
   try {
     response = await fetch(url, { ...init, signal });

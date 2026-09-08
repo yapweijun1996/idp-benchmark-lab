@@ -11,6 +11,7 @@ export type DocumentRecord = {
   createdAt: string;
   storageMode: "session" | "indexeddb";
   blob?: Blob;
+  blobBytes?: ArrayBuffer;
 };
 
 export type NormalizationPolicy = {
@@ -67,6 +68,9 @@ export type PricingSnapshot = {
   cachedInputPerMillion?: number;
   outputPerMillion?: number;
   flatPerRequest?: number;
+  /** Provider-contract maximum, including all billable input/output/reasoning and retries individually. */
+  maximumAttemptCostUsd?: number;
+  maximumAttemptCostSource?: string;
   effectiveAt: string;
   sourceNote?: string;
 };
@@ -76,6 +80,7 @@ export type InputMode = "native_pdf" | "canonical_images";
 export type LanguageCode = "en" | "zh" | "ms" | "ja" | "vi";
 
 export type BenchmarkIdentity = {
+  effectiveInputSha256?: string;
   documentSha256: string;
   profileId: string;
   profileVersion: number;
@@ -99,6 +104,20 @@ export type BenchmarkIdentity = {
 export type SuiteStatus = "draft" | "running" | "completed" | "stopped" | "budget_stopped" | "failed";
 
 export type BenchmarkSuite = {
+  evidenceVersion?: 2;
+  snapshot?: {
+    document: Omit<DocumentRecord, "blob" | "blobBytes">;
+    inputImages?: { mimeType: "image/png" | "image/jpeg"; dataUrl: string }[];
+    inputBase64: string;
+    profile: ExtractionProfile;
+    golden?: GoldenAnswer;
+    provider: ProviderConfig;
+    effectivePrompt: string;
+    effectiveSchema: unknown;
+    pricing: PricingSnapshot | null;
+    settings: unknown;
+  };
+  legacyEvidence?: "unavailable";
   id: string;
   name?: string;
   identity: BenchmarkIdentity;
@@ -131,6 +150,27 @@ export type NormalizedError = {
 };
 
 export type BenchmarkRun = {
+  /** Durable intent; interruption before receipt leaves dispatch and billing unknown. */
+  pendingAttempt?: { number: number; preparedAt: string };
+  attempts?: {
+    number: number;
+    startedAt: string;
+    finishedAt?: string;
+    latencyMs?: number;
+    raw?: string;
+    envelope?: string;
+    usage?: unknown;
+    costUsd?: number;
+    costSource?: string;
+    error?: NormalizedError;
+    parseError?: string;
+  }[];
+  exactMatchNormalized?: boolean;
+  leafAccuracyNormalized?: number;
+  rowMatchedNormalized?: number;
+  rowTotalNormalized?: number;
+  fieldMismatchesNormalized?: { path: string; expected: unknown; actual: unknown }[];
+  normalizationPolicy?: NormalizationPolicy;
   id: string;
   suiteId: string;
   runNumber: number;

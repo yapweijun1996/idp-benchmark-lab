@@ -2,7 +2,7 @@
 
 ## Implementation status
 
-The policies below are requirements. Current custom auth headers can bypass the dedicated memory-only key store and persist inside provider settings/backups. Raw/parsed responses and errors also lack credential redaction, and deleting provider/local data does not immediately clear every ephemeral key. TASK-058/062 track these verified gaps; see [SECURITY.md](../SECURITY.md) and the [review](reviews/2026-09-08-production-readiness.md). Do not treat current backups as secret-free.
+Keys default to memory with explicit optional tab storage. All custom headers stay in memory. Persistence and exports recursively redact known credential values and secret-bearing fields, including response/error envelopes. Removal/clear operations delete ephemeral credentials; in-flight redaction survives clearing. Version-2 migration sanitizes legacy records. See [SECURITY.md](../SECURITY.md) for the exact threat boundary.
 
 ## Model
 

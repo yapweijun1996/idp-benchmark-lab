@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SettingsHubPage } from "./SettingsHubPage";
 import { getDb } from "../storage/db";
@@ -62,7 +62,7 @@ describe("SettingsHubPage", () => {
     fireEvent.click(screen.getByRole("tab", { name: /general/i }));
     fireEvent.click(screen.getByRole("radio", { name: /render pages as images/i }));
 
-    await vi.waitFor(async () => {
+    await waitFor(async () => {
       const { getAppSettings } = await import("../storage/settings");
       const settings = await getAppSettings();
       expect(settings.defaultInputMode).toBe("canonical_images");
@@ -75,7 +75,7 @@ describe("SettingsHubPage", () => {
     expect(screen.getByRole("radio", { name: "5" })).toBeChecked();
     fireEvent.click(screen.getByRole("radio", { name: "20" }));
 
-    await vi.waitFor(async () => {
+    await waitFor(async () => {
       const { getAppSettings } = await import("../storage/settings");
       const settings = await getAppSettings();
       expect(settings.defaultRunCount).toBe(20);
@@ -97,21 +97,21 @@ describe("SettingsHubPage", () => {
 
     render(<SettingsHubPage />);
     fireEvent.click(screen.getByRole("tab", { name: /storage/i }));
-    await vi.waitFor(() => expect(screen.getAllByText("1").length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText("1").length).toBeGreaterThan(0));
 
     fireEvent.click(screen.getByRole("button", { name: /clear local data/i }));
     expect(screen.getByRole("button", { name: /yes, clear everything/i })).toBeInTheDocument();
-    expect(await db.documents.count()).toBe(1);
+    await act(async () => { expect(await db.documents.count()).toBe(1); });
 
     fireEvent.click(screen.getByRole("button", { name: /yes, clear everything/i }));
-    await vi.waitFor(async () => {
+    await waitFor(async () => {
       expect(await db.documents.get("d-1")).toBeUndefined();
       expect(await db.documents.get("demo-document-popular-po")).toBeDefined();
       expect(await db.extractionProfiles.get("demo-profile-popular-po")).toBeDefined();
       expect(await db.goldenAnswers.get("demo-golden-popular-po")).toBeDefined();
       expect(await db.providerConfigs.get("demo-provider-gpt-gateway")).toBeUndefined();
     });
-    await vi.waitFor(() => expect(screen.getByText(/bundled demo fixture was restored/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/bundled demo fixture was restored/i)).toBeInTheDocument());
   });
 
   it("Storage tab clear can be cancelled without deleting data", async () => {
@@ -126,13 +126,13 @@ describe("SettingsHubPage", () => {
       storageMode: "session",
     });
 
-    render(<SettingsHubPage />);
+    await act(async () => { render(<SettingsHubPage />); });
     fireEvent.click(screen.getByRole("tab", { name: /storage/i }));
     fireEvent.click(screen.getByRole("button", { name: /clear local data/i }));
     fireEvent.click(screen.getByRole("button", { name: /cancel/i }));
 
     expect(screen.getByRole("button", { name: /clear local data/i })).toBeInTheDocument();
-    expect(await db.documents.count()).toBe(1);
+    await act(async () => { expect(await db.documents.count()).toBe(1); });
   });
 
   it("Privacy & Security and About tabs render static guidance", () => {

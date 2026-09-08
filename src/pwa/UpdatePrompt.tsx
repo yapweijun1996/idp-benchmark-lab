@@ -19,6 +19,7 @@ export function UpdatePrompt() {
   return (
     <div role="status" className="update-prompt">
       <span>{t("A new app build is available.")}</span>
+      <span>{t("Reload interrupts active benchmarks and clears memory-only credentials. Stop and wait for requests to finish before updating.")}</span>
       <button
         type="button"
         onClick={() => {

@@ -122,7 +122,7 @@ describe("SingleRunService", () => {
 
     expect(result.suite.status).toBe("completed");
     expect(result.suite.identity).toMatchObject({
-      documentSha256: "doc-hash-64",
+      documentSha256: "315d429b7714cedb6ad04ac31240145257692630457f3c88253c5beceac76027",
       profileId: profile.id,
       profileVersion: 1,
       promptSha256: profile.promptSha256,

@@ -38,9 +38,9 @@ gets its own nav slot if a user needs to manage it independently of running a be
 
 - **Home** (`#/home`) — latest-benchmark summary for returning users; sample-readiness information and a **Start benchmark** link into the wizard for first-time users.
 - **New Benchmark** (`#/new-benchmark`) — the guided wizard (see below); the primary workflow.
-- **Runs & Results** (`#/runs`) — the most recent 20 benchmarks, newest first; inspect one for
-  field accuracy, drift, and export. Pagination/full-history access is not implemented (TASK-070).
-- **Compare** (`#/compare`) — select 2+ of the most recent 20 benchmarks and compare side by side; warns (without
+- **Runs & Results** (`#/runs`) — all retained benchmarks, newest first; inspect one for
+  field accuracy, drift, and export. The history query updates live as runs finish.
+- **Compare** (`#/compare`) — select 2+ retained benchmarks and compare side by side; warns (without
   blocking) when test configurations differ.
 - **Library** (`#/library`) — tabs for Documents / Extraction Templates / Expected Results:
   reusable assets managed independently of a specific benchmark run.
@@ -58,22 +58,22 @@ Mobile/tablet collapses this into a slide-out drawer (see `styles/app.css` mobil
 
 ### Home — guided start
 
-The active `DashboardPage` shows sample-readiness cards, workflow guidance, and a link to **New Benchmark** for first-time users. The wizard's Document step offers bundled samples or an upload. Home does not expose provider/API-key inputs or execute a benchmark inline. `DemoBenchmarkCard.tsx` is retained source from the earlier Phase 8 experience, not the current Home entry point; browser tests targeting it are stale (TASK-066).
+The active `DashboardPage` shows sample-readiness cards, workflow guidance, and a link to **New Benchmark** for first-time users. The wizard's Document step offers bundled samples or an upload. Home does not expose provider/API-key inputs or execute a benchmark inline. The retired inline-demo source and tests are removed; browser checks target the active wizard.
 
-The current Home status card recommends "3 repeated runs", while the repeated runner and saved default only support 5/10/20/50/100 (default 5). This is UI drift, not a supported three-run benchmark preset; TASK-070 must align the copy and behavior.
+The current Home status card recommends five repeated runs, matching the supported 5/10/20/50/100 presets and the saved default.
 
 Returning users see benchmark totals, the latest benchmark's summary, recent history and a Compare link when two or more suites exist. The primary action still opens the wizard.
 
 ### New Benchmark (guided wizard)
 
-A 6-step stepper (`src/pages/NewBenchmarkWizard.tsx`) replaces the old flat "Benchmark Builder"
-form: **Document → What to Extract → Expected Result → Choose AI → Run Settings → Review & Run**.
+A 6-step stepper (`src/pages/NewBenchmarkWizard.tsx`) is the active guided workflow:
+**Document → What to Extract → Expected Result → Choose AI → Run Settings → Review & Run**.
 Each step is unlocked only once its prerequisites are met (`maxReachable` gating); Expected
-Result is optional and skippable. The What to Extract step can select a saved template and apply prompt/visual-schema/advanced-JSON overrides to the current run; it does not create an immutable saved template version. Advanced settings (temperature and a normalized reasoning/thinking override) live behind a
+Result is optional and skippable. The What to Extract step can select a saved template and apply prompt/visual-schema/advanced-JSON overrides to the current run; the selected effective values are frozen when a suite starts. Advanced settings (temperature and a normalized reasoning/thinking override) live behind a
 collapsed `<details>` disclosure. Run Settings offers **Quick Test** (single run, immediate
 feedback) or **Benchmark** (repeated runs via the embedded `RepeatedBenchmarkSection`, run count
 preset from Settings → General, defaulting to 5). Review & Run shows the full config,
-capability-gate warnings for incompatible provider/mode combinations, and reports cost as unknown until the first run completes. The UI exposes a "Hard budget cap" field, but current enforcement is only a previous-run estimate and is not a guaranteed cap (TASK-059).
+capability-gate warnings for incompatible provider/mode combinations, and reports cost as unknown until the first run completes. A hard budget cap reserves a configured provider-contract maximum before each attempt and refuses execution when no safe bound is available.
 
 ### Library
 
@@ -82,22 +82,22 @@ Tabs, each still their own focused screen for managing an asset outside the wiza
 - **Documents** — upload PDF, preview pages, choose local-session vs. "Save on this device"
   (IndexedDB) persistence, delete, fingerprint/size display.
 - **Extraction Templates** — name, prompt version, base prompt, extraction contract, JSON
-  schema, optional normalization policy; saves increment the version but currently overwrite the same record (TASK-061).
+  schema, optional normalization policy; saves increment the version under the source record, while suite snapshots retain the selected content.
 - **Expected Results** — two-pane layout: PDF preview and editable Expected Result JSON,
-  validated against the selected template's schema; version numbers increment on save, but historical versions are not retained (TASK-061).
+  validated against the selected template's schema; version numbers increment on save, while suite snapshots retain the selected content.
 
 ### Settings
 
 Tabs: **AI Providers** (OpenAI/Gemini/Custom OpenAI-compatible cards — model, base URL where
-applicable, API style for Custom, OpenAI reasoning effort, Gemini thinking level, key input with "keep until this tab closes" opt-in, capabilities, connection test),
+applicable, API style for Custom, OpenAI reasoning effort, Gemini thinking level, key input with "keep until this tab closes" opt-in, ephemeral custom headers, capabilities, connection test),
 **General** (default input mode, default run count), **Storage** (per-table record counts,
-two-step confirm to clear local data), **Backup & Restore** (export/import JSON; current validation and secret handling have open gaps in TASK-058/062), **Privacy & Security** (static BYOK/key-handling explanation whose absolute safety copy currently overstates the implementation), **About**
+two-step confirm to clear local data), **Backup & Restore** (export/import JSON with full entity/reference/hash and secret validation), **Privacy & Security** (static BYOK/key-handling explanation), **About**
 (app build).
 
 ### Runs & Results / Run Inspector
 
-Runs & Results lists the latest 20 suites returned by `useRunHistory`; older IndexedDB records are not reachable from this view even though the active subtitle says every benchmark is shown. Pagination/full-history support and truthful copy are required by TASK-070. "Inspect" opens `SuiteDetail` — field accuracy
-heatmap, ordered run list, strict field mismatches, available raw/parsed output, current referenced Expected Result, and summary/export data. Normalized metrics are not persisted/displayed yet (TASK-065); old Expected Results must be frozen before historical inspectors can be trusted (TASK-061). Failed-response evidence remains incomplete (TASK-063).
+Runs & Results queries all retained suites through `useRunHistory`; the inspector subscription updates as records change. "Inspect" opens `SuiteDetail` — field accuracy
+heatmap, ordered run list, strict field mismatches, frozen Golden snapshot, available redacted raw/parsed output, attempt history and summary/export data. Strict and normalized metrics plus the normalization policy persist separately, and failed-response evidence retains usage, timing and redacted envelopes.
 
 ### Compare
 
@@ -107,7 +107,7 @@ consistency, unique variants, cost, latency). Warns when selected benchmarks' te
 
 ## Localization
 
-The top bar offers English, Mandarin, Malay, Japanese, and Vietnamese, and persists the selection in app settings. Translation is incremental: missing entries fall back to English or the untranslated source key. Treat this as partial localization until page coverage, formatting, accessibility, and browser QA are completed under TASK-070.
+The top bar offers English, Mandarin, Malay, Japanese, and Vietnamese, and persists the selection in app settings. Translation is incremental: missing entries fall back to English or the untranslated source key. Treat this as partial localization; coverage/fallback tests pass locally, while target-device browser QA remains part of TASK-068.
 
 ## Visual style
 

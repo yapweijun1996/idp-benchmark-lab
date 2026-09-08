@@ -239,6 +239,7 @@ const EXTRA_COPY: Record<string, Partial<Record<LanguageCode, string>>> = {
   "Attempted": { zh: "已尝试", ms: "Dicuba", ja: "試行", vi: "Đã thử" },
   "Row accuracy": { zh: "行准确率", ms: "Ketepatan baris", ja: "行精度", vi: "Độ chính xác dòng" },
   "Recent runs": { zh: "最近运行", ms: "Larian terkini", ja: "最近の実行", vi: "Lần chạy gần đây" },
+  "Run history": { zh: "运行历史", ms: "Sejarah larian", ja: "実行履歴", vi: "Lịch sử chạy" },
   "Every benchmark run in this browser, newest first. Inspect one for field accuracy, drift, and export.": { zh: "此浏览器中的所有基准运行，按最新优先显示。检查运行以查看字段准确率、漂移和导出。", ms: "Setiap larian penanda aras dalam pelayar ini, yang terbaru dahulu. Periksa untuk ketepatan medan, hanyutan dan eksport.", ja: "このブラウザの全ベンチマーク実行を新しい順に表示します。フィールド精度、ドリフト、エクスポートを確認できます。", vi: "Mọi lần chạy benchmark trong trình duyệt này, mới nhất trước. Kiểm tra độ chính xác trường, độ lệch và xuất dữ liệu." },
   "No runs yet. Start a": { zh: "还没有运行记录。开始一个", ms: "Belum ada larian. Mulakan", ja: "実行がありません。", vi: "Chưa có lần chạy. Bắt đầu" },
   "to see results here.": { zh: "即可在此查看结果。", ms: "untuk melihat keputusan di sini.", ja: "するとここに結果が表示されます。", vi: "để xem kết quả tại đây." },

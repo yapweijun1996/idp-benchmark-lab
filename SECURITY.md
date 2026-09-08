@@ -1,10 +1,10 @@
 # SECURITY — Static BYOK PWA
 
-## Current implementation gaps
+## Current implementation boundary
 
-**Production NO-GO (2026-09-08).** The dedicated API-key store is memory-only by default with optional tab storage. However, custom authentication headers are persisted in provider settings and copied into backups; the import guard checks only top-level field names. Provider raw/parsed responses and errors are not credential-redacted before storage. Removing a provider or clearing local data does not immediately clear every corresponding in-memory/session key. Synthetic credential probes reproduced persistence/export paths; no real leak was observed.
+Known keys and custom-header values are registered for recursive redaction before persistence/export. All custom headers are memory-only; credentials are cleared on provider deletion or local-data clearing. In-flight requests retain a private redaction context after clearing. The version-2 migration removes legacy credential fields and known echoes while preserving historical records.
 
-The policies below remain requirements, not guarantees of the current build. TASK-058 owns credential isolation, cleanup, redaction, and user-facing privacy claims; TASK-062 owns complete backup validation. Until verified, use restricted test credentials and non-sensitive data, avoid putting secrets in custom headers, and treat existing backups/results as potentially secret-bearing. See the [review](docs/reviews/2026-09-08-production-readiness.md).
+Synthetic regression tests cover nested/serialized/malformed credential fields, URL credentials, echoed responses/errors, deletion and backup import rejection. This is a browser BYOK boundary, not a guarantee against arbitrary transformations of secrets by a hostile provider. Previously downloaded backups cannot be repaired by an app migration. Production acceptance still requires the external checks in [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
 ## Threat model
 

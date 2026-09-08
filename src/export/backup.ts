@@ -1,4 +1,8 @@
 import { blobToArrayBuffer } from "../documents/blob";
+import Dexie from "dexie";
+import { redact } from "../providers/redaction";
+import { validateBackupEntities } from "./validateBackup";
+import { clearAllKeys } from "../providers/keys";
 import { arrayBufferToBase64 } from "../providers/base64";
 import type { IdpDatabase } from "../storage/db";
 import type {
@@ -14,7 +18,7 @@ import type {
 
 export const BACKUP_FORMAT_VERSION = 1;
 
-type SerializedDocument = Omit<DocumentRecord, "blob"> & { blobBase64?: string };
+type SerializedDocument = Omit<DocumentRecord, "blob" | "blobBytes"> & { blobBase64?: string };
 
 export interface BackupEntities {
   documents: SerializedDocument[];
@@ -44,10 +48,10 @@ export async function buildBackup(db: IdpDatabase, options: BuildBackupOptions =
   const documentsRaw = await db.documents.toArray();
   const documents: SerializedDocument[] = [];
   for (const doc of documentsRaw) {
-    const { blob, ...rest } = doc;
+    const { blob, blobBytes, ...rest } = doc;
     const usableBlob = options.getBlob
       ? await options.getBlob(doc)
-      : typeof blob?.arrayBuffer === "function"
+      : blobBytes ? new Blob([blobBytes], { type: "application/pdf" }) : typeof blob?.arrayBuffer === "function"
         ? blob
         : undefined;
     if (usableBlob) {
@@ -57,7 +61,7 @@ export async function buildBackup(db: IdpDatabase, options: BuildBackupOptions =
       documents.push(rest);
     }
   }
-  return {
+  return redact({
     formatVersion: BACKUP_FORMAT_VERSION,
     appVersion: typeof __APP_BUILD__ !== "undefined" ? __APP_BUILD__ : "0.1.0",
     exportedAt: new Date().toISOString(),
@@ -71,7 +75,7 @@ export async function buildBackup(db: IdpDatabase, options: BuildBackupOptions =
       benchmarkRuns: await db.benchmarkRuns.toArray(),
       appSettings: await db.appSettings.toArray(),
     },
-  };
+  });
 }
 
 export class BackupError extends Error {
@@ -84,18 +88,8 @@ export class BackupError extends Error {
   }
 }
 
-const SECRET_KEYS = ["apikey", "authorization", "x-api-key", "key"];
-
 function assertNoSecrets(records: unknown[], store: string): void {
-  for (const record of records) {
-    if (record && typeof record === "object") {
-      for (const key of Object.keys(record as Record<string, unknown>)) {
-        if (SECRET_KEYS.some((s) => key.toLowerCase() === s)) {
-          throw new BackupError("secret_found", `Backup contains a secret-like field "${key}" in ${store}; refusing import.`);
-        }
-      }
-    }
-  }
+  if (JSON.stringify(redact(records)) !== JSON.stringify(records)) throw new BackupError("secret_found", `Backup contains credential material in ${store}; refusing import.`);
 }
 
 function asRecords(value: unknown, store: string): unknown[] {
@@ -151,9 +145,25 @@ export async function importBackup(
     assertNoSecrets(records, key);
     validated.set(key, records);
   }
+  if (typeof bundle.appVersion !== "string" || !bundle.appVersion.trim() || typeof bundle.exportedAt !== "string" || !Number.isFinite(Date.parse(bundle.exportedAt))) throw new BackupError("invalid_format", "Backup build identity and export timestamp are required.");
+  if (mode !== "replace" && mode !== "merge") throw new BackupError("invalid_format", "Unsupported import mode.");
+  if (mode === "replace") {
+    try { await validateBackupEntities(entities); }
+    catch { throw new BackupError("invalid_entities", "Backup entity, hash, or reference validation failed; no data was changed."); }
+  }
 
   let count = 0;
   await db.transaction("rw", db.tables, async () => {
+    if (mode === "merge") {
+      const existing = await Dexie.waitFor(buildBackup(db));
+      for (const [key] of stores) {
+        const records = new Map(existing.entities[key].map((record) => [record.id, record]));
+        for (const record of entities[key]) records.set(record.id, record as never);
+        Object.assign(existing.entities, { [key]: [...records.values()] });
+      }
+      try { await Dexie.waitFor(validateBackupEntities(existing.entities)); }
+      catch { throw new BackupError("invalid_entities", "Merge would invalidate retained records; no data was changed."); }
+    }
     if (mode === "replace") {
       await Promise.all(db.tables.map((table) => table.clear()));
     }
@@ -172,7 +182,7 @@ export async function importBackup(
               for (let i = 0; i < binary.length; i += 1) {
                 bytes[i] = binary.charCodeAt(i);
               }
-              return { ...rest, blob: new Blob([bytes], { type: "application/pdf" }) } as DocumentRecord;
+              return { ...rest, blobBytes: bytes.buffer } as DocumentRecord;
             }
             return rest as DocumentRecord;
           })
@@ -181,5 +191,6 @@ export async function importBackup(
       count += records.length;
     }
   });
+  if (mode === "replace") clearAllKeys();
   return count;
 }

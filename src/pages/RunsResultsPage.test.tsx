@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { RunsResultsPage } from "./RunsResultsPage";
 import { useRunHistory } from "../benchmarks/useRunHistory";
@@ -71,6 +71,6 @@ describe("RunsResultsPage", () => {
     expect(screen.getByText(/benchmark — po \(x5\)/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /inspect/i }));
-    await vi.waitFor(() => expect(screen.getByText(/gemini-3-flash-lite/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/gemini-3-flash-lite/)).toBeInTheDocument());
   });
 });

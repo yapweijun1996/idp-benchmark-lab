@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NewBenchmarkWizard } from "./NewBenchmarkWizard";
 import { RunFailure } from "../benchmarks/singleRun";
@@ -177,8 +177,8 @@ function advanceToReview() {
 }
 
 describe("NewBenchmarkWizard", () => {
-  it("renders the demo document ready to test", () => {
-    render(<NewBenchmarkWizard />);
+  it("renders the demo document ready to test", async () => {
+    await act(async () => { render(<NewBenchmarkWizard />); });
     expect(screen.getByRole("heading", { name: /test document/i })).toBeInTheDocument();
     expect(screen.getByText("po.pdf")).toBeInTheDocument();
   });
@@ -245,8 +245,8 @@ describe("NewBenchmarkWizard", () => {
     expect(screen.getByText(/visual builder is paused/i)).toBeInTheDocument();
   });
 
-  it("cannot continue or jump ahead without a document, template, or provider", () => {
-    render(<NewBenchmarkWizard />);
+  it("cannot continue or jump ahead without a document, template, or provider", async () => {
+    await act(async () => { render(<NewBenchmarkWizard />); });
     // The active/demo document is selected automatically so its preview is immediately visible.
     expect(screen.getByRole("button", { name: /continue/i })).toBeEnabled();
     // Stepper buttons past the current one are disabled until their prerequisite is met.
@@ -336,7 +336,7 @@ describe("NewBenchmarkWizard", () => {
     expect(screen.getByText(/po\.pdf/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /run quick test/i }));
-    await vi.waitFor(() => expect(runMock).toHaveBeenCalled());
+    await waitFor(() => expect(runMock).toHaveBeenCalled());
     expect(await screen.findByText(/succeeded/)).toBeInTheDocument();
     expect(screen.getByText(/latency 123 ms/)).toBeInTheDocument();
     expect(screen.getByRole("region", { name: "Accuracy" })).toHaveTextContent("Field accuracy94.0%");
@@ -391,6 +391,6 @@ describe("NewBenchmarkWizard", () => {
     advanceToReview();
     fireEvent.click(screen.getByRole("button", { name: /run quick test/i }));
 
-    await vi.waitFor(() => expect(screen.getByText(/rate_limit: rate limit/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/rate_limit: rate limit/)).toBeInTheDocument());
   });
 });

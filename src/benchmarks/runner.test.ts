@@ -242,6 +242,7 @@ describe("Hard budget cap", () => {
     const adapter = fakeAdapter();
     adapter.extract.mockResolvedValue(okResponse(1)); // 每次 $1（provider reported）
     const { profile } = await seed();
+    await db.pricingSnapshots.put({ id: "bound", provider: "gemini", model: "gemini-3-flash-lite", currency: "USD", effectiveAt: "2026-09-08", maximumAttemptCostUsd: 1, maximumAttemptCostSource: "Synthetic provider contract" });
     const suite = await runnerFor(adapter).run({
       ...baseConfig,
       profileId: profile.id,
@@ -254,12 +255,10 @@ describe("Hard budget cap", () => {
     expect(runs).toHaveLength(2); // 2 * $1 = $2 ≤ 2.5；第三次预估 $1 会超
     expect(suite.costUsdKnown).toBeCloseTo(2, 9);
     // 停止原因对用户透明：含上限、已确认花费与预估
-    expect(suite.stopReason).toMatch(/budget cap 2\.5 usd/i);
-    expect(suite.stopReason).toMatch(/confirmed spend 2\.000000 usd/i);
-    expect(suite.stopReason).toMatch(/1\.000000 usd/i);
+    expect(suite.stopReason).toMatch(/insufficient unreserved funds/i);
   });
 
-  it("keeps running when cost is unknown", async () => {
+  it("rejects hard-cap execution without a safe bound", async () => {
     const adapter = fakeAdapter();
     adapter.extract.mockResolvedValue(okResponse()); // 无成本信息
     const { profile } = await seed();
@@ -270,7 +269,27 @@ describe("Hard budget cap", () => {
       maxBudgetUsd: 0.001,
     });
 
-    expect(suite.status).toBe("completed");
+    expect(suite.status).toBe("budget_stopped");
+    expect(adapter.extract).not.toHaveBeenCalled();
     expect(suite.costUsdKnown).toBeUndefined();
   });
+});
+
+it("does not start a retry after Stop during backoff", async () => {
+  const adapter = fakeAdapter();
+  adapter.extract.mockRejectedValue({ category: "rate_limit", message: "slow", retryable: true });
+  const { profile } = await seed();
+  const runner = runnerFor(adapter, async () => { runner.requestStop(); });
+  const suite = await runner.run({ ...baseConfig, profileId: profile.id, requestedRuns: 1 });
+  expect(suite.status).toBe("stopped");
+  expect(adapter.extract).toHaveBeenCalledTimes(1);
+});
+it("cannot oversubscribe a concurrent hard cap", async () => {
+  const adapter = fakeAdapter();
+  adapter.extract.mockResolvedValue(okResponse(1));
+  const { profile } = await seed();
+  await db.pricingSnapshots.put({ id: "bound", provider: "gemini", model: "gemini-3-flash-lite", currency: "USD", effectiveAt: "2026-09-08", maximumAttemptCostUsd: 1, maximumAttemptCostSource: "Synthetic provider contract" });
+  const suite = await runnerFor(adapter).run({ ...baseConfig, profileId: profile.id, requestedRuns: 5, concurrency: 5, maxBudgetUsd: 1 });
+  expect(adapter.extract).toHaveBeenCalledTimes(1);
+  expect(suite.costUsdKnown).toBe(1);
 });

@@ -89,7 +89,9 @@ describe("buildSummaryCsv", () => {
       },
     ]);
     const row = csv.trim().split("\n")[1]!;
-    expect(row.endsWith(",,")).toBe(true);
+    const headers = csv.split("\n")[0]!.split(",");
+    expect(row.split(",")[headers.indexOf("cost_total_usd")]).toBe("");
+    expect(row.split(",")[headers.indexOf("cost_avg_usd")]).toBe("");
   });
 });
 

@@ -9,6 +9,8 @@ import { RunsResultsPage } from "./pages/RunsResultsPage";
 import { SettingsHubPage } from "./pages/SettingsHubPage";
 import { seedDemoFixture } from "./demo/seedDemoFixture";
 import { I18nProvider } from "./i18n";
+import { recoverInterrupted } from "./benchmarks/recovery";
+import { getDb } from "./storage/db";
 
 // Every declared route maps to a real page; unknown hashes fall back to
 // home inside useHashRoute (no placeholder fallback exists anymore).
@@ -21,9 +23,9 @@ export default function App() {
   const toggleNav = useCallback(() => setNavOpen((v) => !v), []);
 
   useEffect(() => {
-    // Keep the bundled demo fixture and GPT gateway preset available on every
-    // route, not only after visiting New Benchmark.
+    // Bundled documents and templates are available on every route.
     void seedDemoFixture().catch(() => undefined);
+    void recoverInterrupted(getDb()).catch(() => undefined);
   }, []);
 
   return (

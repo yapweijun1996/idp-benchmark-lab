@@ -1,3 +1,4 @@
+import { sha256Hex } from "../documents/hash";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { IdpDatabase } from "../storage/db";
 import { ProfileService } from "../profiles/service";
@@ -31,7 +32,7 @@ describe("backup round-trip", () => {
       name: "po.pdf",
       mimeType: "application/pdf",
       size: blob.size,
-      sha256: "h",
+      sha256: await sha256Hex(new TextEncoder().encode("%PDF-1.4 mock").buffer),
       createdAt: "2026-08-15T00:00:00.000Z",
       storageMode: "indexeddb",
       blob,
@@ -43,7 +44,7 @@ describe("backup round-trip", () => {
       defaultRunCount: 5,
       theme: "dark",
       showSecretsWarning: false,
-      updatedAt: "",
+      updatedAt: "2026-09-08T00:00:00Z",
     } satisfies AppSettings);
 
     const bundle = await buildBackup(db, {
@@ -60,7 +61,7 @@ describe("backup round-trip", () => {
 
     const restoredDoc = await restored.documents.get("doc-1");
     expect(restoredDoc?.name).toBe("po.pdf");
-    expect(restoredDoc?.blob).toBeDefined();
+    expect(restoredDoc?.blobBytes).toBeDefined();
     const restoredProfile = await restored.extractionProfiles.get(profile.id);
     expect(restoredProfile?.name).toBe("PO");
     const settings = await restored.appSettings.get("app");
@@ -101,12 +102,12 @@ describe("backup round-trip", () => {
       defaultRunCount: 5,
       theme: "system",
       showSecretsWarning: true,
-      updatedAt: "",
+      updatedAt: "2026-09-08T00:00:00Z",
     });
     const bundle = {
       formatVersion: 1,
       appVersion: "0.1.0",
-      exportedAt: "",
+      exportedAt: "2026-09-08T00:00:00Z",
       entities: {
         documents: [],
         extractionProfiles: [],
@@ -119,10 +120,11 @@ describe("backup round-trip", () => {
           {
             id: "app",
             defaultConcurrency: 5,
+            defaultRunCount: 5,
             defaultInputMode: "native_pdf",
             theme: "system",
             showSecretsWarning: true,
-            updatedAt: "",
+            updatedAt: "2026-09-08T00:00:00Z",
           },
         ],
       },
@@ -130,5 +132,33 @@ describe("backup round-trip", () => {
     await importBackup(db, JSON.stringify(bundle), "merge");
     const settings = await db.appSettings.get("app");
     expect(settings?.defaultConcurrency).toBe(5);
+  });
+
+  it("merge mode validates partial incoming stores against retained references", async () => {
+    const profile = await new ProfileService(db).create({
+      name: "PO",
+      basePrompt: "Extract number",
+      extractionContract: ["number"],
+      jsonSchema: { type: "object", properties: { number: { type: "string" } }, required: ["number"], additionalProperties: false },
+    });
+    const bytes = new TextEncoder().encode("%PDF-1.4 retained");
+    await db.documents.put({ id: "doc-retained", name: "retained.pdf", mimeType: "application/pdf", size: bytes.byteLength, sha256: await sha256Hex(bytes.buffer), storageMode: "indexeddb", blobBytes: bytes.buffer, createdAt: "2026-09-08T00:00:00Z" });
+    const golden = {
+      id: "golden-retained", documentId: "doc-retained", profileId: profile.id, profileVersion: profile.version, version: 1,
+      json: { number: "001" }, sha256: await sha256Hex(new TextEncoder().encode('{"number":"001"}').buffer), schemaValid: true, createdAt: "2026-09-08T00:00:00Z",
+    };
+    await db.goldenAnswers.put(golden);
+    const full = await buildBackup(db);
+    const partial = structuredClone(full);
+    partial.entities.documents = [];
+    partial.entities.extractionProfiles = [];
+    partial.entities.goldenAnswers = [full.entities.goldenAnswers[0]!];
+    partial.entities.providerConfigs = [];
+    partial.entities.pricingSnapshots = [];
+    partial.entities.benchmarkSuites = [];
+    partial.entities.benchmarkRuns = [];
+    partial.entities.appSettings = [];
+    await expect(importBackup(db, JSON.stringify(partial), "merge")).resolves.toBe(1);
+    expect(await db.documents.get("doc-retained")).toBeDefined();
   });
 });

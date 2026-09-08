@@ -2,7 +2,7 @@
 
 Persistent entities use IndexedDB. Session-only document blobs and provider credentials use separate in-memory/session mechanisms.
 
-`src/storage/types.ts` and `src/storage/db.ts` define the current executable model. The database is schema version 1 with eight stores and no later upgrade handler yet. Any remediation that changes records must add and test a forward migration rather than assuming a fresh database. The [review](docs/reviews/2026-09-08-production-readiness.md) identified gaps between those types/storage behavior and the intended safety and history guarantees below.
+`src/storage/types.ts` and `src/storage/db.ts` own the executable model. Schema version 2 migrates version 1 in a transaction, retains records, redacts legacy credentials and converts PDF Blobs to ArrayBuffer bytes. The public backup envelope remains formatVersion 1; suites declare evidenceVersion 2.
 
 ## Entities
 
@@ -19,6 +19,7 @@ type DocumentRecord = {
   createdAt: string;
   storageMode: "session" | "indexeddb";
   blob?: Blob;
+  blobBytes?: ArrayBuffer; // Persisted PDF bytes; blob is a legacy/runtime field.
 };
 ```
 
@@ -71,11 +72,11 @@ type GoldenAnswer = {
 
 When the bound profile version changes, the UI must re-validate the Golden Answer and require explicit re-approval before it can be selected for a new benchmark.
 
-Current profile/Golden updates increment the version field but overwrite the existing ID; previous versions are not retained as separate records. Historical results resolve Golden data by that mutable ID. Immutable version retention or suite snapshots are required by TASK-061.
+Profile/Golden editors increment versions on their existing IDs. Each new suite stores the selected versions and content in an immutable snapshot; history reads that snapshot. Legacy suites without snapshots are explicitly marked unavailable rather than resolved against mutable records.
 
 ### ProviderConfig
 
-The dedicated API-key field is stored separately in memory by default. The open-ended `settings` object can currently persist secret custom headers; it must not be treated as a validated secret-free record (TASK-058).
+Dedicated keys and arbitrary custom headers are ephemeral. Persisted settings have an empty customHeaders object, and recursive persistence/export redaction handles known credential echoes and secret-bearing fields.
 
 ```ts
 type ProviderConfig = {
@@ -108,11 +109,11 @@ type PricingSnapshot = {
 
 ### BenchmarkSuite
 
-Stores identity hashes/IDs, requested run count, concurrency, budget, timestamps, status, and optional accumulated positive known cost. The runner currently leaves `costUsdKnown` unset when the accumulated known cost is zero. It does not yet freeze complete effective inputs, custom endpoint/settings or applied pricing. TASK-061/064 must make the historical evidence immutable and auditable.
+Stores identity, timestamps and a frozen snapshot of PDF bytes, canonical images when used, document/profile/Golden versions, effective prompt/schema, endpoint/settings, pricing and execution settings. A SHA-256 digest covers the effective snapshot. Build identity includes package version, Git revision and a unique build UUID. Known cost zero is retained.
 
 ### BenchmarkRun
 
-Stores run number, state, optional latency/raw response/parsed JSON, schema status, strict exact/leaf/row metrics, strict leaf mismatches, output hash, usage, cost, and normalized error. Normalized evaluation metrics, schema error details, and detailed missing/extra/duplicate row results are not stored (TASK-065). `safeRawResponse` is currently a field name, not an enforced redaction guarantee; malformed provider output loses raw/usage/timing evidence before this record is written (TASK-058/063).
+Stores run state, redacted raw/parsed output, strict and normalized metrics, policy, hashes, usage, timing and cost. An attempts array retains each response/error envelope and cost basis. A durable pendingAttempt records dispatch intent before network execution; interruption leaves its dispatch/billing uncertain and never replays it automatically.
 
 ### AppSettings
 
@@ -134,7 +135,7 @@ The active UI uses `language`, `defaultInputMode`, and `defaultRunCount`. Other 
 
 ## Storage rules
 
-These are required invariants. Current backup validation checks the envelope and string IDs, not complete entity/reference validity, and export does not enforce secret removal. See TASK-058/062 before relying on these rules as implemented controls.
+Backup validation checks record schemas, unique IDs, references, hashes, snapshot versions, nested credential material and binary payloads before mutation. Merge validates retained and incoming records together. Replace clears runtime credentials after successful commit.
 
 - version the IndexedDB schema and migrate forward before changing version 1
 - migrate forward deterministically

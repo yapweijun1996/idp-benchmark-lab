@@ -2,7 +2,7 @@
 
 Status values: `todo`, `in_progress`, `blocked`, `done`.
 
-Current production decision: **NO-GO**, reviewed 2026-09-08 at `26b0ae9`. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and the [review](docs/reviews/2026-09-08-production-readiness.md).
+Current production decision: **NO-GO**, with local remediation implemented on 2026-09-08. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and the [remediation evidence](docs/reviews/2026-09-08-production-remediation.md).
 
 ## Historical spike delivery
 
@@ -75,18 +75,18 @@ TASK-000..056 retain their original delivery status. `done` here does not certif
 | ID | Task / review finding | Status | Depends On | Acceptance |
 | --- | --- | --- | --- | --- |
 | TASK-057 | Review production readiness at 26b0ae9 | done | TASK-056 | Dated report with source evidence, reproductions and verification limits |
-| TASK-058 | Enforce credential persistence/export boundary (R3) | todo | TASK-057 | Nested auth headers and credential echoes excluded from persistent config, evidence and exports; removing a provider or clearing local data also clears its memory/session key; active Privacy/Backup copy is verified against behavior |
-| TASK-059 | Enforce hard budget before every attempt (R1) | todo | TASK-057 | Zero/unknown/variable costs, in-flight reservations and concurrency cannot bypass the cap |
-| TASK-060 | Stop retries during backoff (R2) | todo | TASK-057 | Stop prevents every subsequent network attempt; already-started requests retain evidence |
-| TASK-061 | Preserve immutable historical inputs/configuration (R4) | todo | TASK-058 | Golden/profile edits and endpoint/settings changes cannot alter or mislabel old evidence; retain effective inputs and unique build identity; introduce a versioned IndexedDB migration before changing schema v1 |
-| TASK-062 | Validate full backup before replace/merge (R5) | todo | TASK-058 | Invalid entities/references rejected before mutation; original data remains intact; Backup UI claims match the implemented validation boundary |
-| TASK-063 | Preserve failed response and attempt evidence (R6) | todo | TASK-058 | Parse failures retain redacted raw output, usage/timing and correct failure classification |
-| TASK-064 | Freeze suite pricing basis (R7) | todo | TASK-061 | Preserve configured pricing associations in provider edits, expose an auditable configuration path, freeze the applied basis at suite start, and ensure price edits affect future suites only |
-| TASK-065 | Persist/display strict and normalized metrics (R9) | todo | TASK-061 | Both sets and policy survive reload/export; align exact/schema/error/latency/cost metric denominators and implemented outputs with EVALUATION.md |
-| TASK-066 | Restore deterministic tests and release gates (R8) | todo | TASK-057 | Fixed time fixtures and React teardown warnings; current-wizard E2E replaces obsolete Home demo coverage; PR and browser checks gate deployment |
-| TASK-067 | Resolve dependency advisory paths (R10) | todo | TASK-057 | Reviewed lockfile changes/reachability disposition; audit and build verified |
-| TASK-068 | Complete production acceptance | todo | TASK-058..067/070 | Real Pages-origin providers/CORS, browsers, PWA update/offline, large-document/stress, storage migration, and interruption checks recorded; explicit release decision |
+| TASK-058 | Enforce credential persistence/export boundary (R3) | done | TASK-057 | Nested auth headers and credential echoes excluded from persistent config, evidence and exports; removing a provider or clearing local data also clears its memory/session key; active Privacy/Backup copy is verified against behavior |
+| TASK-059 | Enforce hard budget before every attempt (R1) | done | TASK-057 | Zero/unknown/variable costs, in-flight reservations and concurrency cannot bypass the cap |
+| TASK-060 | Stop retries during backoff (R2) | done | TASK-057 | Stop prevents every subsequent network attempt; already-started requests retain evidence |
+| TASK-061 | Preserve immutable historical inputs/configuration (R4) | done | TASK-058 | Golden/profile edits and endpoint/settings changes cannot alter or mislabel old evidence; retain effective inputs and unique build identity; introduce a versioned IndexedDB migration before changing schema v1 |
+| TASK-062 | Validate full backup before replace/merge (R5) | done | TASK-058 | Invalid entities/references rejected before mutation; original data remains intact; Backup UI claims match the implemented validation boundary |
+| TASK-063 | Preserve failed response and attempt evidence (R6) | done | TASK-058 | Parse failures retain redacted raw output, usage/timing and correct failure classification |
+| TASK-064 | Freeze suite pricing basis (R7) | done | TASK-061 | Preserve configured pricing associations in provider edits, expose an auditable configuration path, freeze the applied basis at suite start, and ensure price edits affect future suites only |
+| TASK-065 | Persist/display strict and normalized metrics (R9) | done | TASK-061 | Both sets and policy survive reload/export; align exact/schema/error/latency/cost metric denominators and implemented outputs with EVALUATION.md |
+| TASK-066 | Restore deterministic tests and release gates (R8) | done | TASK-057 | Fixed time fixtures and React teardown warnings; current-wizard E2E replaces obsolete Home demo coverage; PR and browser checks gate deployment |
+| TASK-067 | Resolve dependency advisory paths (R10) | done | TASK-057 | Reviewed lockfile changes/reachability disposition; audit and build verified |
+| TASK-068 | Complete production acceptance | blocked | TASK-058..067/070 | Real Pages-origin providers/CORS, browsers, PWA update/offline, large-document/stress, storage migration, and interruption checks recorded; explicit release decision |
 | TASK-069 | Reconcile documentation with production review | done | TASK-057 | Status, current UI, known gaps, evidence and remediation ledger aligned; documentation-only validation completed |
-| TASK-070 | Reconcile post-MVP UX and history behavior | todo | TASK-066 | Home run-count guidance matches supported presets; Runs/Compare expose or explicitly paginate all retained history and use truthful copy; localization coverage/fallback is defined and tested; retired inline-demo source/tests/comments are removed or intentionally restored |
+| TASK-070 | Reconcile post-MVP UX and history behavior | done | TASK-066 | Home run-count guidance matches supported presets; Runs/Compare expose or explicitly paginate all retained history and use truthful copy; localization coverage/fallback is defined and tested; retired inline-demo source/tests/comments are removed or intentionally restored |
 
-TASK-058..068 and TASK-070 are implementation/validation work, not completed fixes. None is currently blocked, but TASK-068 needs appropriately authorized test credentials and deployment access for live checks. Do not infer those results from the historical spike release.
+TASK-058..067 and TASK-070 have local implementation/regression evidence in the remediation report. TASK-068 remains blocked on the user-published Pages revision and real end-user BYOK/provider/CORS checks, plus external verification of the Windows WebKit offline limitation. Read-only checks found `origin/main` still at `86ed35f` and the live Pages Home still on the pre-remediation guidance; the latest public Actions run failed during tests before build/deploy. The user will push; no publishing or paid requests were performed by the agent.

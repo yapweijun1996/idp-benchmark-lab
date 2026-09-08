@@ -1,6 +1,6 @@
 # Metrics Reference
 
-This table is the target metric contract. Current persisted/displayed metrics have gaps: normalized scores are discarded, malformed output loses evidence, exact/schema rates use all stored run rows rather than terminal runs, error rate counts only provider errors, and cost exposes only total/average/exact-correct values. [EVALUATION.md](../EVALUATION.md) is the canonical definition and distinguishes it from current summary behavior; [TASK.md](../TASK.md) tracks remediation.
+This table summarizes the metric contract implemented by the evaluator, persistent evidence, summary and exports. Strict/normalized scores remain separate. [EVALUATION.md](../EVALUATION.md) owns denominators and the distinction between known cost subtotal and complete cost totals.
 
 | Metric | Meaning |
 |---|---|

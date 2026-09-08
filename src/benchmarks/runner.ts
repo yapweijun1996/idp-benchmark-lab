@@ -1,4 +1,9 @@
 import { getDb } from "../storage/db";
+import { AttemptBlocked, AttemptBudget } from "./budget";
+import { PricingService } from "../cost/pricingService";
+import { freezeInputs } from "./snapshot";
+import { attemptEvidence, outcomeFields } from "./evidence";
+import { withExecutionLease } from "./recovery";
 import type {
   BenchmarkIdentity,
   BenchmarkRun,
@@ -57,6 +62,7 @@ function backoffDelay(policy: RetryPolicy, attempt: number): number {
 export class BenchmarkRunner {
   private deps: RunnerDeps;
   private stopRequested = false;
+  private stopWaiters = new Set<() => void>();
 
   constructor(deps: Partial<RunnerDeps> = {}) {
     this.deps = { db: deps.db ?? getDb(), ...deps } as RunnerDeps;
@@ -64,9 +70,25 @@ export class BenchmarkRunner {
 
   requestStop(): void {
     this.stopRequested = true;
+    this.stopWaiters.forEach((wake) => wake());
+  }
+
+  private async waitForRetry(ms: number): Promise<void> {
+    if (this.stopRequested) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let wake!: () => void;
+    const stopped = new Promise<void>((resolve) => { wake = resolve; this.stopWaiters.add(wake); });
+    const delay = this.deps.sleep ? this.deps.sleep(ms) : new Promise<void>((resolve) => { timer = setTimeout(resolve, ms); });
+    try { await Promise.race([stopped, delay]); }
+    finally { this.stopWaiters.delete(wake); if (timer !== undefined) clearTimeout(timer); }
   }
 
   async run(config: BenchmarkConfig): Promise<BenchmarkSuite> {
+    const frozenConfig = structuredClone(config);
+    return withExecutionLease(this.deps.db, () => this.runUnlocked(frozenConfig));
+  }
+  private async runUnlocked(config: BenchmarkConfig): Promise<BenchmarkSuite> {
+    config = structuredClone(config);
     if (!Number.isInteger(config.requestedRuns) || config.requestedRuns < 1) {
       throw new RunFailure({
         category: "invalid_request",
@@ -77,11 +99,11 @@ export class BenchmarkRunner {
     const db = this.deps.db;
     const now = new Date().toISOString();
 
-    const document = (await db.documents.get(config.documentId)) ?? getSessionDocument(config.documentId);
+    let document = (await db.documents.get(config.documentId)) ?? getSessionDocument(config.documentId);
     const profile = await db.extractionProfiles.get(config.profileId);
     const configRecord = await db.providerConfigs.get(config.providerConfigId);
     const golden = config.goldenId ? await db.goldenAnswers.get(config.goldenId) : undefined;
-    if (!document || !profile || !configRecord) {
+    if (!document || !profile || !configRecord || (config.goldenId && !golden)) {
       throw new RunFailure({
         category: "invalid_request",
         message: "Document, profile, or provider config not found.",
@@ -91,10 +113,22 @@ export class BenchmarkRunner {
 
     const concurrency = config.concurrency ?? 1;
     const retryPolicy = config.retryPolicy ?? DEFAULT_RETRY_POLICY;
+    if (!Number.isInteger(concurrency) || concurrency < 1 || !Number.isInteger(retryPolicy.maxAttempts) || retryPolicy.maxAttempts < 1 ||
+      !Number.isFinite(retryPolicy.baseDelayMs) || retryPolicy.baseDelayMs < 0 || !Number.isFinite(retryPolicy.maxDelayMs) || retryPolicy.maxDelayMs < 0) {
+      throw new Error("Concurrency and retry policy must have positive counts and finite nonnegative delays.");
+    }
+    const pricing = new PricingService(db);
+    const snapshot = (configRecord.pricingSnapshotId ? await pricing.get(configRecord.pricingSnapshotId) : await pricing.latestFor(configRecord.kind, configRecord.model)) ?? null;
+    const budget = new AttemptBudget(config.maxBudgetUsd, snapshot?.maximumAttemptCostSource?.trim() ? snapshot.maximumAttemptCostUsd : undefined);
+    let budgetStopReason: string | undefined;
+    const frozen = await freezeInputs(this.deps, { ...config, document, profile, config: configRecord, pricingSnapshot: snapshot }, golden, { ...config, concurrency, retryPolicy });
+    document = frozen.document;
     const suite: BenchmarkSuite = {
       id: crypto.randomUUID(),
       name: `Benchmark — ${profile.name} (x${config.requestedRuns})`,
-      identity: await this.buildIdentity({ config, document, profile, configRecord, golden, concurrency }),
+      identity: { ...await this.buildIdentity({ config, document, profile, configRecord, golden, concurrency }), effectiveInputSha256: frozen.hash },
+      evidenceVersion: 2,
+      snapshot: frozen.snapshot,
       requestedRuns: config.requestedRuns,
       concurrency,
       maxBudgetUsd: config.maxBudgetUsd,
@@ -106,7 +140,7 @@ export class BenchmarkRunner {
 
     let nextRunNumber = 1;
     let knownCost = 0;
-    let lastRunCost: number | undefined;
+    let hasKnownCost = false;
     let budgetStopped = false;
     let anySuccessful = false;
 
@@ -133,56 +167,104 @@ export class BenchmarkRunner {
         thinking: config.thinking,
         renderSettings: config.renderSettings,
         goldenJson: golden?.json,
+        pricingSnapshot: snapshot,
+        frozenImages: frozen.snapshot.inputImages,
       };
 
       let lastError: ReturnType<typeof normalizeFailure> | undefined;
       let lastAttempt = 0;
+      let blockedBeforeAttempt: "stop" | "budget" | undefined;
+      const attempts: NonNullable<BenchmarkRun["attempts"]> = [];
+      let runCost = 0;
+      let runCostKnown = true;
+      const runStarted = performance.now();
       for (let attempt = 1; attempt <= retryPolicy.maxAttempts; attempt += 1) {
-        lastAttempt = attempt;
+        let settle: ((cost?: number) => void) | undefined;
+        let providerReturned = false;
+        let attemptStartedAt = new Date().toISOString();
         try {
-          const outcome = await executeExtraction(this.deps, base);
+          const outcome = await executeExtraction(this.deps, { ...base, prepareAttempt: async () => {
+            await db.benchmarkRuns.put({ ...runBase, state: "running", attempts, providerCalls: lastAttempt, pendingAttempt: { number: lastAttempt + 1, preparedAt: new Date().toISOString() } });
+          }, beforeAttempt: () => {
+            if (this.stopRequested) {
+              blockedBeforeAttempt = "stop";
+              throw new AttemptBlocked("Stopped manually by the user.");
+            }
+            try { settle = budget.reserve(); }
+            catch (error) { blockedBeforeAttempt = "budget"; budgetStopped = true; budgetStopReason = budget.reason; throw error; }
+            lastAttempt += 1;
+            attemptStartedAt = new Date().toISOString();
+          } });
+          providerReturned = true;
+          settle?.(outcome.costSource === "flat" ? undefined : outcome.costUsd);
+          settle = undefined;
+          attempts.push(attemptEvidence(lastAttempt, attemptStartedAt, outcome));
+          runCost += outcome.costUsd ?? 0;
+          runCostKnown &&= outcome.costUsd !== undefined;
           anySuccessful = true;
-          const state = outcome.schemaValid ? ("succeeded" as const) : ("schema_invalid" as const);
+          const state = outcome.response.parseError ? "parse_error" : outcome.schemaValid ? ("succeeded" as const) : ("schema_invalid" as const);
           const run: BenchmarkRun = {
             ...runBase,
+            ...outcomeFields(outcome, profile.normalizationPolicy),
+            attempts,
             state,
-            latencyMs: outcome.latencyMs,
+            latencyMs: Math.round(performance.now() - runStarted),
             safeRawResponse: outcome.response.raw,
             parsedJson: outcome.response.json,
             schemaValid: outcome.schemaValid,
-            exactMatch: outcome.evaluation?.exactMatch,
+            exactMatch: outcome.evaluation?.exactMatch ?? (golden ? false : undefined),
+            exactMatchNormalized: outcome.evaluation?.exactMatchNormalized ?? (golden ? false : undefined),
             leafAccuracy: outcome.evaluation?.leafAccuracy.accuracy,
             rowAccuracy: rowAccuracyOf(outcome.evaluation),
             rowMatched: outcome.evaluation?.rowComparison.matchedRows,
             rowTotal: outcome.evaluation?.rowComparison.goldenRows,
             fieldMismatches: outcome.evaluation?.leafAccuracy.mismatches,
             outputHash: outcome.outputHash,
-            providerCalls: attempt,
+            providerCalls: lastAttempt,
             usage: outcome.response.usage,
-            costUsd: outcome.costUsd,
+            costUsd: runCostKnown ? runCost : undefined,
             finishedAt: new Date().toISOString(),
           };
           await db.benchmarkRuns.put(run);
-          lastRunCost = outcome.costUsd;
           if (outcome.costUsd !== undefined) {
             knownCost += outcome.costUsd;
+            hasKnownCost = true;
           }
           this.deps.onRunComplete?.(run);
           return;
         } catch (e) {
+          // Persistence/UI failures after a response must never trigger another paid request.
+          if (providerReturned) throw e;
+          const outcome = e instanceof RunFailure ? e.outcome : undefined;
+          settle?.();
+          if (e instanceof AttemptBlocked) break;
           lastError = normalizeFailure(e);
+          if (settle) {
+            attempts.push(attemptEvidence(lastAttempt, attemptStartedAt, outcome, lastError));
+            runCost += outcome?.costUsd ?? 0;
+            runCostKnown &&= outcome?.costUsd !== undefined;
+            if (outcome?.costUsd !== undefined) { knownCost += outcome.costUsd; hasKnownCost = true; }
+            await db.benchmarkRuns.put({ ...runBase, state: "running", attempts, providerCalls: lastAttempt });
+          }
           if (!lastError.retryable || attempt >= retryPolicy.maxAttempts) {
             break;
           }
-          await (this.deps.sleep ?? defaultSleep)(backoffDelay(retryPolicy, attempt));
+          await this.waitForRetry(backoffDelay(retryPolicy, attempt));
         }
       }
 
       // 取消语义：runner 的优雅 Stop 不 abort in-flight；只有 AbortError
       // （normalizeFailure 归一化为 "Run cancelled"）才产生 cancelled 终态。
-      const cancelled = lastError?.category === "provider" && lastError.message === "Run cancelled";
+      const cancelled = blockedBeforeAttempt === "stop" || blockedBeforeAttempt === "budget" || (lastError?.category === "provider" && lastError.message === "Run cancelled");
       const failedRun: BenchmarkRun = {
         ...runBase,
+        exactMatch: golden ? false : undefined,
+        exactMatchNormalized: golden ? false : undefined,
+        attempts,
+        latencyMs: Math.round(performance.now() - runStarted),
+        safeRawResponse: attempts.at(-1)?.raw,
+        usage: attempts.at(-1)?.usage,
+        costUsd: lastAttempt > 0 && runCostKnown ? runCost : undefined,
         state: cancelled ? "cancelled" : "provider_error",
         providerCalls: lastAttempt,
         error: lastError ?? { category: "unknown", message: "No attempts completed", retryable: false },
@@ -192,28 +274,10 @@ export class BenchmarkRunner {
       this.deps.onRunComplete?.(failedRun);
     };
 
-    // 预算规则（docs/COST_AND_PRICING.md）：
-    // 下一次运行的成本用「最近一次已确认成本」作为上界预估；当且仅当
-    // 已确认累计 + 该预估 严格超过上限时才停止启动新运行。若最近一次
-    // 成本未知（provider 未报告且无 pricing 快照），则无法保证上限，
-    // 按文档继续运行并在 stopReason 中说明。
-    let budgetStopReason: string | undefined;
+    // Every network attempt also reserves synchronously after asynchronous input preparation.
     const budgetWouldExceed = (): boolean => {
-      if (config.maxBudgetUsd === undefined) {
-        return false;
-      }
-      if (lastRunCost === undefined) {
-        return false;
-      }
-      const projected = knownCost + lastRunCost;
-      if (projected > config.maxBudgetUsd) {
-        budgetStopReason =
-          `Budget cap ${config.maxBudgetUsd} USD: confirmed spend ${knownCost.toFixed(6)} USD, ` +
-          `next run estimated at ${lastRunCost.toFixed(6)} USD based on the most recent run, ` +
-          `projected total ${projected.toFixed(6)} USD would exceed the cap — stopped starting new runs.`;
-        return true;
-      }
-      return false;
+      budgetStopReason = budget.reason;
+      return budgetStopReason !== undefined;
     };
 
     const worker = async (): Promise<void> => {
@@ -221,6 +285,7 @@ export class BenchmarkRunner {
         if (this.stopRequested) {
           return;
         }
+        if (nextRunNumber > config.requestedRuns) return;
         if (budgetWouldExceed()) {
           budgetStopped = true;
           return;
@@ -242,7 +307,7 @@ export class BenchmarkRunner {
     let status: BenchmarkSuite["status"];
     if (budgetStopped) {
       status = "budget_stopped";
-    } else if (this.stopRequested && attempted < config.requestedRuns) {
+    } else if (this.stopRequested) {
       status = "stopped";
     } else if (!anySuccessful) {
       status = "failed";
@@ -252,7 +317,7 @@ export class BenchmarkRunner {
     const finalSuite: BenchmarkSuite = {
       ...suite,
       status,
-      costUsdKnown: knownCost > 0 ? knownCost : undefined,
+      costUsdKnown: hasKnownCost ? knownCost : undefined,
       stopReason: budgetStopReason ?? (this.stopRequested && attempted < config.requestedRuns ? "Stopped manually by the user." : undefined),
       finishedAt: new Date().toISOString(),
     };
@@ -298,10 +363,6 @@ export class BenchmarkRunner {
       appBuild: typeof __APP_BUILD__ !== "undefined" ? __APP_BUILD__ : "0.1.0",
     };
   }
-}
-
-function defaultSleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function rowAccuracyOf(evaluation: import("./execute").RunOutcome["evaluation"]): number | undefined {

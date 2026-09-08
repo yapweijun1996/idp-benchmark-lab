@@ -97,11 +97,11 @@ describe("openaiAdapter.extract", () => {
     });
   });
 
-  it("reports unparseable JSON as a provider error", async () => {
+  it("retains unparseable JSON as response evidence", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ choices: [{ message: { content: "not json at all" } }] }));
-    await expect(openaiAdapter.extract(request, ctx)).rejects.toMatchObject({
-      category: "provider",
-      message: expect.stringMatching(/parseable/i),
+    await expect(openaiAdapter.extract(request, ctx)).resolves.toMatchObject({
+      raw: "not json at all",
+      parseError: expect.stringMatching(/parseable/i),
     });
   });
 

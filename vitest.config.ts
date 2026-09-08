@@ -25,6 +25,8 @@ export default defineConfig({
     ],
   },
   test: {
+    // Bound jsdom workers to avoid CPU/memory contention producing false timeouts.
+    maxWorkers: 2,
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],

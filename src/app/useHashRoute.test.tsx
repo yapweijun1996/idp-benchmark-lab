@@ -31,11 +31,11 @@ describe("useHashRoute", () => {
     const { result: benchmarks } = renderHook(() => useHashRoute());
     expect(benchmarks.current).toBe("new-benchmark");
 
-    setHash("#/documents");
+    act(() => setHash("#/documents"));
     const { result: documents } = renderHook(() => useHashRoute());
     expect(documents.current).toBe("library");
 
-    setHash("#/providers");
+    act(() => setHash("#/providers"));
     const { result: providers } = renderHook(() => useHashRoute());
     expect(providers.current).toBe("settings");
   });

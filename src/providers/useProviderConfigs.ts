@@ -22,20 +22,25 @@ export function useProviderConfigs(service?: ProviderConfigService): UseProvider
   const [configs, setConfigs] = useState<ProviderConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(true);
 
   const refresh = useCallback(async () => {
     try {
-      setConfigs(await svc.list());
+      const configs = await svc.list();
+      if (!mounted.current) return;
+      setConfigs(configs);
       setError(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (mounted.current) setError(e instanceof Error ? e.message : String(e));
     } finally {
-      setLoading(false);
+      if (mounted.current) setLoading(false);
     }
   }, [svc]);
 
   useEffect(() => {
+    mounted.current = true;
     void refresh();
+    return () => { mounted.current = false; };
   }, [refresh]);
 
   const save = useCallback(

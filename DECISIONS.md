@@ -48,7 +48,7 @@ Missing printed subtotal/GST/total remains `null` unless a profile explicitly re
 Quantities, prices, and amounts are strings in the canonical schema to avoid `5` vs `5.00` drift and locale formatting differences. Comparison stays character-sensitive. Numeric output is allowed only when the profile schema explicitly declares number types.
 
 ## ADR-016 Guided wizard is the primary entry point
-Home routes users into the six-step New Benchmark wizard. Bundled samples are normal document/template/Expected Result records and reuse the same execution engine; the retained inline `DemoBenchmarkCard` is not an active alternative workflow and should be removed or deliberately restored under TASK-070.
+Home routes users into the six-step New Benchmark wizard. Bundled samples are normal document/template/Expected Result records and reuse the same execution engine. The retired inline DemoBenchmarkCard and its obsolete tests have been removed.
 
 ## ADR-017 No built-in provider gateway
 The app does not create an offline/demo gateway or application-owned provider endpoint. Bundled samples do not include a provider config. Users configure OpenAI, Gemini, or a Custom OpenAI-compatible endpoint and provide credentials at runtime.
@@ -57,4 +57,13 @@ The app does not create an offline/demo gateway or application-owned provider en
 Model lists are suggestions, not an authoritative registry. OpenAI reasoning effort and Gemini thinking level are stored as provider settings and normalized into the run's reasoning/thinking input; adapters translate them to provider-specific payload fields. Support must be verified for the chosen live model.
 
 ## ADR-019 Localization uses explicit fallback
-The UI offers `en`, `zh`, `ms`, `ja`, and `vi`, persists the selection locally, and falls back to English or the source key when a translation is missing. This fallback keeps the app operable but is not proof of complete localization coverage (TASK-070).
+The UI offers `en`, `zh`, `ms`, `ja`, and `vi`, persists the selection locally, and falls back to English or the source key when a translation is missing. Coverage and fallback behavior have local regression evidence; target-device localization QA remains part of TASK-068.
+
+## ADR-020 Snapshot effective evidence before execution
+Suites own immutable effective inputs, profile/Golden versions, provider configuration, pricing and build identity. Canonical images are rendered once and frozen with the original PDF. This avoids mutable history and pixel changes between retries. Library session-only storage does not prevent a started benchmark from retaining its input as local evidence. Version-2 migration preserves records and labels legacy missing snapshots.
+
+## ADR-021 Budget bounds and interrupted requests remain conservative
+Hard-cap runs require a sourced provider-contract maximum per attempt, reserved synchronously before dispatch. Estimates and previous charges are not bounds. Unknown response billing consumes the reservation. Dispatch intent is journaled before the final Stop/budget gate; interrupted intent remains uncertain, never automatically replayed. Provider compliance with the declared bound is an external assumption, not something a browser can enforce at the billing system.
+
+## ADR-022 Portable binary persistence
+Persist PDF bytes as ArrayBuffer and reconstruct runtime Blobs. Windows Playwright WebKit rejected Blob writes in IndexedDB; the forward migration converts existing Blobs without discarding history. Backup wire data remains base64 and is hash-validated before restore.

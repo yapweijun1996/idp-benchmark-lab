@@ -4,7 +4,7 @@
  * images, and benchmark results must never be precached or runtime-cached.
  * Audited by src/security.audit.test.ts.
  */
-export const WORKBOX_GLOB_PATTERNS = ["**/*.{js,css,html,svg,png,ico,woff2}"];
+export const WORKBOX_GLOB_PATTERNS = ["**/*.{js,mjs,css,html,svg,png,ico,woff2}"];
 
 export const PWA_MANIFEST = {
   name: "IDP Benchmark Lab",

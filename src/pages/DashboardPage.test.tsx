@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { waitFor, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DashboardPage } from "./DashboardPage";
 import { useRunHistory } from "../benchmarks/useRunHistory";
@@ -66,7 +66,7 @@ describe("DashboardPage", () => {
 
     render(<DashboardPage />);
 
-    await vi.waitFor(() => expect(screen.getByRole("region", { name: /latest benchmark/i })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("region", { name: /latest benchmark/i })).toBeInTheDocument());
     expect(screen.getAllByText(/gemini-3-flash-lite/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/3\/5 runs/).length).toBeGreaterThan(0);
     // 3 runs: 2 exact → 66.7%
@@ -80,7 +80,7 @@ describe("DashboardPage", () => {
       refresh: vi.fn(() => Promise.resolve()),
     });
     render(<DashboardPage />);
-    await vi.waitFor(() => expect(screen.getByRole("region", { name: /guided benchmark/i })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("region", { name: /guided benchmark/i })).toBeInTheDocument());
     expect(screen.getByRole("heading", { name: /how it works/i })).toBeInTheDocument();
     expect(screen.getAllByText(/golden schema/i).length).toBeGreaterThan(0);
     expect(screen.getByRole("link", { name: /run benchmark step by step/i })).toHaveAttribute("href", "#/new-benchmark");
@@ -94,7 +94,7 @@ describe("DashboardPage", () => {
     await db.benchmarkSuites.put(suite);
     await db.benchmarkRuns.bulkPut([run(1, true), run(2, true)]);
     render(<DashboardPage />);
-    await vi.waitFor(() => expect(screen.getByText("1 benchmarks")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("1 benchmarks")).toBeInTheDocument());
     expect(screen.getByText("2 runs")).toBeInTheDocument();
   });
 
@@ -110,7 +110,7 @@ describe("DashboardPage", () => {
     });
 
     render(<DashboardPage />);
-    await vi.waitFor(() => expect(screen.getByRole("link", { name: /compare results/i })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("link", { name: /compare results/i })).toBeInTheDocument());
     expect(screen.getByRole("link", { name: /compare results/i })).toHaveAttribute("href", "#/compare");
   });
 
@@ -119,7 +119,7 @@ describe("DashboardPage", () => {
     await db.benchmarkSuites.put(suite);
     await db.benchmarkRuns.bulkPut([run(1, true)]);
     render(<DashboardPage />);
-    await vi.waitFor(() => expect(screen.getByRole("region", { name: /latest benchmark/i })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("region", { name: /latest benchmark/i })).toBeInTheDocument());
     expect(screen.queryByRole("link", { name: /compare results/i })).not.toBeInTheDocument();
   });
 });

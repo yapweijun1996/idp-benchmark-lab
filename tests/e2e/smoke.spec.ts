@@ -1,5 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+test("wizard remains navigable at phone and tablet widths", async ({ page }) => {
+  for (const width of [390, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto("/#/new-benchmark");
+    await expect(page.getByRole("heading", { name: "New Benchmark", exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continue →", exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
+  }
+});
+
 /**
  * Browser smoke (TASK-052 / TESTING.md): the built app loads, the shell
  * renders, hash routing works, and the core pages respond.
@@ -11,18 +21,10 @@ test("shell loads with navigation and the Home page", async ({ page }) => {
   await expect(page.getByRole("heading", { name: /^home$/i })).toBeVisible();
 });
 
-test("a first-time visitor sees a ready-to-run demo on Home with no setup", async ({ page }) => {
+test("Home routes visitors to the active wizard", async ({ page }) => {
   await page.goto("/#/home");
-  const demo = page.getByRole("region", { name: /demo benchmark/i });
-  await expect(demo).toBeVisible();
-  await expect(demo.getByText(/sample pdf/i)).toBeVisible();
-  await expect(demo.getByText(/extraction prompt/i)).toBeVisible();
-  await expect(demo.getByText(/json schema/i)).toBeVisible();
-  await expect(demo.getByText(/expected result/i)).toBeVisible();
-  await expect(demo.getByRole("radio", { name: "Gemini" })).toBeChecked();
-  await expect(demo.getByRole("radio", { name: "3" })).toBeChecked();
-  await expect(demo.getByRole("button", { name: /run benchmark/i })).toBeVisible();
-  await expect(demo.getByRole("link", { name: /upload my document/i })).toHaveAttribute("href", "#/new-benchmark");
+  await page.getByRole("link", { name: /Start benchmark/i }).click();
+  await expect(page.getByRole("heading", { name: "New Benchmark", exact: true })).toBeVisible();
 });
 
 test("hash routing reaches the Documents tab in Library", async ({ page }) => {

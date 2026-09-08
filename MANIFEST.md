@@ -39,6 +39,7 @@ Files:
 - `docs/PROMPT_CONTRACT.md`
 - `docs/PROVIDER_ADAPTER.md`
 - `docs/reviews/2026-09-08-production-readiness.md`
+- `docs/reviews/2026-09-08-production-remediation.md`
 - `examples/extraction-contract.example.json`
 - `examples/golden-popular-po.golden.json`
 - `examples/json-schema-canonical.example.json`

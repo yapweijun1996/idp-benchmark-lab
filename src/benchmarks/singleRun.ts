@@ -1,4 +1,7 @@
 import { getDb } from "../storage/db";
+import { freezeInputs } from "./snapshot";
+import { attemptEvidence, outcomeFields } from "./evidence";
+import { withExecutionLease } from "./recovery";
 import type {
   BenchmarkIdentity,
   BenchmarkRun,
@@ -61,14 +64,19 @@ export class SingleRunService {
   }
 
   async run(input: SingleRunInput, options: SingleRunOptions = {}): Promise<SingleRunResult> {
+    const frozenInput = structuredClone(input);
+    return withExecutionLease(this.deps.db, () => this.runUnlocked(frozenInput, options));
+  }
+  private async runUnlocked(input: SingleRunInput, options: SingleRunOptions): Promise<SingleRunResult> {
+    input = structuredClone(input);
     const db = this.deps.db;
     const now = new Date().toISOString();
 
-    const document = (await db.documents.get(input.documentId)) ?? getSessionDocument(input.documentId);
+    let document = (await db.documents.get(input.documentId)) ?? getSessionDocument(input.documentId);
     const profile = await db.extractionProfiles.get(input.profileId);
     const config = await db.providerConfigs.get(input.providerConfigId);
     const golden = input.goldenId ? await db.goldenAnswers.get(input.goldenId) : undefined;
-    if (!document || !profile || !config) {
+    if (!document || !profile || !config || (input.goldenId && !golden)) {
       throw new RunFailure({
         category: "invalid_request",
         message: "Document, profile, or provider config not found. Check your selections.",
@@ -76,7 +84,13 @@ export class SingleRunService {
       });
     }
 
+    const frozen = await freezeInputs(this.deps, { ...input, document, profile, config }, golden, input);
+    document = frozen.document;
     const suite = await this.createSuite({ input, document, profile, config, golden, now });
+    suite.evidenceVersion = 2;
+    suite.snapshot = frozen.snapshot;
+    suite.identity.effectiveInputSha256 = frozen.hash;
+    await db.benchmarkSuites.put(suite);
     const runBase: BenchmarkRun = {
       id: crypto.randomUUID(),
       suiteId: suite.id,
@@ -88,6 +102,9 @@ export class SingleRunService {
     await db.benchmarkRuns.put(runBase);
     await db.benchmarkRuns.put({ ...runBase, state: "running" });
 
+    let providerCalls = 0;
+    let attemptStartedAt = now;
+    let providerReturned = false;
     try {
       const outcome = await executeExtraction(this.deps, {
         document,
@@ -101,23 +118,31 @@ export class SingleRunService {
         renderSettings: input.renderSettings,
         signal: options.signal,
         goldenJson: golden?.json,
+        pricingSnapshot: frozen.snapshot.pricing,
+        frozenImages: frozen.snapshot.inputImages,
+        prepareAttempt: async () => { await db.benchmarkRuns.put({ ...runBase, state: "running", pendingAttempt: { number: 1, preparedAt: new Date().toISOString() } }); },
+        beforeAttempt: () => { options.signal?.throwIfAborted(); providerCalls += 1; attemptStartedAt = new Date().toISOString(); },
       });
-      const state = outcome.schemaValid ? ("succeeded" as const) : ("schema_invalid" as const);
+      providerReturned = true;
+      const state = outcome.response.parseError ? "parse_error" : outcome.schemaValid ? ("succeeded" as const) : ("schema_invalid" as const);
       const run: BenchmarkRun = {
         ...runBase,
+        ...outcomeFields(outcome, profile.normalizationPolicy),
+        attempts: [attemptEvidence(1, attemptStartedAt, outcome)],
         state,
         latencyMs: outcome.latencyMs,
         safeRawResponse: outcome.response.raw,
         parsedJson: outcome.response.json,
         schemaValid: outcome.schemaValid,
-        exactMatch: outcome.evaluation?.exactMatch,
+        exactMatch: outcome.evaluation?.exactMatch ?? (golden ? false : undefined),
+        exactMatchNormalized: outcome.evaluation?.exactMatchNormalized ?? (golden ? false : undefined),
         leafAccuracy: outcome.evaluation?.leafAccuracy.accuracy,
         rowAccuracy: rowAccuracyOf(outcome.evaluation),
         rowMatched: outcome.evaluation?.rowComparison.matchedRows,
         rowTotal: outcome.evaluation?.rowComparison.goldenRows,
         fieldMismatches: outcome.evaluation?.leafAccuracy.mismatches,
         outputHash: outcome.outputHash,
-        providerCalls: outcome.response.providerCalls,
+        providerCalls,
         usage: outcome.response.usage,
         costUsd: outcome.costUsd,
         finishedAt: new Date().toISOString(),
@@ -134,12 +159,21 @@ export class SingleRunService {
 
       return { suite: finalSuite, run, response: outcome.response };
     } catch (e) {
+      if (providerReturned) throw e;
       const err = normalizeFailure(e);
-      const cancelled = e instanceof DOMException && e.name === "AbortError";
+      const outcome = e instanceof RunFailure ? e.outcome : undefined;
+      const cancelled = (e instanceof DOMException && e.name === "AbortError") || err.message === "Run cancelled";
       const run: BenchmarkRun = {
         ...runBase,
+        attempts: providerCalls ? [attemptEvidence(1, attemptStartedAt, outcome, err)] : [],
+        exactMatch: golden ? false : undefined,
+        exactMatchNormalized: golden ? false : undefined,
+        latencyMs: outcome?.latencyMs,
+        safeRawResponse: outcome?.response.raw,
+        usage: outcome?.response.usage,
+        costUsd: outcome?.costUsd,
         state: cancelled ? "cancelled" : "provider_error",
-        providerCalls: 1,
+        providerCalls,
         error: err,
         finishedAt: new Date().toISOString(),
       };

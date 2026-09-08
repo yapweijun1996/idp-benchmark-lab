@@ -21,13 +21,13 @@ Exit: all remediation/verification gates have recorded evidence and the producti
 | --- | --- | --- |
 | 0 — Documentation seed | Product scope, contracts and planning documents | Reconciled with current code/review; requirements retained |
 | 1 — PWA foundation | React/Vite/TypeScript shell, IndexedDB, manifest/service worker, Pages workflow | Local build verified; live Pages/PWA lifecycle acceptance outstanding |
-| 2 — Single extraction | Local PDF preview, profiles/schema/Golden, adapters and single-run inspector | Failed-response evidence and historical-version guarantees need correction |
-| 3 — Benchmark harness | Repeated queue, concurrency, retry, Stop, cost/budget and run records | Per-attempt Stop/budget controls do not yet meet acceptance |
-| 4 — Evaluation | Exact/schema/field/row metrics, variants, heatmap, latency/cost | Normalized results calculated but not persisted/displayed |
-| 5 — Compare and portability | Comparison, JSON/CSV export, backup/import | Credential handling, restore validation and immutable inputs need correction |
-| 6 — Spike hardening/release | v0.1.0 delivery recorded in the historical task ledger | Current unit/browser gates fail; security and production QA remain open |
-| 7 — Guided UI | Six-item task navigation, six-step wizard, terminology and settings | Current primary workflow; browser extraction tests must target it |
-| 8 — Inline Home demo | Bundled fixtures, demo card, runtime PDF renderer wiring | The inline card is no longer mounted by Home; samples are available through the wizard |
+| 2 — Single extraction | Local PDF preview, profiles/schema/Golden, adapters and single-run inspector | Failed-response evidence and historical-version guarantees are remediated locally; live provider acceptance remains open |
+| 3 — Benchmark harness | Repeated queue, concurrency, retry, Stop, cost/budget and run records | Per-attempt Stop/budget controls are covered locally; live-origin acceptance remains open |
+| 4 — Evaluation | Exact/schema/field/row metrics, variants, heatmap, latency/cost | Strict and normalized results are persisted, displayed and exported separately |
+| 5 — Compare and portability | Comparison, JSON/CSV export, backup/import | Credential redaction, whole-backup validation and immutable inputs are remediated locally |
+| 6 — Spike hardening/release | v0.1.0 delivery recorded in the historical task ledger | Local unit/build/audit gates pass; the known Windows WebKit limitation and external release gates remain |
+| 7 — Guided UI | Six-item task navigation, six-step wizard, terminology and settings | Current primary workflow is covered by active-wizard browser checks |
+| 8 — Bundled samples | Bundled fixtures, runtime PDF renderer wiring and wizard entry points | Samples remain available through the wizard; the retired inline Home card and obsolete tests were removed |
 
 ## Post-Phase 8 implementation changes
 
@@ -40,13 +40,13 @@ The current code also includes changes that were not reflected in the original p
 - accuracy details in the wizard result view;
 - corrected Gemini `thinkingConfig.thinkingLevel` request mapping.
 
-These are delivered spike capabilities, not production acceptance. TASK-070 owns the remaining Home preset, history pagination, localization coverage, and retired-demo cleanup.
+These are delivered spike capabilities, not production acceptance. TASK-070 is complete locally; TASK-068 owns the remaining published-origin, provider/CORS, target-browser and PWA acceptance.
 
 ## Current user journey
 
-Home offers Start benchmark and routes into New Benchmark. The six steps are Document → What to Extract → Expected Result → Choose AI → Run Settings → Review & Run. Users can select a bundled sample or upload a PDF, choose a configured provider, and run a Quick Test or repeated Benchmark. Provider configuration/runtime key entry is available in Settings → AI Providers. Execution records persist locally, while the current Home/Runs/Compare query exposes only the newest 20 suites.
+Home offers Start benchmark and routes into New Benchmark. The six steps are Document → What to Extract → Expected Result → Choose AI → Run Settings → Review & Run. Users can select a bundled sample or upload a PDF, choose a configured provider, and run a Quick Test or repeated Benchmark. Provider configuration/runtime key entry is available in Settings → AI Providers. Execution records persist locally, and Home/Runs/Compare expose all retained suites through live queries.
 
-`DemoBenchmarkCard.tsx` and the older Home-targeted E2E cases still exist, but they do not describe the active entry point. See [DESIGN.md](DESIGN.md) for the current UI and [TESTING.md](TESTING.md) for verification gaps.
+The active wizard and retained-history behavior are covered by the current smoke and browser checks. See [DESIGN.md](DESIGN.md) for the current UI and [TESTING.md](TESTING.md) for verification gaps.
 
 ## Deferred
 

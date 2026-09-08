@@ -41,7 +41,7 @@ describe("seedDemoFixture", () => {
     const profile = await db.extractionProfiles.get(DEMO_PROFILE_ID);
     const golden = await db.goldenAnswers.get(DEMO_GOLDEN_ID);
     expect(document?.storageMode).toBe("indexeddb");
-    expect(document?.blob).toBeDefined();
+    expect(document?.blobBytes).toBeDefined();
     expect(profile?.jsonSchema).toBeDefined();
     expect(golden?.documentId).toBe(DEMO_DOCUMENT_ID);
     expect(golden?.profileId).toBe(DEMO_PROFILE_ID);

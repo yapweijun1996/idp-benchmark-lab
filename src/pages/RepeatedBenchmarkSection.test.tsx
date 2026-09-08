@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, waitFor, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RepeatedBenchmarkSection, type BenchmarkSelection } from "./RepeatedBenchmarkSection";
 import { saveAppSettings } from "../storage/settings";
@@ -32,14 +32,14 @@ describe("RepeatedBenchmarkSection", () => {
   it("preselects the run count saved in settings", async () => {
     await saveAppSettings({ defaultRunCount: 20 });
     render(<RepeatedBenchmarkSection selection={selection} />);
-    await vi.waitFor(() => expect(screen.getByRole("radio", { name: "20" })).toBeChecked());
+    await waitFor(() => expect(screen.getByRole("radio", { name: "20" })).toBeChecked());
   });
 
   it("keeps a manual run-count pick even if settings resolve afterwards", async () => {
     await saveAppSettings({ defaultRunCount: 20 });
     render(<RepeatedBenchmarkSection selection={selection} />);
     fireEvent.click(screen.getByRole("radio", { name: "10" }));
-    await vi.waitFor(() => expect(screen.getByRole("radio", { name: "10" })).toBeChecked());
+    await waitFor(() => expect(screen.getByRole("radio", { name: "10" })).toBeChecked());
     expect(screen.getByRole("radio", { name: "20" })).not.toBeChecked();
   });
 
@@ -55,7 +55,7 @@ describe("RepeatedBenchmarkSection", () => {
   it("requires a selection before starting", async () => {
     render(<RepeatedBenchmarkSection selection={{ ...selection, documentId: "" }} />);
     fireEvent.click(screen.getByRole("button", { name: /start benchmark/i }));
-    await vi.waitFor(() => expect(screen.getByText(/select a document, profile, and provider/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/select a document, profile, and provider/i)).toBeInTheDocument());
   });
 
   it("shows progress and a full summary after completion", async () => {
@@ -82,7 +82,7 @@ describe("RepeatedBenchmarkSection", () => {
     render(<RepeatedBenchmarkSection selection={selection} benchmarkFactory={factory} />);
     fireEvent.click(screen.getByRole("button", { name: /start benchmark/i }));
 
-    await vi.waitFor(() => expect(screen.getByRole("region", { name: /benchmark summary/i })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("region", { name: /benchmark summary/i })).toBeInTheDocument());
     // 5 preset: 4 succeeded + 1 provider error
     expect(screen.getByText(/attempted 5 of 5 runs/i)).toBeInTheDocument();
     expect(screen.getAllByText(/4 succeeded/i).length).toBeGreaterThan(0);
@@ -129,9 +129,9 @@ describe("RepeatedBenchmarkSection", () => {
     });
     render(<RepeatedBenchmarkSection selection={selection} benchmarkFactory={factory} />);
     fireEvent.click(screen.getByRole("button", { name: /start benchmark/i }));
-    await vi.waitFor(() => expect(screen.getByRole("button", { name: /stop/i })).toBeEnabled());
+    await waitFor(() => expect(screen.getByRole("button", { name: /stop/i })).toBeEnabled());
     fireEvent.click(screen.getByRole("button", { name: /stop/i }));
     expect(requestStop).toHaveBeenCalled();
-    resolveRun({} as never);
+    await act(async () => { resolveRun({} as never); });
   });
 });

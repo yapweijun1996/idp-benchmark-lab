@@ -75,7 +75,7 @@ export function SettingsPage() {
           </button>
         </div>
         <p className="doc-card__meta">
-          {t("Imports are validated before writing: structure, record ids, and secret-like fields are checked; invalid or poisoned backups are rejected without changing your data.")}
+          {t("Imports are validated before writing: entity fields, unique IDs, references, hashes, snapshot versions and nested credentials. Invalid backups leave existing data unchanged. Replace also clears runtime credentials.")}
         </p>
         {status ? (
           <p role={status.kind === "error" ? "alert" : "status"} className={status.kind === "error" ? "status-error" : "schema-ok"}>

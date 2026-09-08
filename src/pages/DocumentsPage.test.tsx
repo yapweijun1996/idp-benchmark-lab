@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { DocumentsPage } from "./DocumentsPage";
 import { useDocuments, type UseDocumentsResult } from "../documents/useDocuments";
@@ -43,9 +43,9 @@ describe("DocumentsPage", () => {
     expect(screen.getByRole("button", { name: /upload pdf/i })).toBeInTheDocument();
   });
 
-  it("lists documents with fingerprint and storage chip", () => {
+  it("lists documents with fingerprint and storage chip", async () => {
     useDocumentsMock.mockReturnValue({ ...emptyResult(), documents: [record], activeId: "doc-1" });
-    render(<DocumentsPage />);
+    await act(async () => { render(<DocumentsPage />); });
     expect(screen.getByText("golden-po.pdf")).toBeInTheDocument();
     expect(screen.getByText(/abcdef0123…/)).toBeInTheDocument();
     expect(screen.getByText("Session only")).toBeInTheDocument();
