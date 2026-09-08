@@ -2,11 +2,11 @@
 
 ## Decision
 
-**NO-GO for production; local remediation implemented.** The remaining gates require the user-published Pages revision, real browser BYOK/provider/CORS evidence and confirmation of WebKit/Safari offline behavior. The user will push to GitHub for testing. This task did not commit, publish, deploy or make paid requests.
+**NO-GO for production; local remediation implemented and committed.** The remaining gates require a passing browser matrix, a deployed Pages revision, real browser BYOK/provider/CORS evidence and confirmation of WebKit/Safari offline behavior. The user pushed commit `c4e8abe2afbba91f27de532c63d05fe7f13b2593` for testing; no deployment or paid request was made.
 
 The app remains a static Pages/PWA with direct provider adapters and no server. Home → New Benchmark is the active six-step flow. Dedicated keys and custom headers are ephemeral; suite evidence freezes effective inputs, versions, pricing and build identity. Strict/normalized metrics remain separate. All retained history is visible; translation fallback remains explicit.
 
-Read-only external check on 2026-09-08: `origin/main` remains `86ed35ff4e0ccbd8c306fba655f2c2791621baff`; the public Pages URL returns 200 but still serves the pre-remediation Home guidance, and public Actions run [34176237447](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34176237447) failed during its old unit-test step. This patch has not been pushed.
+Read-only external check on 2026-09-08: `origin/main` is `c4e8abe2afbba91f27de532c63d05fe7f13b2593`. Actions run [34184792553](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34184792553) passed lint, typecheck, unit tests, build and dependency audit, then failed at Browser acceptance on the reproduced WebKit offline reload error; Pages setup and deploy were skipped. The public Pages URL still returns the last successful pre-remediation revision and is not evidence for this patch.
 
 ## Local verification
 
@@ -18,4 +18,4 @@ Read-only external check on 2026-09-08: `origin/main` remains `86ed35ff4e0ccbd8c
 
 Detailed changes, exact limitations, official sources and the user-push acceptance checklist are in the [remediation report](docs/reviews/2026-09-08-production-remediation.md). The [original review](docs/reviews/2026-09-08-production-readiness.md) remains an unchanged historical baseline. [TASK.md](TASK.md) owns task status.
 
-The work is an uncommitted patch on `86ed35f`; prior user work was preserved. KB-MCP was consulted but returned no repository-specific acceptance evidence. No backend addition or architectural rewrite is needed to complete the external checks.
+The work is committed on `main`; prior user work was preserved. KB-MCP was consulted but returned no repository-specific acceptance evidence. No backend addition or architectural rewrite is needed to complete the external checks.

@@ -2,9 +2,9 @@
 
 ## Decision and scope
 
-**NO-GO for production; local remediation is ready for the remaining acceptance checks.** The user will push to GitHub and test with end-user BYOK in the browser. No application server, proxy, paid request, commit, push or deployment was introduced by this task.
+**NO-GO for production; local remediation is committed and ready for the remaining acceptance checks.** The user pushed commit `c4e8abe2afbba91f27de532c63d05fe7f13b2593` to GitHub for end-user BYOK browser testing. No application server, proxy, deployment or paid request was introduced by this task.
 
-The initial review at `26b0ae9` remains historical evidence. The current work is an uncommitted patch on `86ed35ff4e0ccbd8c306fba655f2c2791621baff`; pre-existing documentation work was preserved. Node 25.2.1, npm 11.6.2, Vitest 3.2.7 and Playwright 1.62.1 were used on Windows. The browser-tested build identity is `0.1.0+86ed35ff4e0ccbd8c306fba655f2c2791621baff.d450802b-179b-412a-84ae-16070b879113`.
+The initial review at `26b0ae9` remains historical evidence. The current work is committed as `c4e8abe2afbba91f27de532c63d05fe7f13b2593`; pre-existing documentation work was preserved. Node 25.2.1, npm 11.6.2, Vitest 3.2.7 and Playwright 1.62.1 were used on Windows. The pre-commit local browser-tested build identity was `0.1.0+86ed35ff4e0ccbd8c306fba655f2c2791621baff.d450802b-179b-412a-84ae-16070b879113`; a new build records the committed SHA.
 
 ## Remediated behavior
 
@@ -30,6 +30,7 @@ The hard-cap contract depends on an accurate, sourced provider maximum covering 
 | `npm run build` | Pass; 18 PWA precache entries including the PDF worker; main chunk 1,114.04 kB / 337.47 kB gzip remains above the advisory threshold |
 | `npm audit --json` and `npm audit --omit=dev --json` | Zero advisories |
 | `npm run test:e2e` | 45 passed, 1 failed (Windows WebKit offline reload), 2 skipped (non-Chromium update probes); 48 cases, 2.7 minutes |
+| GitHub Actions [34184792553](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34184792553) | Lint, typecheck, unit tests, build and audit passed; Browser acceptance failed at the same WebKit offline reload error; Pages setup/deploy skipped |
 | `git diff --check` | Pass |
 
 Browser checks use synthetic credentials and intercepted provider responses. They traverse the wizard, retain real PDF/image payloads, exercise malformed output, cap refusal and Stop, run 100 requests at concurrency 10, restore/export/reload, and recover interruption without replay. A synthetic 100-page PDF tests page discovery and bounded lazy preview; it is not a claim about worst-case scanned-document throughput. Phone/tablet viewport navigation is included. Local Chromium update testing changes/restores only generated `dist/sw.js`; Firefox/WebKit update copies are intentionally skipped to keep one writer.
@@ -52,7 +53,7 @@ KB-MCP was consulted with bounded relevant searches. Retrieved material concerne
 
 ## External acceptance still required
 
-1. Read-only public checks on 2026-09-08 found `origin/main` still at `86ed35ff4e0ccbd8c306fba655f2c2791621baff`, while this remediation remains uncommitted. The public Pages URL `https://yapweijun1996.github.io/idp-benchmark-lab/` returned HTTP 200, but its Home page still showed the old three-run/four-step guidance; it is therefore not evidence for this patch. The latest public Actions run [34176237447](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34176237447) for that SHA failed at the Test step and skipped Build/Deploy. The user must push this patch and record successful PR/main checks, deployed SHA, Pages URL and effective build identity. Branch protection and Pages environment settings were not changed.
+1. Read-only public checks on 2026-09-08 found `origin/main` at `c4e8abe2afbba91f27de532c63d05fe7f13b2593`. Actions run [34184792553](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34184792553) passed lint, typecheck, unit tests, build and audit but failed Browser acceptance at the reproduced WebKit offline reload error, so Pages setup/deploy were skipped. The public Pages URL `https://yapweijun1996.github.io/idp-benchmark-lab/` returned HTTP 200 but still serves the last successful pre-remediation revision; it is therefore not evidence for this patch. A future push must record successful PR/main checks, deployed SHA, Pages URL and effective build identity. Branch protection and Pages environment settings were not changed.
 2. From that Pages origin, use end-user BYOK and a user-selected spend limit to exercise OpenAI canonical images, Gemini native PDF/images, and the intended Custom endpoint. Record model ID, request mode, CORS/network result, schema result, redacted evidence, usage and provider billing reconciliation. Do not attach keys or unredacted HAR files.
 3. Validate installation, subpath scope, offline browsing and explicit update on the target devices, including actual Safari or Linux WebKit. Resolve the local WebKit offline failure in a supported environment before full sign-off.
 4. Record any remaining real-document limits and failure/recovery evidence. Do not infer actual provider accuracy, spend or network reachability from mocked CI.

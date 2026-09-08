@@ -2,7 +2,7 @@
 
 Goal: push -> CI test/build -> automatic Pages deployment.
 
-Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The public site currently serves the pre-remediation `main` revision; the remediation patch must be pushed before its origin can be tested. Provider CORS from that origin still requires the user's post-push checks.
+Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The remediation commit is pushed, but Actions run [34184792553](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34184792553) failed Browser acceptance at the reproduced WebKit offline reload error, so Pages still serves the last successful pre-remediation revision. Provider CORS from the deployed origin still requires the user's end-user BYOK checks.
 
 The reviewed workflow uses `checkout@v4`, `setup-node@v4`, `configure-pages@v5`, `upload-pages-artifact@v3`, and `deploy-pages@v4`, with a floating `lts/*` Node runtime. Package resolution comes from `package-lock.json`; the reviewed versions and advisory paths are recorded in [DEPENDENCIES.md](DEPENDENCIES.md).
 
