@@ -2,11 +2,11 @@
 
 ## Decision
 
-**NO-GO for production; local remediation and the WebKit acceptance fix are committed.** The remaining gates require a passing remote browser matrix, a deployed Pages revision, real browser BYOK/provider/CORS evidence and confirmation of WebKit/Safari offline behavior. The user pushed `8b532e4`; the local follow-up series contains the tested WebKit fix, refreshed Actions runtime versions, current Gemini model suggestions and synchronized evidence. The follow-up series is not yet pushed. No deployment or paid request was made.
+**NO-GO for production; local remediation, remote CI and Pages deployment are complete, while authorized live-provider evidence is still open.** The user pushed `90090be`; Actions run [34188671876](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34188671876) passed the full lint/typecheck/unit/build/audit/browser gate, and Pages deployment `6320937240` is successful. The remaining gate is an end-user BYOK run against the selected providers and custom endpoint, with CORS/network, schema, usage and billing evidence. No paid request or credential was made by the agent.
 
 The app remains a static Pages/PWA with direct provider adapters and no server. Home → New Benchmark is the active six-step flow. Dedicated keys and custom headers are ephemeral; suite evidence freezes effective inputs, versions, pricing and build identity. Strict/normalized metrics remain separate. All retained history is visible; translation fallback remains explicit.
 
-Read-only external check on 2026-09-08: `origin/main` is `8b532e42c1577ce7c0d102c274a013d490d05348`. Actions run [34185343749](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34185343749) passed lint, typecheck, unit tests, build and dependency audit, then failed at Browser acceptance on the old WebKit offline reload path; Pages setup and deploy were skipped. The local follow-up `9bbf744` changes that test to a page-initiated reload and the full matrix now passes locally. The public Pages URL still returns the last successful pre-remediation revision and is not evidence for the follow-up until its CI run succeeds.
+Read-only external check on 2026-09-08: `origin/main` is `90090be0c123c9044bbe3e8b2dc16f6b358672b5`. Actions run [34188671876](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34188671876) passed all required checks, including Chromium, Firefox and WebKit browser acceptance, and Pages deployment [6320937240](https://github.com/yapweijun1996/idp-benchmark-lab/deployments) reports success at `https://yapweijun1996.github.io/idp-benchmark-lab/`. The live origin returns HTTP 200 and the current wizard/update UI; public live-provider/CORS and paid-request evidence remains intentionally unrun.
 
 ## Local verification
 
@@ -18,4 +18,4 @@ Read-only external check on 2026-09-08: `origin/main` is `8b532e42c1577ce7c0d102
 
 Detailed changes, exact limitations, official sources and the user-push acceptance checklist are in the [remediation report](docs/reviews/2026-09-08-production-remediation.md). The [original review](docs/reviews/2026-09-08-production-readiness.md) remains an unchanged historical baseline. [TASK.md](TASK.md) owns task status.
 
-The work is committed on `main`; prior user work was preserved. The local follow-up series awaits the user's push and remote CI rerun. KB-MCP was consulted but returned no repository-specific acceptance evidence. No backend addition or architectural rewrite is needed to complete the external checks.
+The work is committed on `main`; prior user work was preserved and `main` matches `origin/main`. KB-MCP was consulted but returned no repository-specific acceptance evidence. No backend addition or architectural rewrite is needed; only the authorized end-user provider/CORS run remains before a production GO decision.

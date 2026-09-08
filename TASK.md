@@ -2,7 +2,7 @@
 
 Status values: `todo`, `in_progress`, `blocked`, `done`.
 
-Current production decision: **NO-GO**, with local remediation implemented on 2026-09-08. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and the [remediation evidence](docs/reviews/2026-09-08-production-remediation.md).
+Current production decision: **NO-GO**. Local remediation, remote CI and Pages deployment passed on 2026-09-08; authorized live-provider/CORS evidence is still required. See [PROJECT_STATUS.md](PROJECT_STATUS.md) and the [remediation evidence](docs/reviews/2026-09-08-production-remediation.md).
 
 ## Historical spike delivery
 
@@ -89,4 +89,4 @@ TASK-000..056 retain their original delivery status. `done` here does not certif
 | TASK-069 | Reconcile documentation with production review | done | TASK-057 | Status, current UI, known gaps, evidence and remediation ledger aligned; documentation-only validation completed |
 | TASK-070 | Reconcile post-MVP UX and history behavior | done | TASK-066 | Home run-count guidance matches supported presets; Runs/Compare expose or explicitly paginate all retained history and use truthful copy; localization coverage/fallback is defined and tested; retired inline-demo source/tests/comments are removed or intentionally restored |
 
-TASK-058..067 and TASK-070 have local implementation/regression evidence in the remediation report. TASK-068 remains blocked until the user pushes the local follow-up series and a new remote browser/Pages check succeeds; real end-user BYOK/provider/CORS checks and supported Safari/Linux WebKit verification also remain open. Actions run [34185343749](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34185343749) failed the old WebKit offline reload path, while the corrected full matrix passes locally. `origin/main` is `8b532e42c1577ce7c0d102c274a013d490d05348`, and the live Pages Home still serves the last successful pre-remediation revision. No publishing or paid requests were performed by the agent.
+TASK-058..067 and TASK-070 have implementation and regression evidence in the remediation report. TASK-068 remains blocked only for the authorized end-user provider/CORS run and its usage/billing reconciliation; remote browser/PWA/stress/interruption checks and Pages deployment now pass. Actions run [34188671876](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34188671876) passed the complete gate, `origin/main` is `90090be0c123c9044bbe3e8b2dc16f6b358672b5`, and the live Pages origin is updated. No credentials or paid requests were used by the agent.
