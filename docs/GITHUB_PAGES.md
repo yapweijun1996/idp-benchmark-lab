@@ -2,9 +2,19 @@
 
 Goal: push -> CI test/build -> automatic Pages deployment.
 
-Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The last published checkpoint is `a45980c`; its remote Actions/Pages evidence is retained in the remediation report. The PWA/i18n code commit `57458d7` is on `origin/main`; wait for its Actions/Pages rerun before relying on new remote evidence. The demo origin's CORS preflight and text Responses path pass, but a full image/PDF plus JSON provider contract from the deployed origin still requires the user's end-user BYOK checks.
+Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The last published checkpoint is `a45980c`; its remote Actions/Pages evidence is retained in the remediation report. The current branch adds the verified bounded Gateway Demo image contract, but its Actions/Pages rerun and full PDF acceptance are still pending.
 
 The workflow uses the current checked releases: `checkout@v7`, `setup-node@v7`, `configure-pages@v6`, `upload-pages-artifact@v4`, `upload-artifact@v7`, and `deploy-pages@v5`, with Node 24 pinned. Package resolution comes from `package-lock.json`; the reviewed versions and advisory paths are recorded in [DEPENDENCIES.md](DEPENDENCIES.md).
+
+The deployed static app can use the Gateway Demo browser profile at
+`https://gpt.yapweijun1996.com/demo`. The browser obtains an origin-bound
+15-minute session and sends `/demo/v1/responses` traffic directly; the app adds no
+backend or proxy. The profile batches canonical pages in groups of four and keeps
+provider traffic outside the service-worker cache. A live recheck on 2026-09-08
+confirmed Pages-origin session `201`, models `200`, Responses preflight `204`,
+one-image JSON `200`, four-image streaming `200` with usage, and five-image `400`
+`DEMO_IMAGE_COUNT_EXCEEDED`. Full PDF map/reduce, quota and remote CI evidence are
+still TASK-068 release gates.
 
 At implementation time, consult current official GitHub Pages documentation and use current supported Pages Actions; do not rely on stale action versions from planning docs.
 

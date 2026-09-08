@@ -15,6 +15,7 @@ export function attemptEvidence(number: number, startedAt: string, outcome?: Run
   return {
     number, startedAt, finishedAt: new Date().toISOString(), latencyMs: outcome?.latencyMs,
     raw: outcome?.response.raw, envelope: outcome?.response.envelope, usage: outcome?.response.usage,
-    parseError: outcome?.response.parseError, costUsd: outcome?.costUsd, costSource: outcome?.costSource, error,
+    parseError: outcome?.response.parseError, providerAttempts: outcome?.response.providerAttempts,
+    costUsd: outcome?.costUsd, costSource: outcome?.costSource, error,
   };
 }

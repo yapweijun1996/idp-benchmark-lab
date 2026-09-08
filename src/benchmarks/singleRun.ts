@@ -120,7 +120,7 @@ export class SingleRunService {
         goldenJson: golden?.json,
         pricingSnapshot: frozen.snapshot.pricing,
         frozenImages: frozen.snapshot.inputImages,
-        prepareAttempt: async () => { await db.benchmarkRuns.put({ ...runBase, state: "running", pendingAttempt: { number: 1, preparedAt: new Date().toISOString() } }); },
+        prepareAttempt: async () => { await db.benchmarkRuns.put({ ...runBase, state: "running", pendingAttempt: { number: providerCalls + 1, preparedAt: new Date().toISOString() } }); },
         beforeAttempt: () => { options.signal?.throwIfAborted(); providerCalls += 1; attemptStartedAt = new Date().toISOString(); },
       });
       providerReturned = true;

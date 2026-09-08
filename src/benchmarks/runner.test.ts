@@ -238,6 +238,23 @@ describe("Progress callback", () => {
 });
 
 describe("Hard budget cap", () => {
+  it("settles a known flat price after each successful request", async () => {
+    const adapter = fakeAdapter();
+    adapter.extract.mockResolvedValue(okResponse());
+    const { profile } = await seed();
+    await db.pricingSnapshots.put({ id: "flat-bound", provider: "gemini", model: "gemini-3-flash-lite", currency: "USD", flatPerRequest: 0.4, maximumAttemptCostUsd: 1, maximumAttemptCostSource: "Synthetic provider contract", effectiveAt: "2026-09-08" });
+    const suite = await runnerFor(adapter).run({
+      ...baseConfig,
+      profileId: profile.id,
+      requestedRuns: 3,
+      maxBudgetUsd: 1.8,
+    });
+
+    expect(suite.status).toBe("completed");
+    expect(adapter.extract).toHaveBeenCalledTimes(3);
+    expect(suite.costUsdKnown).toBeCloseTo(1.2, 9);
+  });
+
   it("stops before a run that would exceed the cap", async () => {
     const adapter = fakeAdapter();
     adapter.extract.mockResolvedValue(okResponse(1)); // 每次 $1（provider reported）

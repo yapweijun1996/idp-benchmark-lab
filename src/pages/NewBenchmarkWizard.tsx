@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { checkModeSupport } from "../providers/capabilityGate";
 import { adapterFor } from "../providers/registry";
+import { gatewayDemoMessageKey, isGatewayDemo } from "../providers/demoGateway";
 import { RunFailure, SingleRunService, type SingleRunResult } from "../benchmarks/singleRun";
 import { browserExecuteDeps } from "../documents/runtimeDeps";
 import { PdfPreview } from "../documents/PdfPreview";
@@ -162,6 +163,10 @@ export function NewBenchmarkWizard({ singleRunFactory, benchmarkFactory }: NewBe
         return;
       }
     }
+    if (selectedProvider && isGatewayDemo(selectedProvider) && mode !== "canonical_images") {
+      setFailure(t("Gateway Demo requires canonical images."));
+      return;
+    }
     if (modeSupport && !modeSupport.supported) {
       setFailure(`${t("Incompatible configuration")}: ${modeSupport.reason ?? t("The selected provider does not support this input mode.")}`);
       return;
@@ -183,7 +188,8 @@ export function NewBenchmarkWizard({ singleRunFactory, benchmarkFactory }: NewBe
       setResult(outcome);
     } catch (e) {
       if (e instanceof RunFailure) {
-        setFailure(e.error.category + ": " + e.error.message);
+        const message = selectedProvider && isGatewayDemo(selectedProvider) ? t(gatewayDemoMessageKey(e.error)) : e.error.message;
+        setFailure(e.error.category + ": " + message);
       } else {
         setFailure(e instanceof Error ? e.message : String(e));
       }
@@ -287,7 +293,11 @@ export function NewBenchmarkWizard({ singleRunFactory, benchmarkFactory }: NewBe
           <ProviderStep
             configs={providers.configs}
             providerConfigId={effectiveProviderConfigId}
-            onSelect={setProviderConfigId}
+            onSelect={(id) => {
+              setProviderConfigId(id);
+              const selected = providers.configs.find((config) => config.id === id);
+              if (selected && isGatewayDemo(selected)) setMode("canonical_images");
+            }}
             modeSupport={modeSupport}
           />
         ) : null}
@@ -304,6 +314,7 @@ export function NewBenchmarkWizard({ singleRunFactory, benchmarkFactory }: NewBe
             onTemperature={setTemperature}
             thinking={thinking}
             onThinking={setThinking}
+            gatewayDemo={selectedProvider ? isGatewayDemo(selectedProvider) : false}
           />
         ) : null}
 
@@ -325,6 +336,7 @@ export function NewBenchmarkWizard({ singleRunFactory, benchmarkFactory }: NewBe
                 <RepeatedBenchmarkSection
                   benchmarkFactory={benchmarkFactory}
                   unsupportedReason={modeSupport && !modeSupport.supported ? modeSupport.reason : undefined}
+                  gatewayDemo={selectedProvider ? isGatewayDemo(selectedProvider) : false}
                   selection={{
                     documentId: selectedDocumentId,
                     profileId: effectiveProfileId,
@@ -939,6 +951,7 @@ function RunSettingsStep({
   onTemperature,
   thinking,
   onThinking,
+  gatewayDemo,
 }: {
   runType: "quick" | "benchmark";
   onRunType: (v: "quick" | "benchmark") => void;
@@ -950,6 +963,7 @@ function RunSettingsStep({
   onTemperature: (v: string) => void;
   thinking: string;
   onThinking: (v: string) => void;
+  gatewayDemo: boolean;
 }) {
   const { t } = useI18n();
   return (
@@ -970,7 +984,7 @@ function RunSettingsStep({
       <fieldset className="mode-picker">
         <legend>{t("Input mode")}</legend>
         <label>
-          <input type="radio" name="wizard-mode" checked={mode === "native_pdf"} onChange={() => onMode("native_pdf")} />
+          <input type="radio" name="wizard-mode" checked={mode === "native_pdf"} disabled={gatewayDemo} onChange={() => onMode("native_pdf")} />
           {t("Send original PDF — best when the provider supports PDF input directly.")}
         </label>
         <label>
@@ -978,6 +992,8 @@ function RunSettingsStep({
           {t("Render pages as images — recommended for fair cross-provider comparisons.")}
         </label>
       </fieldset>
+
+      {gatewayDemo ? <p className="doc-card__meta" role="status">{t("Gateway Demo requires canonical images and sends up to 4 pages per request; larger documents are processed with additional map/reducer calls.")}</p> : null}
 
       <details open={advancedOpen} onToggle={(e) => onAdvancedOpen(e.currentTarget.open)}>
         <summary>{t("Advanced settings")}</summary>

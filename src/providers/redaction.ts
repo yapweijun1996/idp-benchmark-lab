@@ -25,6 +25,9 @@ export function redactText(text: string, values: ReadonlySet<string> = credentia
   }
   return safe
     .replace(/\b(?:Bearer|Basic)\s+[A-Za-z0-9._~+/-]+=*/gi, "[REDACTED]")
+    // Provider/gateway credential prefixes must be safe even when an error is
+    // captured before the runtime credential registry sees the value.
+    .replace(/\b(?:dmo|gw|sk)_[A-Za-z0-9._~+/-]+=*/gi, "[REDACTED]")
     .replace(/("(?:authorization|proxy-authorization|cookie|set-cookie|api[-_]?key|x[-_][\w-]*(?:key|token|secret)|access[-_]?token|refresh[-_]?token|client[-_]?secret)"\s*:\s*")[^"\r\n]*/gi, "$1[REDACTED]")
     .replace(/(https?:\/\/)[^\s/@]+@/gi, "$1[REDACTED]@")
     .replace(/([?&](?:api[-_]?key|access[-_]?token|token|secret|password)=)[^&#\s"]+/gi, "$1[REDACTED]");

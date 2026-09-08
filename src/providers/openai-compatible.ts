@@ -1,5 +1,6 @@
 import { getRuntimeHeaders } from "./keys";
 import { bodyText, errorFromStatus, extractJson, fetchJson } from "./common";
+import { extractGatewayDemo, isGatewayDemo, testGatewayDemoConnection } from "./demoGateway";
 import type {
   NormalizedExtractionRequest,
   NormalizedExtractionResponse,
@@ -14,6 +15,7 @@ interface CustomSettings {
   useJsonObject?: boolean;
   apiStyle?: "chat_completions" | "responses";
   capabilityOverrides?: Partial<ProviderCapabilities>;
+  endpointProfile?: "gateway_demo";
 }
 
 function settingsOf(ctx: ProviderContext): CustomSettings {
@@ -54,6 +56,7 @@ export const customAdapter: ProviderAdapter = {
   },
 
   async testConnection(ctx: ProviderContext) {
+    if (isGatewayDemo(ctx.config)) return testGatewayDemoConnection(ctx);
     const base = baseUrlOf(ctx);
     const s = settingsOf(ctx);
     const headers = buildHeaders(ctx);
@@ -101,6 +104,7 @@ export const customAdapter: ProviderAdapter = {
   },
 
   async extract(request: NormalizedExtractionRequest, ctx: ProviderContext): Promise<NormalizedExtractionResponse> {
+    if (isGatewayDemo(ctx.config)) return extractGatewayDemo(request, ctx);
     const base = baseUrlOf(ctx);
     const s = settingsOf(ctx);
     if (request.mode !== "canonical_images") {

@@ -11,6 +11,7 @@ import { buildBackup, importBackup } from "../export/backup";
 import { summarizeSuite } from "./summary";
 import { recoverAbandonedRecords } from "./recovery";
 import type { ProviderAdapter } from "../providers/types";
+import type { GatewayProviderAttempt } from "../providers/demoGateway";
 import type { BenchmarkRun } from "../storage/types";
 
 const databases: IdpDatabase[] = [];
@@ -88,6 +89,30 @@ it("retains failed attempt costs, timing, errors and redacted envelopes before a
   expect(run.costUsd).toBe(0.2);
   expect(run.attempts?.[0]?.latencyMs).toBeGreaterThanOrEqual(0);
   expect(JSON.stringify(run)).not.toContain("synthetic-production-test-credential");
+});
+it("keeps aggregate cost unknown when a dispatched child request may still be billed", async () => {
+  const { db, adapter, deps, input } = await fixture();
+  const attemptedAt = new Date().toISOString();
+  const child: GatewayProviderAttempt = {
+    meta: { phase: "map", index: 1, total: 2 },
+    startedAt: attemptedAt,
+    finishedAt: attemptedAt,
+    latencyMs: 4,
+    usage: { inputTokens: 12, outputTokens: 3 },
+    error: { category: "network", message: "connection lost", retryable: true },
+  };
+  vi.mocked(adapter.extract).mockRejectedValue({
+    category: "network",
+    message: "connection lost",
+    retryable: true,
+    evidence: { raw: "partial", json: undefined, usage: { inputTokens: 12, outputTokens: 3 }, providerCalls: 1, providerAttempts: [child] },
+  });
+  await new BenchmarkRunner({ ...deps, sleep: async () => undefined }).run({ ...input, requestedRuns: 1, retryPolicy: { maxAttempts: 1, baseDelayMs: 0, maxDelayMs: 0 } });
+  const run = (await db.benchmarkRuns.toArray())[0]!;
+  expect(run.providerCalls).toBe(1);
+  expect(run.usage).toEqual({ inputTokens: 12, outputTokens: 3 });
+  expect(run.costUsd).toBeUndefined();
+  expect(run.attempts?.[0]?.providerAttempts).toHaveLength(1);
 });
 it("persists malformed JSON with usage, timing and the parse_error state", async () => {
   const { db, adapter, deps, input } = await fixture();

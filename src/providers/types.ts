@@ -5,6 +5,30 @@ export type ProviderError = NormalizedError & { evidence?: NormalizedExtractionR
 
 export type { ProviderConfig, ProviderKind };
 
+export type GatewayRequestMeta = {
+  phase: "map" | "reduce";
+  index: number;
+  total: number;
+  pageFrom?: number;
+  pageTo?: number;
+};
+
+export interface ProviderRequestLease {
+  settle(costUsd?: number): void;
+}
+
+export type ProviderRequestCostSource = "provider_reported" | "usage_snapshot" | "flat" | "unknown";
+
+export interface ProviderRequestSettlement {
+  costUsd?: number;
+  costSource: ProviderRequestCostSource;
+}
+
+export interface ProviderRequestGate {
+  beforeRequest(meta: GatewayRequestMeta): Promise<ProviderRequestLease>;
+  afterResponse(lease: ProviderRequestLease | undefined, response?: NormalizedExtractionResponse, error?: unknown): ProviderRequestSettlement | void;
+}
+
 export interface ProviderCapabilities {
   nativePdf: boolean;
   imageInput: boolean;
@@ -20,10 +44,12 @@ export interface ProviderContext {
   config: ProviderConfig;
   apiKey: string;
   signal?: AbortSignal;
+  /** Optional per-network-request Stop/budget/evidence gate. */
+  requestGate?: ProviderRequestGate;
 }
 
 export interface PageImage {
-  mimeType: "image/png" | "image/jpeg";
+  mimeType: "image/png" | "image/jpeg" | "image/webp";
   dataUrl: string;
 }
 
@@ -36,6 +62,8 @@ export interface NormalizedExtractionRequest {
   prompt: string;
   temperature?: number;
   thinking?: string;
+  /** Internal adapter phase; not persisted or sent to providers. */
+  requestPhase?: "map" | "reduce";
 }
 
 export interface NormalizedUsage {
@@ -55,6 +83,8 @@ export interface NormalizedExtractionResponse {
   usage?: NormalizedUsage;
   providerReportedCostUsd?: number;
   providerCalls: number;
+  /** Redacted evidence for each map/reduce HTTP request in a logical run. */
+  providerAttempts?: import("./demoGateway").GatewayProviderAttempt[];
 }
 
 export interface ConnectionResult {

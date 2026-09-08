@@ -179,7 +179,7 @@ export class BenchmarkRunner {
       let runCostKnown = true;
       const runStarted = performance.now();
       for (let attempt = 1; attempt <= retryPolicy.maxAttempts; attempt += 1) {
-        let settle: ((cost?: number) => void) | undefined;
+        const callsBeforeAttempt = lastAttempt;
         let providerReturned = false;
         let attemptStartedAt = new Date().toISOString();
         try {
@@ -190,15 +190,15 @@ export class BenchmarkRunner {
               blockedBeforeAttempt = "stop";
               throw new AttemptBlocked("Stopped manually by the user.");
             }
-            try { settle = budget.reserve(); }
+            let lease: (costUsd?: number) => void;
+            try { lease = budget.reserve(); }
             catch (error) { blockedBeforeAttempt = "budget"; budgetStopped = true; budgetStopReason = budget.reason; throw error; }
             lastAttempt += 1;
             attemptStartedAt = new Date().toISOString();
+            return { settle: lease };
           } });
           providerReturned = true;
-          settle?.(outcome.costSource === "flat" ? undefined : outcome.costUsd);
-          settle = undefined;
-          attempts.push(attemptEvidence(lastAttempt, attemptStartedAt, outcome));
+          attempts.push(attemptEvidence(attempt, attemptStartedAt, outcome));
           runCost += outcome.costUsd ?? 0;
           runCostKnown &&= outcome.costUsd !== undefined;
           anySuccessful = true;
@@ -236,11 +236,18 @@ export class BenchmarkRunner {
           // Persistence/UI failures after a response must never trigger another paid request.
           if (providerReturned) throw e;
           const outcome = e instanceof RunFailure ? e.outcome : undefined;
-          settle?.();
-          if (e instanceof AttemptBlocked) break;
+          if (e instanceof AttemptBlocked) {
+            // Preserve the concrete Stop/budget refusal on the run record so
+            // the UI does not fall back to a misleading "No attempts" error.
+            lastError = normalizeFailure(e);
+            break;
+          }
           lastError = normalizeFailure(e);
-          if (settle) {
-            attempts.push(attemptEvidence(lastAttempt, attemptStartedAt, outcome, lastError));
+          // Persist only a logical attempt that actually dispatched at least
+          // one provider request. A pre-dispatch Stop/budget refusal carries
+          // its reason on the run without inventing zero-call evidence.
+          if (lastAttempt > callsBeforeAttempt || (outcome?.response.providerAttempts?.length ?? 0) > 0) {
+            attempts.push(attemptEvidence(attempt, attemptStartedAt, outcome, lastError));
             runCost += outcome?.costUsd ?? 0;
             runCostKnown &&= outcome?.costUsd !== undefined;
             if (outcome?.costUsd !== undefined) { knownCost += outcome.costUsd; hasKnownCost = true; }

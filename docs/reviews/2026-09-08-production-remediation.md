@@ -2,7 +2,7 @@
 
 ## Decision and scope
 
-**NO-GO for production; local remediation and the PWA/i18n follow-up pass local checks, while a full live-provider contract remains open.** The last published checkpoint is `a45980c`; its Actions run [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) passed the complete gate, and Pages deployment `6321054280` is successful at `https://yapweijun1996.github.io/idp-benchmark-lab/`. The PWA/i18n code commit `57458d7` is now on `origin/main`; its remote rerun is pending, while this spike-evidence documentation update remains local. A controlled demo session and connection request were made only through the user's gateway; no gateway or provider key was sent from the browser.
+**NO-GO for production; local remediation, PWA/i18n, and Gateway Demo integration pass local checks, while a full live-provider contract remains open.** The last published checkpoint is `a45980c`; its Actions run [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) passed the complete gate, and Pages deployment `6321054280` is successful at `https://yapweijun1996.github.io/idp-benchmark-lab/`. The current branch adds the bounded browser image contract and requires a new remote Actions/Pages rerun. A controlled demo session and connection request were made only through the user's gateway; no gateway or provider key was sent from the browser.
 
 The initial review at `26b0ae9` remains historical evidence. The published remediation series through `a45980c` includes the WebKit test fix, Actions runtime refresh, current model suggestions and synchronized evidence. This follow-up adds a build-information boundary, versioned update prompt, sub-path-safe entry-point icons, PWA policy tests, and five-locale UI coverage. Node 25.2.1, npm 11.6.2, Vitest 3.2.7 and Playwright 1.62.1 were used on Windows. Each build records its committed SHA in the run identity; the Pages deployment and remote gate identify the published revision.
 
@@ -26,10 +26,10 @@ The hard-cap contract depends on an accurate, sourced provider maximum covering 
 | --- | --- |
 | `npm run lint` | Pass; two Fast Refresh warnings in the shared `src/i18n.tsx` module, no errors |
 | `npm run typecheck` | Pass |
-| `npm test` | 59 files, 322 tests passed; no unhandled errors or React act warnings. The final TypeScript option, pre-dispatch classification and versioned PWA/i18n corrections were followed by passing focused regressions. |
-| `npm run build` | Pass; 18 PWA precache entries including the PDF worker; main chunk 1,125.88 kB / 341.34 kB gzip remains above the advisory threshold |
+| `npm test` | 60 files, 340 tests passed; no unhandled errors or React act warnings. Gateway Demo session, SSE, batching, reducer, gate, cost and redaction regressions are included. |
+| `npm run build` | Pass; 18 PWA precache entries including the PDF worker; main chunk 1,162.92 kB / 351.16 kB gzip remains above the advisory threshold |
 | `npm audit --json` and `npm audit --omit=dev --json` | Zero advisories |
-| `npm run test:e2e` | 49 passed, 2 skipped (non-Chromium update probes); 51 cases across Chromium, Firefox and WebKit, 2.3 minutes |
+| `npm run test:e2e` | 55 passed, 2 skipped (non-Chromium update probes); 57 cases across Chromium, Firefox and WebKit, about 2.4 minutes |
 | GitHub Actions [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) | Complete required gate passed: lint, typecheck, unit tests, build, audit, Chromium/Firefox/WebKit browser acceptance and evidence upload |
 | GitHub Pages deployment `6321054280` | Published checkpoint `a45980c`; status success; public origin returned HTTP 200 and the current six-step wizard/update UI |
 | `git diff --check` | Pass |
@@ -40,7 +40,7 @@ After the final pre-dispatch error-classification correction, the focused hard-b
 
 The initial concurrent browser matrix had Firefox initialization and WebKit stress navigation timeouts. Browser tests now use one worker (including locally), actual sidebar navigation after reload and a scoped 120-second allowance for the 100-run restore test. Failures were retained while investigating, rather than relabelled as application passes.
 
-Windows WebKit automation reload returned `WebKit encountered an internal error` after a service worker was ready and controlling the page. A minimal standalone HTML + cache-only service worker reproduced the same failure without application code. Playwright's page-initiated `location.reload()` path avoids the affected automation reload path; `9bbf744` applies that driver only to the offline assertion. The corrected full local matrix is 49 passed and 2 skipped; remote CI and actual Safari/Linux WebKit still require verification.
+Windows WebKit automation reload returned `WebKit encountered an internal error` after a service worker was ready and controlling the page. A minimal standalone HTML + cache-only service worker reproduced the same failure without application code. Playwright's page-initiated `location.reload()` path avoids the affected automation reload path; `9bbf744` applies that driver only to the offline assertion. The earlier corrected baseline was 52 passed and 2 skipped; the current Gateway Demo matrix is 55 passed and 2 skipped. Remote CI and actual Safari/Linux WebKit still require verification.
 
 ## Official contract and pricing research
 
@@ -60,3 +60,46 @@ KB-MCP was consulted with bounded relevant searches. Retrieved material concerne
 4. Record any remaining real-document limits and failure/recovery evidence. Do not infer actual provider accuracy, spend or network reachability from mocked CI.
 
 No production GO is claimed while the live-provider/CORS and any required target-device gates remain unverified.
+
+## Gateway Demo contract recheck (2026-09-08)
+
+The earlier `DEMO_MEDIA_DISABLED` observation above is historical. A subsequent
+Pages-origin spike against the user's demo gateway verified the updated bounded
+multimodal route:
+
+| Probe | Result |
+| --- | --- |
+| `POST https://gpt.yapweijun1996.com/demo/session` with `project_id: github-pages` | `201`; response token matched the short-lived `dmo_` shape (token value not retained) |
+| `GET /demo/v1/models` | `200`; `demo-fast` advertised Responses, streaming, multimodal, and structured-output capabilities |
+| `OPTIONS /demo/v1/responses` from `https://yapweijun1996.github.io` | `204`; exact `Access-Control-Allow-Origin` matched the Pages origin |
+| one 1×1 PNG `input_image`, non-streaming Responses | `200` JSON with usage |
+| four 1×1 PNGs, `stream:true` Responses | `200` SSE with Responses completion events and usage |
+| five 1×1 PNGs in one request | `400` `DEMO_IMAGE_COUNT_EXCEEDED` |
+
+The frontend now adds a `gateway_demo` profile to the existing OpenAI-compatible
+adapter. It obtains the session in the browser, keeps the token in the memory
+credential store, forces canonical images and Responses, packs at most four images
+per request, and sends larger documents through sequential map calls and a text-only
+model reducer. Each child call receives the existing Stop and hard-budget gate and
+contributes usage, timing, cost basis, provider-call count, and redacted attempt
+evidence. A later child failure is retained as partial evidence and is not
+automatically replayed.
+
+The latest guide also documents optional Turnstile on session creation and server-side
+`demo-fast` routing across healthy providers. The current registered Pages project does
+not require Turnstile; the adapter accepts a runtime challenge token when a future browser
+integration supplies one, and keeps the gateway's route/quota result as provider evidence.
+
+A real-browser run of the un-deployed branch from `http://127.0.0.1:5173` received
+`403` from `/demo/session` because that development Origin is not registered by the
+gateway. The UI kept the session in the missing-key state and the browser had no
+`dmo_` value in `sessionStorage`. This confirms the Origin gate and prevents treating a
+local CORS/session rejection as a provider or extraction failure; the full browser
+map/reduce check must run from the registered Pages Origin (or after the gateway owner
+registers a development Origin).
+
+The current branch has local unit/UI coverage for session validation, four/five-page
+packing, SSE parsing, reducer invocation, partial-failure redaction, and memory-only
+session persistence. TASK-068 remains **NO-GO** until the deployed branch proves a
+real four-page PDF, a five-page map/reduce run, quota and billing reconciliation,
+remote Actions/Pages revision, and Chromium/Firefox/WebKit storage/cache evidence.

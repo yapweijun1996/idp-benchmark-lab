@@ -6,6 +6,7 @@ import { browserExecuteDeps } from "../documents/runtimeDeps";
 import { getAppSettings } from "../storage/settings";
 import type { BenchmarkRun, BenchmarkSuite, InputMode } from "../storage/types";
 import { useI18n } from "../i18n";
+import { gatewayDemoMessageKey } from "../providers/demoGateway";
 
 export interface BenchmarkSelection {
   documentId: string;
@@ -36,11 +37,13 @@ export function RepeatedBenchmarkSection({
   selection,
   benchmarkFactory,
   unsupportedReason,
+  gatewayDemo = false,
 }: {
   selection: BenchmarkSelection;
   benchmarkFactory?: BenchmarkFactory;
   /** 由父级能力门禁计算：非空时禁止启动基准并展示原因。 */
   unsupportedReason?: string;
+  gatewayDemo?: boolean;
 }) {
   const { t } = useI18n();
   const [preset, setPresetState] = useState<number>(5);
@@ -118,14 +121,14 @@ export function RepeatedBenchmarkSection({
       setSummary(summarizeSuite(collectedRunsRef.current, preset));
     } catch (e) {
       if (e instanceof RunFailure) {
-        setError(e.error.category + ": " + e.error.message);
+        setError(e.error.category + ": " + (gatewayDemo ? t(gatewayDemoMessageKey(e.error)) : e.error.message));
       } else {
         setError(e instanceof Error ? e.message : String(e));
       }
     } finally {
       setRunning(false);
     }
-  }, [selection, preset, concurrency, budget, benchmarkFactory, unsupportedReason, t]);
+  }, [selection, preset, concurrency, budget, benchmarkFactory, unsupportedReason, gatewayDemo, t]);
 
   const stop = () => {
     runnerRef.current?.requestStop();

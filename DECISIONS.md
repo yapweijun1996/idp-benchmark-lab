@@ -59,6 +59,34 @@ Model lists are suggestions, not an authoritative registry. OpenAI reasoning eff
 ## ADR-019 Localization uses explicit fallback
 The UI offers `en`, `zh`, `ms`, `ja`, and `vi`, persists the selection locally, and uses the canonical key registry to require translations for every user-facing literal in each locale. Provider/model names, file names, hashes, and other data-derived technical values intentionally fall back to the English source key. Coverage and fallback behavior have local regression evidence; target-device localization QA remains part of TASK-068.
 
+## ADR-023: Gateway Demo origin-bound sessions and bounded page batching
+
+The Gateway Demo is represented by the existing `openai_compatible` provider with
+`settings.endpointProfile: "gateway_demo"`; no provider kind or application backend
+is added. The browser calls the registered gateway origin's `/demo/session` endpoint
+with `project_id: "github-pages"` and holds the returned 15-minute `dmo_…` token in
+the existing memory-only credential store. It is never written to provider config,
+session storage, IndexedDB, backups, exports, logs, or service-worker cache. The
+origin remains visible to the browser so the gateway can enforce exact Pages-origin
+CORS and session policy.
+
+Canonical page images are sent in sequential groups of at most four, subject to the
+gateway's 4 MiB per-image, 8 MiB total-image, 12 MiB body, and 800 output-token
+limits. A multi-group document sends each map result as untrusted text to the same
+Responses route for a model reducer; reducer inputs are recursively grouped when
+the body bound would be exceeded. This keeps page order and the canonical schema at
+the adapter boundary while avoiding local arithmetic or silent inference. The
+adapter does not use `previous_response_id`: each request is independently bounded,
+auditable, and safe to retry only before any successful child call.
+
+Every map/reduce request invokes the shared Stop and hard-budget gate and settles its
+own reservation from that request's usage/cost. The accounting source and amount
+(or `unknown`) are retained with each child attempt. Child timing, usage, redacted
+raw and envelope evidence, and errors are retained under the logical run. A later child
+failure is non-retryable and preserves completed evidence; the adapter never replays
+the full document automatically. TASK-068 remains NO-GO until the live PDF,
+quota/cost, remote deployment, and browser evidence gates pass.
+
 ## ADR-020 Snapshot effective evidence before execution
 Suites own immutable effective inputs, profile/Golden versions, provider configuration, pricing and build identity. Canonical images are rendered once and frozen with the original PDF. This avoids mutable history and pixel changes between retries. Library session-only storage does not prevent a started benchmark from retaining its input as local evidence. Version-2 migration preserves records and labels legacy missing snapshots.
 

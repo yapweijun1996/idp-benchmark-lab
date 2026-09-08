@@ -107,7 +107,7 @@ export type BenchmarkSuite = {
   evidenceVersion?: 2;
   snapshot?: {
     document: Omit<DocumentRecord, "blob" | "blobBytes">;
-    inputImages?: { mimeType: "image/png" | "image/jpeg"; dataUrl: string }[];
+    inputImages?: { mimeType: "image/png" | "image/jpeg" | "image/webp"; dataUrl: string }[];
     inputBase64: string;
     profile: ExtractionProfile;
     golden?: GoldenAnswer;
@@ -164,6 +164,7 @@ export type BenchmarkRun = {
     costSource?: string;
     error?: NormalizedError;
     parseError?: string;
+    providerAttempts?: unknown[];
   }[];
   exactMatchNormalized?: boolean;
   leafAccuracyNormalized?: number;

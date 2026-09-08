@@ -6,6 +6,14 @@ The saved default is `canonical_images`. Gemini supports both modes in the curre
 
 Capability overrides may exist in a Custom provider's settings, but the current extraction implementation still rejects non-canonical input. Do not use an override to claim native-PDF support without implementing and testing the request path.
 
+The `Gateway Demo` profile is a bounded Custom OpenAI-compatible Responses path.
+It always uses canonical rendered images. Pages are sent sequentially in batches of
+up to four images (4 MiB per image, 8 MiB total images, 12 MiB serialized body), so
+documents larger than four pages remain selectable and use additional map requests
+plus a text-only model reducer. The gateway quota and 800-output-token limit still
+apply to every child request; local code performs no arithmetic or silent field
+inference during reduction.
+
 ## Native PDF
 
 The provider receives the original PDF using its supported API path.

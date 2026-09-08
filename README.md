@@ -4,7 +4,7 @@ A static, BYOK (Bring Your Own Key) PWA demo/spike for benchmarking Intelligent 
 
 ## Project status
 
-**Status:** package version 0.1.0; production **NO-GO** until TASK-068 external acceptance completes. Local remediation implements credential redaction, per-attempt Stop/budget gates, frozen evidence, validated backups, separate scoring, CI gates, a versioned PWA update prompt, and complete UI translation coverage. See the [remediation evidence](docs/reviews/2026-09-08-production-remediation.md).
+**Status:** package version 0.1.0; production **NO-GO** until TASK-068 external acceptance completes. Local remediation implements credential redaction, per-request Stop/budget gates, frozen evidence, validated backups, separate scoring, CI gates, a versioned PWA update prompt, complete UI translation coverage, and the bounded Gateway Demo browser profile. See the [remediation evidence](docs/reviews/2026-09-08-production-remediation.md).
 
 **Reviewed code:** current working tree; the last published checkpoint is recorded in [PROJECT_STATUS.md](PROJECT_STATUS.md).
 
@@ -15,6 +15,24 @@ A static, BYOK (Bring Your Own Key) PWA demo/spike for benchmarking Intelligent 
 **Try it:** Home → **Start benchmark** → the **New Benchmark** wizard. Select one of two auto-seeded bundled samples or upload a PDF, review or override the extraction fields/schema and Expected Result, choose a configured AI provider, then use Quick Test or a 5/10/20/50/100-run Benchmark. Provider configuration and runtime API-key entry are available in Settings → AI Providers. The old inline Home demo card is not the active entry point.
 
 Use non-sensitive samples and restricted BYOK credentials for live acceptance. Hard-cap execution requires a verified provider-contract maximum per attempt; missing bounds stop before any request. Starting a benchmark retains its PDF bytes and, in image mode, rendered images in local evidence and backups.
+
+### Gateway Demo
+
+Settings → AI Providers includes a `Gateway Demo` preset for the registered Pages
+origin. Connect first to obtain a 15-minute origin-bound session; the `dmo_…` token
+is memory-only and is never saved in provider config, IndexedDB, backups, exports,
+logs, or service-worker cache. The preset forces canonical page images and the
+Responses API. It sends at most four images per request (4 MiB per image, 8 MiB total
+images, 12 MiB body) and uses sequential map calls plus a model reducer for larger
+PDFs. Gateway quota, rate/session limits, and the 800-output-token ceiling remain in
+force. A failed child call after a successful batch is retained as partial evidence
+and is not automatically replayed.
+The gateway may route the `demo-fast` alias across healthy providers server-side; the
+browser records the public alias and each request's usage/evidence rather than claiming a
+fixed upstream provider.
+If the gateway enables Turnstile for a deployment, the static preset needs a browser
+challenge integration before that project can connect; no Turnstile or provider secret is
+bundled or persisted by this app.
 
 See [current status and verification](PROJECT_STATUS.md), [tasks](TASK.md), and the [original review](docs/reviews/2026-09-08-production-readiness.md). The PWA/i18n code is on GitHub; wait for the Actions and Pages rerun before relying on new remote evidence. No provider credentials are required for CI.
 

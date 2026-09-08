@@ -1,4 +1,5 @@
 import { canonicalJson } from "../evaluation/canonical";
+import { AttemptBlocked } from "./budget";
 import { blobToArrayBuffer } from "../documents/blob";
 import { sha256Hex } from "../documents/hash";
 import { composePrompt } from "../profiles/composePrompt";
@@ -9,6 +10,7 @@ import { PricingService } from "../cost/pricingService";
 import { getApiKey } from "../providers/keys";
 import { captureRedactor, redact } from "../providers/redaction";
 import { adapterFor } from "../providers/registry";
+import { isGatewayDemo } from "../providers/demoGateway";
 import type { IdpDatabase } from "../storage/db";
 import type {
   DocumentRecord,
@@ -23,6 +25,9 @@ import type {
   NormalizedExtractionResponse,
   ProviderAdapter,
   ProviderError,
+  GatewayRequestMeta,
+  ProviderRequestLease,
+  ProviderRequestSettlement,
 } from "../providers/types";
 import {
   DEFAULT_RENDER_SETTINGS,
@@ -60,8 +65,8 @@ export interface ExecuteInput {
   goldenJson?: unknown;
   /** null freezes an explicitly unavailable price instead of rereading mutable configuration. */
   pricingSnapshot?: PricingSnapshot | null;
-  beforeAttempt?: () => void;
-  prepareAttempt?: () => Promise<void>;
+  beforeAttempt?: (meta?: GatewayRequestMeta) => void | ProviderRequestLease;
+  prepareAttempt?: (meta?: GatewayRequestMeta) => Promise<void>;
 }
 
 export interface RunOutcome {
@@ -123,28 +128,76 @@ export async function executeExtraction(deps: ExecuteDeps, input: ExecuteInput):
   const prompt = composePrompt(input.promptOverride ?? profile.basePrompt, extractionContract, schema);
   const request = await buildRequest(deps, input, blob, prompt);
 
-  await input.prepareAttempt?.();
-  input.beforeAttempt?.();
+  const pricing = new PricingService(db);
+  const snapshot = input.pricingSnapshot !== undefined ? input.pricingSnapshot ?? undefined : config.pricingSnapshotId
+    ? await pricing.get(config.pricingSnapshotId)
+    : await pricing.latestFor(config.kind, config.model);
+
+  const settleRequest = (lease: ProviderRequestLease | undefined, response?: NormalizedExtractionResponse): ProviderRequestSettlement | undefined => {
+    if (!lease) return undefined;
+    const requestCost = estimateCost({
+      providerReportedCostUsd: response?.providerReportedCostUsd,
+      usage: response?.usage,
+      snapshot,
+      flatPerRequest: typeof snapshot?.flatPerRequest === "number" ? snapshot.flatPerRequest : undefined,
+    });
+    // A completed response can settle a flat/usage estimate. A lost response
+    // cannot prove billing, so keep the reservation and report unknown cost.
+    const settled = response !== undefined && requestCost.usd !== undefined;
+    lease.settle(settled ? requestCost.usd : undefined);
+    return settled ? { costUsd: requestCost.usd, costSource: requestCost.source } : { costSource: "unknown" };
+  };
+
+  const createRequestGate = () => ({
+    beforeRequest: async (meta: GatewayRequestMeta): Promise<ProviderRequestLease> => {
+      await input.prepareAttempt?.(meta);
+      const lease = input.beforeAttempt?.(meta);
+      return lease ?? { settle: () => undefined };
+    },
+    afterResponse: (lease: ProviderRequestLease | undefined, response?: NormalizedExtractionResponse): ProviderRequestSettlement | undefined => {
+      return settleRequest(lease, response);
+    },
+  });
+
   let response: NormalizedExtractionResponse;
   let failure: NormalizedError | undefined;
-  try { response = redactEvidence(await adapter.extract(request, { config, apiKey, signal: input.signal })); }
+  try {
+    if (isGatewayDemo(config)) {
+      response = redactEvidence(await adapter.extract(request, { config, apiKey, signal: input.signal, requestGate: createRequestGate() }));
+    } else {
+      const meta: GatewayRequestMeta = { phase: "map", index: 1, total: 1 };
+      await input.prepareAttempt?.(meta);
+      const lease = input.beforeAttempt?.(meta);
+      try {
+        response = redactEvidence(await adapter.extract(request, { config, apiKey, signal: input.signal }));
+      } catch (error) {
+        settleRequest(lease && typeof lease === "object" ? lease : undefined, undefined);
+        throw error;
+      }
+      settleRequest(lease && typeof lease === "object" ? lease : undefined, response);
+    }
+  }
   catch (error) {
+    // A generic provider has no adapter layer to retain a pre-dispatch gate
+    // refusal. Let the runner classify it directly so no synthetic provider
+    // call or attempt evidence is created. The Gateway Demo adapter preserves
+    // partial map/reduce evidence itself before this point.
+    if (error instanceof AttemptBlocked) throw error;
     failure = redactEvidence(normalizeFailure(error));
     const evidence = error && typeof error === "object" && "evidence" in error ? (error as ProviderError).evidence : undefined;
     response = redactEvidence(evidence ?? { raw: "", json: undefined, providerCalls: 1 });
   }
 
   const schemaCheck = validateData(response.json, schema);
-  const pricing = new PricingService(db);
-  const snapshot = input.pricingSnapshot !== undefined ? input.pricingSnapshot ?? undefined : config.pricingSnapshotId
-    ? await pricing.get(config.pricingSnapshotId)
-    : await pricing.latestFor(config.kind, config.model);
-  const cost = estimateCost({
-    providerReportedCostUsd: response.providerReportedCostUsd,
-    usage: response.usage,
-    snapshot,
-    flatPerRequest: typeof snapshot?.flatPerRequest === "number" ? snapshot.flatPerRequest : undefined,
-  });
+  const hasFailedProviderAttempt = response.providerAttempts?.some((attempt) => Boolean(attempt.error)) ?? false;
+  const cost = hasFailedProviderAttempt
+    ? { usd: undefined, source: "unknown" as CostSource }
+    : estimateCost({
+        providerReportedCostUsd: response.providerReportedCostUsd,
+        usage: response.usage,
+        snapshot,
+        flatPerRequest: typeof snapshot?.flatPerRequest === "number" ? snapshot.flatPerRequest : undefined,
+      });
 
   const latencyMs = Math.round(performance.now() - startedAt);
   const outputHash = response.json === undefined ? undefined : await sha256String(canonicalJson(response.json));

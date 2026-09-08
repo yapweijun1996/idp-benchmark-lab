@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PricingEditor } from "./PricingEditor";
 import { adapterFor } from "../providers/registry";
 import { useProviderConfigs } from "../providers/useProviderConfigs";
 import { clearApiKey, getApiKey, isKeyRememberedForTab, setApiKey } from "../providers/keys";
-import type { ConnectionResult, ProviderContext } from "../providers/types";
+import type { ConnectionResult, ProviderContext, ProviderError } from "../providers/types";
 import type { ProviderConfig, ProviderKind } from "../storage/types";
 import { useI18n } from "../i18n";
+import {
+  acquireGatewayDemoSession,
+  gatewayDemoDefaults,
+  gatewayDemoMessageKey,
+  gatewayDemoSession,
+  forgetGatewayDemoSession,
+  rememberGatewayDemoSession,
+} from "../providers/demoGateway";
 
 interface CardForm {
   model: string;
@@ -14,12 +22,13 @@ interface CardForm {
   apiStyle: "chat_completions" | "responses";
   reasoningEffort: string;
   thinkingLevel: string;
+  endpointProfile: "" | "gateway_demo";
 }
 
 const DEFAULTS: Record<ProviderKind, CardForm> = {
-  openai: { model: "gpt-5.4-mini", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "" },
-  gemini: { model: "gemini-3.5-flash-lite", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "" },
-  openai_compatible: { model: "local-model", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "" },
+  openai: { model: "gpt-5.4-mini", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "", endpointProfile: "" },
+  gemini: { model: "gemini-3.5-flash-lite", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "", endpointProfile: "" },
+  openai_compatible: { model: "local-model", baseUrl: "", customHeaders: "", apiStyle: "chat_completions", reasoningEffort: "", thinkingLevel: "", endpointProfile: "" },
 };
 
 const REASONING_EFFORT_OPTIONS = ["none", "low", "medium", "high", "xhigh", "max"] as const;
@@ -36,8 +45,16 @@ const MODEL_OPTIONS: Record<ProviderKind, readonly string[]> = {
     "gemini-3-flash-lite",
     "gemini-3-pro",
   ],
-  openai_compatible: ["local-model"],
+  openai_compatible: ["local-model", "demo-fast"],
 };
+
+function gatewayMessage(t: (key: string) => string, error: unknown): string {
+  if (error && typeof error === "object" && "message" in error && typeof (error as { message?: unknown }).message === "string") {
+    const providerError = error as Pick<ProviderError, "status" | "message">;
+    return t(gatewayDemoMessageKey(providerError));
+  }
+  return error instanceof Error ? error.message : String(error);
+}
 
 export function ProvidersPage() {
   const { t } = useI18n();
@@ -94,6 +111,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
           apiStyle: existing.settings.apiStyle === "responses" ? "responses" : "chat_completions",
           reasoningEffort: typeof existing.settings.reasoningEffort === "string" ? existing.settings.reasoningEffort : "",
           thinkingLevel: typeof existing.settings.thinkingLevel === "string" ? existing.settings.thinkingLevel : "",
+          endpointProfile: existing.settings.endpointProfile === "gateway_demo" ? "gateway_demo" : "",
         }
       : DEFAULTS[kind],
   );
@@ -102,8 +120,30 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
   const [reveal, setReveal] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [sessionExpiresAt, setSessionExpiresAt] = useState<string | undefined>(() => gatewayDemoSession(existing?.id ?? "")?.expiresAt);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const demo = kind === "openai_compatible" && form.endpointProfile === "gateway_demo";
+  useEffect(() => {
+    if (!demo || !existing?.id) return;
+    const syncSession = () => {
+      const session = gatewayDemoSession(existing.id);
+      setSessionExpiresAt(session?.expiresAt);
+      if (!session && getApiKey(existing.id)?.startsWith("dmo_")) {
+        // Do not leave an expired demo token available for a later click.
+        clearApiKey(existing.id);
+        setApiKeyState("");
+        setRemember(false);
+        setSessionExpired(true);
+      } else if (session) {
+        setSessionExpired(false);
+      }
+    };
+    syncSession();
+    const timer = window.setInterval(syncSession, 30_000);
+    return () => window.clearInterval(timer);
+  }, [demo, existing?.id]);
   const buildSettings = (customHeaders: Record<string, string>): Record<string, unknown> => {
-    const settings: Record<string, unknown> = { ...existing?.settings, customHeaders };
+    const settings: Record<string, unknown> = { ...existing?.settings };
     if (kind === "openai") {
       if (form.reasoningEffort) settings.reasoningEffort = form.reasoningEffort;
       else delete settings.reasoningEffort;
@@ -114,9 +154,40 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
       delete settings.reasoningEffort;
     } else {
       settings.apiStyle = form.apiStyle;
+      if (demo) {
+        const defaults = gatewayDemoDefaults();
+        settings.endpointProfile = "gateway_demo";
+        settings.gatewayOrigin = defaults.origin;
+        settings.gatewaySessionPath = defaults.sessionPath;
+        settings.gatewayProjectId = defaults.projectId;
+        settings.apiStyle = "responses";
+        delete settings.customHeaders;
+      } else if (Object.keys(customHeaders).length > 0) {
+        delete settings.endpointProfile;
+        delete settings.gatewayOrigin;
+        delete settings.gatewaySessionPath;
+        delete settings.gatewayProjectId;
+        settings.customHeaders = customHeaders;
+      } else {
+        delete settings.endpointProfile;
+        delete settings.gatewayOrigin;
+        delete settings.gatewaySessionPath;
+        delete settings.gatewayProjectId;
+        delete settings.customHeaders;
+      }
     }
+    if (kind !== "openai_compatible") settings.customHeaders = customHeaders;
     return settings;
   };
+  const buildConfig = (id?: string): Omit<ProviderConfig, "id"> & { id?: string } => ({
+    id,
+    kind,
+    name: demo ? "Gateway Demo" : kind === "openai" ? "OpenAI" : kind === "gemini" ? "Gemini" : "Custom OpenAI-compatible",
+    baseUrl: kind === "openai_compatible" ? (demo ? gatewayDemoDefaults().baseUrl : form.baseUrl.trim() || undefined) : undefined,
+    model: demo ? gatewayDemoDefaults().model : form.model.trim(),
+    settings: buildSettings({}),
+    pricingSnapshotId: existing?.model === form.model.trim() ? existing.pricingSnapshotId : undefined,
+  });
   const save = async () => {
     let customHeaders: Record<string, string> = {};
     if (form.customHeaders.trim()) {
@@ -129,22 +200,49 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
     }
     try {
       const saved = await onSave({
-        id: existing?.id,
-        kind,
-        name: kind === "openai" ? "OpenAI" : kind === "gemini" ? "Gemini" : "Custom OpenAI-compatible",
-        baseUrl: kind === "openai_compatible" ? form.baseUrl.trim() || undefined : undefined,
-        model: form.model.trim(),
+        ...buildConfig(existing?.id),
         settings: buildSettings(customHeaders),
-        pricingSnapshotId: existing?.model === form.model.trim() ? existing.pricingSnapshotId : undefined,
       });
       if (apiKey.trim()) {
-        setApiKey(saved.id, apiKey.trim(), { rememberForTab: remember });
+        setApiKey(saved.id, apiKey.trim(), { rememberForTab: demo ? false : remember });
       } else {
         clearApiKey(saved.id);
+        if (demo) {
+          forgetGatewayDemoSession(saved.id);
+          setSessionExpiresAt(undefined);
+          setSessionExpired(true);
+        }
       }
-      setMessage(`${t("Saved. The API key stays in this browser tab only")}${remember ? ` (${t("kept until this tab closes")})` : ` (${t("memory only")})`}.`);
+      if (!demo) forgetGatewayDemoSession(saved.id);
+      const remembered = !demo && remember;
+      setMessage(`${t("Saved. The API key stays in this browser tab only")}${remembered ? ` (${t("kept until this tab closes")})` : ` (${t("memory only")})`}.`);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : String(e));
+    }
+  };
+
+  const connectDemo = async () => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const defaults = gatewayDemoDefaults();
+      const saved = existing ?? await onSave({
+        ...buildConfig(undefined),
+        baseUrl: defaults.baseUrl,
+        model: defaults.model,
+        settings: buildSettings({}),
+      });
+      const session = await acquireGatewayDemoSession({ origin: defaults.origin, sessionPath: defaults.sessionPath, projectId: defaults.projectId });
+      setApiKey(saved.id, session.token, { rememberForTab: false });
+      rememberGatewayDemoSession(saved.id, session);
+      setApiKeyState(session.token);
+      setSessionExpiresAt(session.expiresAt);
+      setSessionExpired(false);
+      setMessage(t("Gateway Demo session connected for 15 minutes; the token stays memory-only."));
+    } catch (e) {
+      setMessage(demo ? gatewayMessage(t, e) : e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -153,29 +251,34 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
     setMessage(null);
     try {
       const key = apiKey.trim() || getApiKey(existing?.id ?? "");
+      if (demo && !key) {
+        setMessage(t("Connect a Gateway Demo session first."));
+        return;
+      }
       if (!key) {
         setMessage(t("Enter an API key first."));
         return;
       }
-      if (!form.model.trim()) {
+      if (!demo && !form.model.trim()) {
         setMessage(t("Enter a model id first."));
         return;
       }
-      const config: ProviderConfig = {
-        id: existing?.id ?? "unsaved",
-        kind,
-        name: kind,
-        model: form.model.trim(),
-        baseUrl: kind === "openai_compatible" ? form.baseUrl.trim() || undefined : undefined,
-        settings: buildSettings({}),
-      };
+      const configDraft = buildConfig(existing?.id ?? "unsaved");
+      const config: ProviderConfig = { ...configDraft, id: configDraft.id! };
       const ctx: ProviderContext = { config, apiKey: key ?? "" };
       const result = await adapterFor(kind).testConnection(ctx);
-      onTestResult(result);
-      setMessage(result.message);
+      const displayed = demo ? { ...result, message: gatewayMessage(t, result.error ?? { message: result.message }) } : result;
+      onTestResult(displayed);
+      if (demo && result.error?.status === 401 && existing?.id) {
+        clearApiKey(existing.id);
+        forgetGatewayDemoSession(existing.id);
+        setApiKeyState("");
+        setSessionExpiresAt(undefined);
+        setSessionExpired(true);
+      }
+      setMessage(displayed.message);
     } catch (e) {
-      const message = e instanceof Error ? e.message : String(e);
-      setMessage(message);
+      setMessage(demo ? gatewayMessage(t, e) : e instanceof Error ? e.message : String(e));
     } finally {
       setBusy(false);
     }
@@ -192,7 +295,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
     ? "OpenAI"
     : kind === "gemini"
       ? "Gemini"
-      : t("Custom OpenAI-compatible");
+      : demo ? t("Gateway Demo") : t("Custom OpenAI-compatible");
   const removeProvider = () => {
     if (!existing) return;
     if (window.confirm(`${t("Remove the")} ${providerLabel} ${t("provider configuration from this browser?")}`)) {
@@ -214,6 +317,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
           aria-controls={`provider-model-options-${kind}`}
           list={`provider-model-options-${kind}`}
           value={form.model}
+          disabled={demo}
           onChange={(e) => setForm({ ...form, model: e.target.value })}
         />
         <datalist id={`provider-model-options-${kind}`}>
@@ -250,6 +354,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
             type="text"
             placeholder="https://api.example.com/v1"
             value={form.baseUrl}
+            disabled={demo}
             onChange={(e) => setForm({ ...form, baseUrl: e.target.value })}
           />
         </label>
@@ -257,9 +362,32 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
 
       {kind === "openai_compatible" ? (
         <>
+          <div className="toolbar provider-preset-actions">
+            <button
+              type="button"
+              className="btn"
+              onClick={() => {
+                const defaults = gatewayDemoDefaults();
+                setForm({ ...form, endpointProfile: "gateway_demo", baseUrl: defaults.baseUrl, model: defaults.model, apiStyle: "responses", customHeaders: "" });
+                setSessionExpired(false);
+              }}
+            >
+              {t("Use Gateway Demo preset")}
+            </button>
+            {demo ? (
+              <button type="button" className="btn" onClick={() => void connectDemo()} disabled={busy}>
+                {busy ? t("Connecting…") : t("Connect demo session")}
+              </button>
+            ) : null}
+          </div>
+          {demo ? (
+            <p className="doc-card__meta" role="status">
+              {t("Gateway Demo sends canonical pages in batches of up to 4 images; larger PDFs use additional map and reducer requests.")} {sessionExpiresAt ? `${t("Session expires")}: ${new Date(sessionExpiresAt).toLocaleTimeString()}.` : sessionExpired ? t("Demo session expired; connect again.") : t("No active demo session.")}
+            </p>
+          ) : null}
           <label className="field">
-          <span>{t("API format")}</span>
-            <select value={form.apiStyle} onChange={(e) => setForm({ ...form, apiStyle: e.target.value as CardForm["apiStyle"] })}>
+            <span>{t("API format")}</span>
+            <select value={demo ? "responses" : form.apiStyle} disabled={demo} onChange={(e) => setForm({ ...form, apiStyle: e.target.value as CardForm["apiStyle"] })}>
               <option value="responses">{t("OpenAI Responses API")}</option>
               <option value="chat_completions">{t("Chat Completions API")}</option>
             </select>
@@ -271,26 +399,26 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
       ) : null}
 
       <label className="field">
-        <span>{t("API key (memory-only by default)")}</span>
+        <span>{demo ? t("Demo session token (memory-only)") : t("API key (memory-only by default)")}</span>
         <span className="key-row">
           <input
             type={reveal ? "text" : "password"}
             aria-label={t("API key")}
             autoComplete="off"
             value={apiKey}
-            onChange={(e) => setApiKeyState(e.target.value)}
+            onChange={(e) => { setApiKeyState(e.target.value); if (demo) setSessionExpired(false); }}
           />
           <button type="button" className="btn" onClick={() => setReveal((v) => !v)}>
             {reveal ? t("Hide") : t("Reveal")}
           </button>
         </span>
         <label className="checkbox">
-          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          <input type="checkbox" checked={remember} disabled={demo} onChange={(e) => setRemember(e.target.checked)} />
           {t("Keep until this tab closes")}
         </label>
       </label>
 
-      {kind === "openai_compatible" ? (
+      {kind === "openai_compatible" && !demo ? (
         <label className="field">
           <span>{t("Custom headers (JSON, optional)")} — {t("Custom headers are memory-only; re-enter after reload")}</span>
           <textarea

@@ -1,4 +1,13 @@
-export class AttemptBlocked extends Error {}
+/** A pre-dispatch Stop/budget refusal that adapters must preserve as evidence. */
+export class AttemptBlocked extends Error {
+  readonly category = "invalid_request" as const;
+  readonly retryable = false as const;
+
+  constructor(message: string) {
+    super(message);
+    this.name = "AttemptBlocked";
+  }
+}
 
 /** All amounts round outwards to nanodollars; reservations are synchronous across workers. */
 export class AttemptBudget {

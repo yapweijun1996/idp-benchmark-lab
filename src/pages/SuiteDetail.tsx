@@ -4,6 +4,7 @@ import { summarizeSuite } from "../benchmarks/summary";
 import { buildFieldCsv, buildSuiteExportJson, buildSummaryCsv, downloadText } from "../export/export";
 import type { BenchmarkRun, BenchmarkSuite, GoldenAnswer } from "../storage/types";
 import { useI18n } from "../i18n";
+import { gatewayDemoMessageKey } from "../providers/demoGateway";
 
 export interface SuiteDetailProps {
   suite: BenchmarkSuite;
@@ -15,6 +16,7 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
   const { t } = useI18n();
   const [selectedRunId, setSelectedRunId] = useState<string | undefined>(undefined);
   const selected = runs.find((r) => r.id === selectedRunId);
+  const gatewayDemo = suite.snapshot?.provider.settings?.endpointProfile === "gateway_demo";
   const heatmap = buildFieldHeatmap(runs);
   const summary = summarizeSuite(runs, suite.requestedRuns);
   const stateChip = (state: BenchmarkRun["state"]) =>
@@ -136,19 +138,19 @@ export function SuiteDetail({ suite, runs, golden }: SuiteDetailProps) {
         ))}
       </ul>
 
-      {selected ? <RunInspector run={selected} golden={golden} /> : null}
+      {selected ? <RunInspector run={selected} golden={golden} gatewayDemo={gatewayDemo} /> : null}
     </div>
   );
 }
 
-function RunInspector({ run, golden }: { run: BenchmarkRun; golden?: GoldenAnswer }) {
+function RunInspector({ run, golden, gatewayDemo }: { run: BenchmarkRun; golden?: GoldenAnswer; gatewayDemo: boolean }) {
   const { t } = useI18n();
   return (
     <div className="progress-panel" role="region" aria-label={`${t("Run")} ${run.runNumber} ${t("inspector")}`}>
       <h3>{t("Run")} {run.runNumber} {t("inspector")}</h3>
       {run.error ? (
         <p className="status-error">
-          {run.error.category}: {run.error.message}
+          {run.error.category}: {gatewayDemo ? t(gatewayDemoMessageKey(run.error)) : run.error.message}
         </p>
       ) : null}
       {run.fieldMismatches && run.fieldMismatches.length > 0 ? (

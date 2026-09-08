@@ -2,6 +2,7 @@ import { getDb, type IdpDatabase } from "../storage/db";
 import type { ProviderConfig } from "../storage/types";
 import { clearApiKey, setRuntimeHeaders } from "./keys";
 import { collectCredentials, redact } from "./redaction";
+import { forgetGatewayDemoSession } from "./demoGateway";
 
 /** Persisted provider configuration — never contains API keys (ADR-012). */
 export class ProviderConfigService {
@@ -20,13 +21,19 @@ export class ProviderConfigService {
       const url = new URL(input.baseUrl);
       if (url.username || url.password || url.search || url.hash) throw new Error("Provider base URL must not contain credentials, query parameters, or fragments. Use runtime headers.");
     }
+    const settings = { ...input.settings };
+    if (input.kind === "openai_compatible" && settings.endpointProfile === "gateway_demo") {
+      // Demo sessions use an origin-bound dmo token, never caller-supplied
+      // gateway headers. Keep the persisted profile free of header material.
+      delete settings.customHeaders;
+    }
     const record: ProviderConfig = {
       id: input.id ?? crypto.randomUUID(),
       kind: input.kind,
       name: input.name,
       baseUrl: input.baseUrl,
       model: input.model,
-      settings: input.settings,
+      settings,
       pricingSnapshotId: input.pricingSnapshotId,
     };
     const headers = record.settings.customHeaders;
@@ -43,5 +50,6 @@ export class ProviderConfigService {
   async remove(id: string): Promise<void> {
     await this.db.providerConfigs.delete(id);
     clearApiKey(id);
+    forgetGatewayDemoSession(id);
   }
 }

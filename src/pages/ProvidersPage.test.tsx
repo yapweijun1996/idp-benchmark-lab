@@ -129,6 +129,27 @@ describe("ProvidersPage", () => {
     await waitFor(() => expect(screen.getAllByText(/enter an api key first/i).length).toBeGreaterThan(0));
   });
 
+  it("connects the Gateway Demo preset with a memory-only session", async () => {
+    const result = emptyResult();
+    useProviderConfigsMock.mockReturnValue(result);
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "dmo_ui_session" }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ id: "demo-fast" }] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("data: {\"type\":\"response.output_text.delta\",\"delta\":\"pong\"}\n\ndata: {\"type\":\"response.completed\",\"response\":{\"usage\":{\"input_tokens\":1,\"output_tokens\":1,\"total_tokens\":2}}}\n\n", { status: 200, headers: { "Content-Type": "text/event-stream" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<ProvidersPage />);
+    fireEvent.click(screen.getByRole("button", { name: /use gateway demo preset/i }));
+    fireEvent.click(screen.getByRole("button", { name: /connect demo session/i }));
+    await waitFor(() => expect(getApiKey("new-1")).toBe("dmo_ui_session"));
+    expect(result.save).toHaveBeenCalledWith(expect.objectContaining({
+      model: "demo-fast",
+      baseUrl: "https://gpt.yapweijun1996.com/demo/v1",
+      settings: expect.objectContaining({ endpointProfile: "gateway_demo", apiStyle: "responses" }),
+    }));
+    expect(window.sessionStorage.getItem("idp:apikey:new-1")).toBeNull();
+    vi.unstubAllGlobals();
+  });
+
   it("gives provider removal a clear danger action and confirmation", () => {
     const result = emptyResult();
     result.configs = [{ id: "cfg-1", kind: "gemini", name: "Gemini", model: "gemini-3.5-flash-lite", settings: {} }];

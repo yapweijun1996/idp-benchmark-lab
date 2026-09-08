@@ -81,6 +81,15 @@ Manifest/service-worker policy constants; app-shell-only precache whitelist audi
 ### i18n
 English, Mandarin, Malay, Japanese, and Vietnamese selection with the preference in `AppSettings`. The pure `i18nCatalog` module's `COPY` and `EXTRA_COPY` tables form a canonical `I18N_KEY_REGISTRY`; coverage tests scan literal `t(...)` calls and require an explicit value for each supported locale. Provider/model names, file names, hashes, and other data-derived technical values intentionally fall back to the English source key. Target-device localization QA remains part of TASK-068.
 
+The Gateway Demo remains inside the Custom OpenAI-compatible adapter boundary. Its
+browser-only session acquisition, four-image page packing, streamed Responses
+parsing, recursive text-only reduction, and per-request Stop/budget gate are adapter
+details; the runner still owns logical retries, persistence, evaluation, and suite
+status. The gateway origin and project/session settings are frozen with the suite,
+while the short-lived `dmo_…` token remains outside all persisted records. Each
+child request returns its usage and cost source to the runner through the gate;
+provider traffic is intentionally absent from Workbox runtime caching.
+
 ### history query boundary
 All retained suites are exposed by a live IndexedDB query; there is no hidden latest-20 cutoff. Inspectors subscribe to changes and use frozen Golden snapshots.
 
