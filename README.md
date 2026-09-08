@@ -16,7 +16,7 @@ A static, BYOK (Bring Your Own Key) PWA demo/spike for benchmarking Intelligent 
 
 Use non-sensitive samples and restricted BYOK credentials for live acceptance. Hard-cap execution requires a verified provider-contract maximum per attempt; missing bounds stop before any request. Starting a benchmark retains its PDF bytes and, in image mode, rendered images in local evidence and backups.
 
-See [current status and verification](PROJECT_STATUS.md), [tasks](TASK.md), and the [original review](docs/reviews/2026-09-08-production-readiness.md). Push the local commit to GitHub to rerun the browser gate and Pages deployment; no provider credentials are required for CI.
+See [current status and verification](PROJECT_STATUS.md), [tasks](TASK.md), and the [original review](docs/reviews/2026-09-08-production-readiness.md). The PWA/i18n code is on GitHub; wait for the Actions and Pages rerun before relying on new remote evidence. No provider credentials are required for CI.
 
 The current shell offers English, Mandarin, Malay, Japanese, and Vietnamese. A canonical registry checks every literal UI translation call and requires an explicit value for each supported locale; provider/model names, file names, and other data-derived technical values retain their documented English fallback. The About panel shows the friendly package version (for example, `v0.1.0`) and exposes the full build identity in technical details. When a service-worker refresh is available, the update prompt shows the currently loaded version and waits for explicit user acceptance.
 
