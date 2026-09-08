@@ -2,7 +2,7 @@
 
 Goal: push -> CI test/build -> automatic Pages deployment.
 
-Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. Follow-up `9bbf744` fixes the WebKit offline acceptance driver after Actions run [34185343749](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34185343749) failed the old path; the fix must be pushed before Pages can rerun. Provider CORS from the deployed origin still requires the user's end-user BYOK checks.
+Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. Follow-up `9bbf744` fixes the WebKit offline acceptance driver after Actions run [34185343749](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34185343749) failed the old path, and `ddbec9e` refreshes the Actions runtime versions; these commits must be pushed before Pages can rerun. Provider CORS from the deployed origin still requires the user's end-user BYOK checks.
 
 The workflow uses the current checked releases: `checkout@v7`, `setup-node@v7`, `configure-pages@v6`, `upload-pages-artifact@v4`, `upload-artifact@v7`, and `deploy-pages@v5`, with Node 24 pinned. Package resolution comes from `package-lock.json`; the reviewed versions and advisory paths are recorded in [DEPENDENCIES.md](DEPENDENCIES.md).
 
