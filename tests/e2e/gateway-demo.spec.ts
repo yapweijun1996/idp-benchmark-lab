@@ -15,10 +15,12 @@ function fivePagePdf(): Buffer {
 }
 
 test("Gateway Demo preset connects in the browser and runs one canonical image request", async ({ page }) => {
+  let sessionCalls = 0;
   let responseCalls = 0;
   await page.route(`${gateway}/**`, async (route) => {
     const request = route.request();
     if (request.url().endsWith("/demo/session")) {
+      sessionCalls += 1;
       await route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ token: "dmo_e2e_session" }) });
       return;
     }
@@ -44,16 +46,6 @@ test("Gateway Demo preset connects in the browser and runs one canonical image r
     await route.continue();
   });
 
-  await page.goto("/#/settings");
-  await expect(page.getByRole("heading", { name: /AI Providers/i })).toBeVisible();
-  const card = page.locator("article").filter({ hasText: /Custom OpenAI-compatible|Gateway Demo/ }).last();
-  await expect(card.getByRole("button", { name: /use gateway demo preset/i })).toBeVisible();
-  await card.getByRole("button", { name: /use gateway demo preset/i }).click();
-  await card.getByRole("button", { name: /connect demo session/i }).click();
-  await expect(card.getByRole("heading", { name: /gateway demo/i })).toBeVisible();
-  await expect(card).toContainText(/15 minutes|15 分钟/);
-  expect(await page.evaluate(() => Object.values(window.sessionStorage).some((value) => value.includes("dmo_")))).toBe(false);
-
   await page.goto("/#/new-benchmark");
   await page.getByRole("button", { name: /Continue/ }).click();
   await page.getByRole("radio", { name: /Popular/ }).check();
@@ -68,7 +60,9 @@ test("Gateway Demo preset connects in the browser and runs one canonical image r
   await page.getByRole("button", { name: /Continue/ }).click();
   await page.getByRole("button", { name: /Run Quick Test/ }).click();
   await expect(page.getByText(/Quick Test (completed|finished with issues)/)).toBeVisible({ timeout: 30_000 });
+  expect(sessionCalls).toBe(1);
   expect(responseCalls).toBe(1);
+  expect(await page.evaluate(() => Object.values(window.sessionStorage).some((value) => value.includes("dmo_")))).toBe(false);
 });
 
 test("Gateway Demo maps five rendered pages in two calls and reduces them once", async ({ page }) => {

@@ -251,11 +251,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
     setMessage(null);
     try {
       const key = apiKey.trim() || getApiKey(existing?.id ?? "");
-      if (demo && !key) {
-        setMessage(t("Connect a Gateway Demo session first."));
-        return;
-      }
-      if (!key) {
+      if (!key && !demo) {
         setMessage(t("Enter an API key first."));
         return;
       }
@@ -382,7 +378,7 @@ function ProviderCard({ kind, existing, onSave, onRemove, testResult, onTestResu
           </div>
           {demo ? (
             <p className="doc-card__meta" role="status">
-              {t("Gateway Demo sends canonical pages in batches of up to 4 images; larger PDFs use additional map and reducer requests.")} {sessionExpiresAt ? `${t("Session expires")}: ${new Date(sessionExpiresAt).toLocaleTimeString()}.` : sessionExpired ? t("Demo session expired; connect again.") : t("No active demo session.")}
+              {t("Gateway Demo sends canonical pages in batches of up to 4 images; larger PDFs use additional map and reducer requests.")} {sessionExpiresAt ? `${t("Session expires")}: ${new Date(sessionExpiresAt).toLocaleTimeString()}.` : sessionExpired ? t("Demo session expired; connect again.") : t("Gateway Demo connects automatically before its first request.")}
             </p>
           ) : null}
           <label className="field">

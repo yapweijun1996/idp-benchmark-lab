@@ -15,8 +15,9 @@ confirmed Pages-origin session `201`, models `200`, Responses preflight `204`,
 one-image JSON `200`, four-image streaming `200` with usage, and five-image `400`
 `DEMO_IMAGE_COUNT_EXCEEDED`. Full PDF map/reduce, quota and remote CI evidence are
 still TASK-068 release gates.
-New browser profiles receive this provider configuration without a key; connecting
-the short-lived session remains an explicit Settings action.
+New browser profiles receive this provider configuration without a key; the first
+Test or Run automatically obtains the short-lived session. The Settings action
+remains available for an immediate connection or manual reconnect.
 
 At implementation time, consult current official GitHub Pages documentation and use current supported Pages Actions; do not rely on stale action versions from planning docs.
 

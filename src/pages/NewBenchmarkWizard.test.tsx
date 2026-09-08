@@ -286,7 +286,7 @@ describe("NewBenchmarkWizard", () => {
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
 
-    const sessionStatus = screen.getAllByRole("status").find((node) => node.textContent?.includes("No active demo session"));
+    const sessionStatus = screen.getAllByRole("status").find((node) => node.textContent?.includes("Gateway Demo connects automatically"));
     expect(sessionStatus).toBeDefined();
     expect(screen.getByRole("link", { name: "Connect demo session" })).toHaveAttribute("href", "#/settings");
   });

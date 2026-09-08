@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   acquireGatewayDemoSession,
   extractGatewayDemo,
@@ -10,6 +10,7 @@ import {
   rememberGatewayDemoSession,
   testGatewayDemoConnection,
 } from "./demoGateway";
+import { clearAllKeys, getApiKey } from "./keys";
 import type { GatewayRequestMeta, ProviderContext } from "./types";
 import type { ProviderConfig } from "../storage/types";
 import { AttemptBudget } from "../benchmarks/budget";
@@ -40,12 +41,20 @@ const config: ProviderConfig = {
   settings: { endpointProfile: "gateway_demo", gatewayOrigin: "https://gpt.yapweijun1996.com" },
 };
 
-function ctx(gate?: ProviderContext["requestGate"]): ProviderContext {
-  return { config, apiKey: "dmo_test_session", requestGate: gate };
+function ctx(gate?: ProviderContext["requestGate"], apiKey = "dmo_test_session"): ProviderContext {
+  return { config, apiKey, requestGate: gate };
 }
 
 describe("Gateway Demo contract", () => {
-  beforeEach(() => vi.stubGlobal("fetch", vi.fn()));
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+    rememberGatewayDemoSession(config.id, { token: "dmo_test_session", expiresAt: new Date(Date.now() + 10 * 60_000).toISOString() });
+  });
+  afterEach(() => {
+    clearAllKeys();
+    forgetGatewayDemoSession(config.id);
+    vi.unstubAllGlobals();
+  });
 
   it("uses the configured public defaults and packs pages into groups of four", () => {
     expect(gatewayDemoDefaults()).toMatchObject({ model: "demo-fast", projectId: "github-pages", sessionPath: "/demo/session" });
@@ -60,6 +69,18 @@ describe("Gateway Demo contract", () => {
     expect(session.token).toBe("dmo_short_lived");
     expect(Date.parse(session.expiresAt)).toBeGreaterThan(Date.now());
     expect(JSON.stringify(vi.mocked(fetch).mock.calls)).toContain("project_id");
+  });
+
+  it("automatically acquires and stores a session when extraction starts without a token", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "dmo_auto_session" }), { status: 201 }))
+      .mockResolvedValueOnce(streamResponse(sse({ ok: true })));
+    const result = await extractGatewayDemo({ mode: "canonical_images", images: [image], prompt: "Extract JSON." }, ctx(undefined, ""));
+    expect(result.json).toEqual({ ok: true });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(getApiKey(config.id)).toBe("dmo_auto_session");
+    expect(gatewayDemoSession(config.id)).toBeDefined();
   });
 
   it("expires session metadata after fifteen minutes and rejects malformed expiry", () => {
@@ -96,8 +117,10 @@ describe("Gateway Demo contract", () => {
   });
 
   it("normalizes a model-route network/CORS failure", async () => {
-    vi.mocked(fetch).mockRejectedValue(new TypeError("Failed to fetch"));
-    const result = await testGatewayDemoConnection(ctx());
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "dmo_connection_session" }), { status: 201 }))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"));
+    const result = await testGatewayDemoConnection(ctx(undefined, ""));
     expect(result).toMatchObject({ ok: false, error: { category: "network", retryable: true }, message: expect.stringMatching(/network\/CORS/i) });
   });
 

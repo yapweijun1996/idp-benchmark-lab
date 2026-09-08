@@ -931,7 +931,7 @@ function ProviderStep({
                   <span className="doc-card__meta" role="status">
                     {session
                       ? `${t("Session expires")}: ${new Date(session.expiresAt).toLocaleTimeString()}`
-                      : <>{t("No active demo session.")} <a href="#/settings">{t("Connect demo session")}</a>.</>}
+                      : <>{t("Gateway Demo connects automatically before its first request.")} <a href="#/settings">{t("Connect demo session")}</a>.</>}
                   </span>
                 ) : null}
               </li>

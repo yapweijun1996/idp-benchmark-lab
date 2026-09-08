@@ -1,5 +1,6 @@
 import { bodyText, errorFromStatus, extractJson } from "./common";
 import { redact, rememberCredential } from "./redaction";
+import { setApiKey } from "./keys";
 import type {
   GatewayRequestMeta,
   NormalizedExtractionRequest,
@@ -46,6 +47,12 @@ export interface GatewayDemoSession {
 
 export interface GatewayDemoSessionInfo {
   expiresAt: string;
+}
+
+export interface GatewayDemoConfig {
+  id?: string;
+  baseUrl?: string;
+  settings?: Record<string, unknown>;
 }
 
 export interface GatewayImageBatch {
@@ -395,14 +402,47 @@ export function gatewayDemoSession(configId: string): GatewayDemoSessionInfo | u
   return { expiresAt };
 }
 
+function sessionOptions(config: GatewayDemoConfig): { origin: string; sessionPath: string; projectId: string } {
+  const settings = (config.settings ?? {}) as GatewayDemoSettings;
+  let origin = settings.gatewayOrigin?.trim().replace(/\/+$/, "");
+  if (!origin && config.baseUrl?.trim()) {
+    try { origin = new URL(config.baseUrl.trim()).origin; } catch { /* use the documented default */ }
+  }
+  return {
+    origin: origin || DEMO_GATEWAY_ORIGIN,
+    sessionPath: settings.gatewaySessionPath?.trim() || DEMO_GATEWAY_SESSION_PATH,
+    projectId: settings.gatewayProjectId?.trim() || DEMO_GATEWAY_PROJECT_ID,
+  };
+}
+
+/**
+ * Return a live demo token, acquiring one automatically when the provider has
+ * no active session. The token and expiry remain in the existing memory-only
+ * credential/session stores; provider configuration is never changed.
+ */
+export async function ensureGatewayDemoSession(config: GatewayDemoConfig, currentToken = "", signal?: AbortSignal): Promise<GatewayDemoSession> {
+  const token = currentToken.trim();
+  const active = config.id ? gatewayDemoSession(config.id) : undefined;
+  if (DEMO_TOKEN_RE.test(token) && (!config.id || active)) {
+    return { token, expiresAt: active?.expiresAt ?? new Date(Date.now() + DEMO_GATEWAY_LIMITS.sessionMinutes * 60_000).toISOString() };
+  }
+
+  const session = await acquireGatewayDemoSession({ ...sessionOptions(config), signal });
+  if (config.id) {
+    setApiKey(config.id, session.token, { rememberForTab: false });
+    rememberGatewayDemoSession(config.id, session);
+  }
+  return session;
+}
+
 function authHeaders(token: string): Record<string, string> {
   return { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 }
 
 export async function testGatewayDemoConnection(ctx: ProviderContext): Promise<{ ok: boolean; message: string; error?: ProviderError }> {
   try {
-    const token = ctx.apiKey.trim();
-    if (!DEMO_TOKEN_RE.test(token)) return { ok: false, message: "Connect a Gateway Demo session before testing.", error: { category: "auth", message: "Connect a Gateway Demo session before testing.", retryable: false } };
+    const session = await ensureGatewayDemoSession(ctx.config, ctx.apiKey, ctx.signal);
+    const token = session.token;
     rememberCredential(token);
     const models = await fetch(`${baseOf(ctx)}/models`, { method: "GET", headers: { Authorization: `Bearer ${token}` }, signal: ctx.signal });
     const modelsText = await models.text().catch(() => "");
@@ -458,10 +498,11 @@ function reducerGroups(partials: unknown[], prompt: string, model: string, think
 export async function extractGatewayDemo(request: NormalizedExtractionRequest, ctx: ProviderContext): Promise<NormalizedExtractionResponse> {
   if (request.mode !== "canonical_images") throw invalidGatewayRequest("Gateway Demo supports canonical rendered images only.");
   if (ctx.config.model !== DEMO_GATEWAY_MODEL) throw invalidGatewayRequest(`Gateway Demo requires model ${DEMO_GATEWAY_MODEL}.`);
-  if (!DEMO_TOKEN_RE.test(ctx.apiKey.trim())) throw { category: "auth", message: "Gateway Demo session is missing or expired. Connect a new demo session.", retryable: false } satisfies ProviderError;
-  rememberCredential(ctx.apiKey.trim());
-  const model = DEMO_GATEWAY_MODEL;
   const thinking = thinkingOf(request.thinking);
+  const session = await ensureGatewayDemoSession(ctx.config, ctx.apiKey, ctx.signal);
+  const token = session.token;
+  rememberCredential(token);
+  const model = DEMO_GATEWAY_MODEL;
   const attempts: GatewayProviderAttempt[] = [];
   const responses: NormalizedExtractionResponse[] = [];
   let successfulMapCount = 0;
@@ -473,7 +514,7 @@ export async function extractGatewayDemo(request: NormalizedExtractionRequest, c
     try {
       lease = await ctx.requestGate?.beforeRequest(meta);
       dispatched = true;
-      const response = await gatewayStream(`${baseOf(ctx)}/responses`, { method: "POST", headers: authHeaders(ctx.apiKey), body: JSON.stringify(body) }, ctx.signal);
+      const response = await gatewayStream(`${baseOf(ctx)}/responses`, { method: "POST", headers: authHeaders(token), body: JSON.stringify(body) }, ctx.signal);
       const settlement = ctx.requestGate?.afterResponse(lease, response);
       attempts.push({ meta, startedAt, finishedAt: new Date().toISOString(), latencyMs: Math.round(performance.now() - started), raw: response.raw, envelope: response.envelope, usage: response.usage, ...settlement, parseError: response.parseError });
       responses.push(response);

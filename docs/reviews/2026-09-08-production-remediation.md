@@ -110,8 +110,9 @@ contract for synthetic input; it is not a real-document or billing result.
 
 The first-run provider initialization is covered by unit tests: an empty browser
 profile receives one keyless Gateway Demo configuration, the wizard can select it
-immediately, and a deliberate removal is preserved. Connecting the short-lived
-session remains an explicit Settings action.
+immediately, and a deliberate removal is preserved. The first Test or Run now
+automatically obtains the short-lived session when needed; the Settings action
+remains available for an immediate connection or manual reconnect.
 
 The current branch has local unit/UI coverage for session validation, four/five-page
 packing, SSE parsing, reducer invocation, partial-failure redaction, and memory-only

@@ -19,7 +19,7 @@ Use non-sensitive samples and restricted BYOK credentials for live acceptance. H
 ### Gateway Demo
 
 Settings → AI Providers includes a `Gateway Demo` preset for the registered Pages
-origin. Connect first to obtain a 15-minute origin-bound session; the `dmo_…` token
+origin. The first Test or Run obtains a 15-minute origin-bound session; the `dmo_…` token
 is memory-only and is never saved in provider config, IndexedDB, backups, exports,
 logs, or service-worker cache. The preset forces canonical page images and the
 Responses API. It sends at most four images per request (4 MiB per image, 8 MiB total
@@ -28,9 +28,10 @@ PDFs. Gateway quota, rate/session limits, and the 800-output-token ceiling remai
 force. A failed child call after a successful batch is retained as partial evidence
 and is not automatically replayed.
 New browser profiles receive a persisted, keyless `Gateway Demo` configuration on
-first load, so it is already selectable in the New Benchmark wizard. The user must
-still connect a short-lived demo session explicitly before making a provider call;
-removing the preset is respected and it is not recreated on later mounts.
+first load, so it is already selectable in the New Benchmark wizard. The first Test
+or Run automatically acquires a short-lived demo session when needed; the Settings
+button remains available for an immediate connection or manual reconnect. Removing
+the preset is respected and it is not recreated on later mounts.
 The gateway may route the `demo-fast` alias across healthy providers server-side; the
 browser records the public alias and each request's usage/evidence rather than claiming a
 fixed upstream provider.

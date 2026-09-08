@@ -150,6 +150,24 @@ describe("ProvidersPage", () => {
     vi.unstubAllGlobals();
   });
 
+  it("automatically connects Gateway Demo when testing without a session", async () => {
+    const result = emptyResult();
+    result.configs = [{ id: "demo-1", kind: "openai_compatible", name: "Gateway Demo", model: "demo-fast", baseUrl: "https://gpt.yapweijun1996.com/demo/v1", settings: { endpointProfile: "gateway_demo" } }];
+    useProviderConfigsMock.mockReturnValue(result);
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ token: "dmo_auto_ui_session" }), { status: 201 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ id: "demo-fast" }] }), { status: 200 }))
+      .mockResolvedValueOnce(new Response("data: {\"type\":\"response.output_text.delta\",\"delta\":\"{\\\"ok\\\":true}\"}\n\ndata: {\"type\":\"response.completed\",\"response\":{\"usage\":{\"input_tokens\":1,\"output_tokens\":1,\"total_tokens\":2}}}\n\ndata: [DONE]\n\n", { status: 200, headers: { "Content-Type": "text/event-stream" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(<ProvidersPage />);
+
+    const testButtons = screen.getAllByRole("button", { name: /test connection/i });
+    fireEvent.click(testButtons.at(-1)!);
+    await waitFor(() => expect(getApiKey("demo-1")).toBe("dmo_auto_ui_session"));
+    expect((await screen.findAllByText(/session, model route, and Responses streaming are reachable/i)).length).toBeGreaterThan(0);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
   it("gives provider removal a clear danger action and confirmation", () => {
     const result = emptyResult();
     result.configs = [{ id: "cfg-1", kind: "gemini", name: "Gemini", model: "gemini-3.5-flash-lite", settings: {} }];
