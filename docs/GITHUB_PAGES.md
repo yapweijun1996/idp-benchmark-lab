@@ -2,7 +2,7 @@
 
 Goal: push -> CI test/build -> automatic Pages deployment.
 
-Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The last published checkpoint is `a45980c`; its remote Actions/Pages evidence is retained in the remediation report. The current local change set adds versioned update UX, sub-path-safe entry-point icons, PWA invariants, and complete five-locale UI coverage. Push it before relying on new Pages evidence. Provider CORS and a full image/PDF plus JSON contract from the deployed origin still require the user's end-user BYOK checks.
+Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The last published checkpoint is `a45980c`; its remote Actions/Pages evidence is retained in the remediation report. The current local change set adds versioned update UX, sub-path-safe entry-point icons, PWA invariants, and complete five-locale UI coverage. Push it before relying on new Pages evidence. The demo origin's CORS preflight and text Responses path pass, but a full image/PDF plus JSON provider contract from the deployed origin still requires the user's end-user BYOK checks.
 
 The workflow uses the current checked releases: `checkout@v7`, `setup-node@v7`, `configure-pages@v6`, `upload-pages-artifact@v4`, `upload-artifact@v7`, and `deploy-pages@v5`, with Node 24 pinned. Package resolution comes from `package-lock.json`; the reviewed versions and advisory paths are recorded in [DEPENDENCIES.md](DEPENDENCIES.md).
 
