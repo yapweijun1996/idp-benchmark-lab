@@ -24,10 +24,11 @@ export const DEMO_GATEWAY_LIMITS = Object.freeze({
   maxImageBytes: 4 * 1024 * 1024,
   maxTotalImageBytes: 8 * 1024 * 1024,
   maxBodyBytes: 12 * 1024 * 1024,
-  maxOutputTokens: 800,
   sessionMinutes: 15,
 });
 const DEMO_TOKEN_RE = /^dmo_[A-Za-z0-9._~-]+$/;
+const OUTPUT_LIMIT_MESSAGE = "Gateway Demo reached its output-token limit and returned incomplete JSON. Request fewer fields or use a provider with a higher output limit.";
+const INCOMPLETE_MESSAGE = "Gateway Demo returned an incomplete response. Partial output was retained; the request will not be retried automatically.";
 
 export interface GatewayDemoSettings {
   endpointProfile?: "gateway_demo";
@@ -147,6 +148,7 @@ function gatewayError(status: number, detail: unknown): ProviderError {
 /** Translate only stable, adapter-owned messages; provider detail stays a safe fallback. */
 export function gatewayDemoMessageKey(error: Pick<ProviderError, "status" | "message">): string {
   const message = error.message ?? "";
+  if (message === OUTPUT_LIMIT_MESSAGE || message === INCOMPLETE_MESSAGE) return message;
   if (/failed after a successful batch|partial evidence was retained|restart the benchmark/i.test(message)) return "Gateway Demo failed after a successful batch; partial evidence was retained. Restart the benchmark to try again.";
   if (/no healthy provider route/i.test(message)) return "Gateway Demo has no healthy provider route available. Try again later.";
   if (/router is disabled/i.test(message)) return "Gateway Demo router is disabled by the gateway.";
@@ -299,12 +301,18 @@ function normalizeUsage(value: unknown): NormalizedUsage | undefined {
   return Object.values(normalized).some((v) => v !== undefined) ? normalized : undefined;
 }
 
-function parseSse(text: string): { output: string; usage?: NormalizedUsage; response?: Record<string, unknown>; events: string[]; error?: string } {
+function incompleteMessage(response: Record<string, unknown>): string {
+  const details = response.incomplete_details as { reason?: unknown } | undefined;
+  return details?.reason === "max_output_tokens" ? OUTPUT_LIMIT_MESSAGE : INCOMPLETE_MESSAGE;
+}
+
+function parseSse(text: string): { output: string; usage?: NormalizedUsage; response?: Record<string, unknown>; events: string[]; error?: string; incomplete?: boolean } {
   const events: string[] = [];
   let output = "";
   let usage: NormalizedUsage | undefined;
   let completed: Record<string, unknown> | undefined;
   let error: string | undefined;
+  let incomplete = false;
   const blocks = text.split(/\r?\n\r?\n/);
   for (const block of blocks) {
     const dataLines = block.split(/\r?\n/).filter((line) => line.startsWith("data:")).map((line) => line.slice(5).trim());
@@ -324,11 +332,16 @@ function parseSse(text: string): { output: string; usage?: NormalizedUsage; resp
     if (type === "response.output_text.delta" && typeof event.delta === "string") output += event.delta;
     if (type === "response.output_text.done" && !output && typeof event.text === "string") output = event.text;
     const response = event.response && typeof event.response === "object" ? event.response as Record<string, unknown> : undefined;
+    if (type === "response.incomplete" || response?.status === "incomplete") {
+      incomplete = true;
+      error = incompleteMessage(response ?? {});
+      if (!output && response) output = outputTextFromResponse(response);
+    }
     if (type === "response.completed" && response) completed = response;
     usage = normalizeUsage(response?.usage ?? event.usage) ?? usage;
   }
   if (!output && completed) output = outputTextFromResponse(completed);
-  return { output, usage, response: completed, events, error };
+  return { output, usage, response: completed, events, error, incomplete };
 }
 
 async function readResponseBody(response: Response): Promise<string> {
@@ -361,12 +374,18 @@ async function gatewayStream(url: string, init: RequestInit, signal?: AbortSigna
     let data: Record<string, unknown> = {};
     try { data = JSON.parse(text) as Record<string, unknown>; } catch { /* parseError below */ }
     const output = outputTextFromResponse(data);
+    if (data.status === "incomplete") {
+      throw { category: "provider", status: response.status, retryable: false, message: incompleteMessage(data), evidence: { raw: String(redact(output)), envelope: safeText, json: undefined, usage: normalizeUsage(data.usage), providerCalls: 1 } } satisfies ProviderError;
+    }
     const json = extractJson(output);
     return { raw: output, envelope: safeText, json, parseError: json === undefined ? "Gateway Demo response was not parseable JSON." : undefined, usage: normalizeUsage(data.usage), providerCalls: 1 };
   }
   const parsed = parseSse(text);
   if (parsed.error) {
     const detail = String(redact(parsed.error)).slice(0, 300);
+    if (parsed.incomplete) {
+      throw { category: "provider", status: response.status, retryable: false, message: detail, evidence: { raw: String(redact(parsed.output)), envelope: safeText, json: undefined, usage: parsed.usage, providerCalls: 1 } } satisfies ProviderError;
+    }
     throw { category: "provider", status: 502, retryable: true, message: `Gateway Demo returned an SSE error: ${detail}`, evidence: { raw: safeText, envelope: safeText, json: undefined, usage: parsed.usage, providerCalls: 1 } } satisfies ProviderError;
   }
   const json = extractJson(parsed.output);
@@ -574,7 +593,7 @@ export async function extractGatewayDemo(request: NormalizedExtractionRequest, c
     } catch (error) {
       const partial = successfulMapCount > 0;
       const providerError = error && typeof error === "object" && "category" in error ? error as ProviderError : invalidGatewayRequest("Gateway Demo batch failed.");
-      const evidence: NormalizedExtractionResponse = { raw: responses.at(-1)?.raw ?? "", envelope: JSON.stringify(attempts), json: undefined, usage: sumUsage(responses), providerCalls: attempts.length, providerAttempts: attempts };
+      const evidence: NormalizedExtractionResponse = { raw: attempts.at(-1)?.raw ?? responses.at(-1)?.raw ?? "", envelope: JSON.stringify(attempts), json: undefined, usage: sumUsage(attempts), providerCalls: attempts.length, providerAttempts: attempts };
       throw { ...providerError, message: partial ? "Gateway Demo failed after a successful batch; partial evidence was retained. Restart the benchmark to try again." : providerError.message, retryable: partial ? false : providerError.retryable, evidence } satisfies ProviderError;
     }
   }
@@ -600,12 +619,12 @@ export async function extractGatewayDemo(request: NormalizedExtractionRequest, c
     return { ...final, providerCalls: attempts.length, usage: sumUsage(responses), providerAttempts: attempts, envelope: JSON.stringify(attempts.map((attempt) => ({ ...attempt, raw: attempt.raw, envelope: attempt.envelope }))) };
   } catch (error) {
     const providerError = error && typeof error === "object" && "category" in error ? error as ProviderError : invalidGatewayRequest("Gateway Demo reducer failed.");
-    const evidence: NormalizedExtractionResponse = { raw: responses.at(-1)?.raw ?? "", envelope: JSON.stringify(attempts), json: undefined, usage: sumUsage(responses), providerCalls: attempts.length, providerAttempts: attempts };
+    const evidence: NormalizedExtractionResponse = { raw: attempts.at(-1)?.raw ?? responses.at(-1)?.raw ?? "", envelope: JSON.stringify(attempts), json: undefined, usage: sumUsage(attempts), providerCalls: attempts.length, providerAttempts: attempts };
     throw { ...providerError, message: "Gateway Demo failed after a successful batch; partial evidence was retained. Restart the benchmark to try again.", retryable: false, evidence } satisfies ProviderError;
   }
 }
 
-function sumUsage(responses: NormalizedExtractionResponse[]): NormalizedUsage | undefined {
+function sumUsage(responses: Array<{ usage?: NormalizedUsage }>): NormalizedUsage | undefined {
   if (!responses.length || responses.some((response) => !response.usage)) return undefined;
   const values = responses.map((response) => response.usage!);
   const sum = (key: keyof NormalizedUsage) => {

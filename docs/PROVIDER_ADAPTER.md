@@ -96,3 +96,7 @@ inside those fences, preserving the instructions and schema while staying below 
 gateway's input-token safety bound. If a custom prompt and image still exceed that
 bound, the adapter fails with a stable `DEMO_INPUT_TOO_LARGE` message instead of
 retrying the request or exposing gateway detail.
+
+An explicit `response.incomplete` / `status: incomplete` is always a failed extraction, even if its partial text parses. `max_output_tokens` has a localized output-limit message and is non-retryable. Both streaming and JSON envelopes retain partial text and reported usage; failed-child usage is included in the logical run, while unknown cost keeps the conservative budget reservation. The bundled full Nexabyte schema exceeded the live 800-token allowance; a successful HTTP response alone is not extraction acceptance.
+
+Gateway Demo connection, map and reducer request bodies deliberately omit `max_output_tokens`, `max_completion_tokens`, and `max_tokens`. No frontend default or override sets an output-token ceiling. The `max_output_tokens` string is recognized only as a server response reason. Removing client parameters cannot change a gateway-enforced allowance.

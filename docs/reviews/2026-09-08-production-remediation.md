@@ -117,7 +117,7 @@ remains available for an immediate connection or manual reconnect.
 A Pages-origin replay of the bundled purchase-order page reproduced the gateway's
 `400 DEMO_INPUT_TOO_LARGE` when the readable, pretty-printed prompt/schema was sent
 with the image. An adapter-style replay that compacted only valid JSON blocks inside
-the prompt fences returned `200` streamed JSON with usage. The adapter now performs
+the prompt fences returned `200` SSE; that status alone did not establish complete JSON. The adapter now performs
 this deterministic prompt compaction for Gateway Demo map/reducer requests and
 returns a localized, non-retryable token-safety error when a custom prompt still
 cannot fit. No gateway token or provider key was retained.
@@ -128,3 +128,11 @@ session persistence. TASK-068 remains **NO-GO** until a real four-page PDF, quot
 billing reconciliation, and any required target-device storage/cache evidence are
 recorded; the five-page synthetic map/reduce, remote Actions/Pages revision, and CI
 browser matrix are now proven.
+
+## Output truncation follow-up
+
+Published checkpoint `1b76da1` passed [Actions 34214400653](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34214400653) including deployment. A live Pages-origin Nexabyte wizard replay returned HTTP 200, then `response.incomplete` with `max_output_tokens`; usage was 3555 input, 800 output, 4355 total. Partial output was 2576 characters and stopped during item 9. No credentials were retained. The earlier compaction probe demonstrated admission past the input bound, not successful full-document extraction.
+
+The adapter now recognizes incomplete streamed and non-streamed Responses, shows an explicit output-limit message, disables automatic retry, and retains redacted partial text and aggregate usage including the failed child. Even syntactically valid partial JSON remains a failure and cannot reach the reducer/evaluator as successful extraction. The gateway owns its output allowance; no hidden schema reduction, JSON repair, or cap bypass is implemented. TASK-068 remains NO-GO.
+
+Follow-up verification: full unit suite 351 passed, then the expanded Gateway contract subset 23 passed including connection/map/reducer omission of all output-token-limit request parameters. Lint and typecheck passed (two existing Fast Refresh warnings); dependency audit found zero vulnerabilities. The three-engine browser suite passed 58 tests with 2 existing non-Chromium update skips, including output-limit UI, persisted/exported usage and redacted partial text. No full-extraction success is claimed for Nexabyte.

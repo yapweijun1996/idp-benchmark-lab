@@ -14,7 +14,8 @@ function fivePagePdf(): Buffer {
   return Buffer.from(pdf);
 }
 
-test("Gateway Demo preset connects in the browser and runs one canonical image request", async ({ page }) => {
+for (const truncated of [false, true]) {
+test(`Gateway Demo auto-connects and retains ${truncated ? "output-limit failure" : "completed response"}`, async ({ page }) => {
   let sessionCalls = 0;
   let responseCalls = 0;
   await page.route(`${gateway}/**`, async (route) => {
@@ -34,6 +35,14 @@ test("Gateway Demo preset connects in the browser and runs one canonical image r
       expect(body.stream).toBe(true);
       expect(body.store).toBe(false);
       expect(JSON.stringify(body.input)).toContain("input_image");
+      if (truncated) {
+        await route.fulfill({ status: 200, contentType: "text/event-stream", body: [
+          `data: ${JSON.stringify({ type: "response.output_text.delta", delta: '{"rows":["dmo_e2e_session"' })}`,
+          `data: ${JSON.stringify({ type: "response.incomplete", response: { status: "incomplete", incomplete_details: { reason: "max_output_tokens" }, usage: { input_tokens: 3555, output_tokens: 800, total_tokens: 4355 } } })}`,
+          "",
+        ].join("\n\n") });
+        return;
+      }
       const sse = [
         `data: ${JSON.stringify({ type: "response.output_text.delta", delta: '{"doc_info":{},"row_data":[],"footer":{}}' })}`,
         `data: ${JSON.stringify({ type: "response.completed", response: { usage: { input_tokens: 4, output_tokens: 2, total_tokens: 6 } } })}`,
@@ -59,11 +68,27 @@ test("Gateway Demo preset connects in the browser and runs one canonical image r
   await page.getByRole("radio", { name: /Render pages as images/ }).check();
   await page.getByRole("button", { name: /Continue/ }).click();
   await page.getByRole("button", { name: /Run Quick Test/ }).click();
-  await expect(page.getByText(/Quick Test (completed|finished with issues)/)).toBeVisible({ timeout: 30_000 });
+  if (truncated) {
+    await expect(page.getByRole("alert")).toContainText("output-token limit", { timeout: 30_000 });
+    await page.goto("/#/runs");
+    await page.getByRole("button", { name: /Inspect results/ }).first().click();
+    const download = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Export JSON", exact: true }).click();
+    const stream = await (await download).createReadStream();
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream!) chunks.push(Buffer.from(chunk));
+    const output = Buffer.concat(chunks).toString();
+    expect(output).not.toContain("dmo_e2e_session");
+    const bundle = JSON.parse(output);
+    expect(bundle.runs[0]).toMatchObject({ state: "provider_error", usage: { outputTokens: 800 }, providerCalls: 1, error: { retryable: false }, safeRawResponse: '{"rows":["[REDACTED]"' });
+  } else {
+    await expect(page.getByText(/Quick Test (completed|finished with issues)/)).toBeVisible({ timeout: 30_000 });
+  }
   expect(sessionCalls).toBe(1);
   expect(responseCalls).toBe(1);
   expect(await page.evaluate(() => Object.values(window.sessionStorage).some((value) => value.includes("dmo_")))).toBe(false);
 });
+}
 
 test("Gateway Demo maps five rendered pages in two calls and reduces them once", async ({ page }) => {
   const calls: { phase: "map" | "reduce"; imageCount: number }[] = [];

@@ -165,6 +165,17 @@ describe("Gateway Demo contract", () => {
     expect(result).toMatchObject({ ok: false, error: { category: "network", retryable: true }, message: expect.stringMatching(/network\/CORS/i) });
   });
 
+  it("omits output-token parameters from the connection probe", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(new Response(JSON.stringify({ data: [{ id: "demo-fast" }] })))
+      .mockResolvedValueOnce(streamResponse(sse({ ok: true })));
+    expect(await testGatewayDemoConnection(ctx())).toMatchObject({ ok: true });
+    const body = JSON.parse(String(vi.mocked(fetch).mock.calls[1]?.[1]?.body));
+    expect(body).not.toHaveProperty("max_output_tokens");
+    expect(body).not.toHaveProperty("max_completion_tokens");
+    expect(body).not.toHaveProperty("max_tokens");
+  });
+
   it("streams one batch directly and calls two maps plus one reducer for five pages", async () => {
     const fetchMock = vi.mocked(fetch);
     fetchMock
@@ -175,6 +186,12 @@ describe("Gateway Demo contract", () => {
     const after = vi.fn(() => ({ costUsd: 0.005, costSource: "usage_snapshot" as const }));
     const result = await extractGatewayDemo({ mode: "canonical_images", images: [image, image, image, image, image], prompt: "Extract JSON." }, ctx({ beforeRequest: before, afterResponse: after }));
     expect(fetchMock).toHaveBeenCalledTimes(3);
+    for (const [, init] of fetchMock.mock.calls) {
+      const body = JSON.parse(String(init?.body));
+      expect(body).not.toHaveProperty("max_output_tokens");
+      expect(body).not.toHaveProperty("max_completion_tokens");
+      expect(body).not.toHaveProperty("max_tokens");
+    }
     expect(before.mock.calls.map(([meta]) => meta.phase)).toEqual(["map", "map", "reduce"]);
     expect(result.json).toEqual({ merged: true });
     expect(result.providerCalls).toBe(3);
@@ -208,6 +225,46 @@ describe("Gateway Demo contract", () => {
   it("retains a redacted SSE error envelope", async () => {
     vi.mocked(fetch).mockResolvedValue(streamResponse(`data: ${JSON.stringify({ type: "response.error", error: { message: "expired dmo_test_session" } })}\n\ndata: [DONE]\n\n`));
     await expect(extractGatewayDemo({ mode: "canonical_images", images: [image], prompt: "Extract JSON." }, ctx())).rejects.toMatchObject({ message: expect.stringMatching(/SSE error/i), evidence: { providerAttempts: [{ raw: expect.stringContaining("[REDACTED]") }] } });
+  });
+
+  it.each([true, false])("retains truncated output and usage without retrying (stream=%s)", async (stream) => {
+    const output = '{"reference":"dmo_test_session","rows":[';
+    const response = {
+      status: "incomplete",
+      incomplete_details: { reason: "max_output_tokens" },
+      output: [{ type: "message", content: [{ type: "output_text", text: output }] }],
+      usage: { input_tokens: 3555, output_tokens: 800, total_tokens: 4355 },
+    };
+    vi.mocked(fetch).mockResolvedValue(stream
+      ? streamResponse(`data: ${JSON.stringify({ type: "response.output_text.delta", delta: output })}\n\ndata: ${JSON.stringify({ type: "response.incomplete", response })}\n\n`)
+      : new Response(JSON.stringify(response), { headers: { "Content-Type": "application/json" } }));
+    const failure = await extractGatewayDemo({ mode: "canonical_images", images: [image], prompt: "Extract JSON." }, ctx()).catch((error: unknown) => error);
+    expect(failure).toMatchObject({
+      category: "provider", status: 200, retryable: false,
+      message: expect.stringContaining("output-token limit"),
+      evidence: {
+        raw: '{"reference":"[REDACTED]","rows":[', json: undefined,
+        usage: { inputTokens: 3555, outputTokens: 800, totalTokens: 4355 }, providerCalls: 1,
+        providerAttempts: [{ usage: { outputTokens: 800 }, error: { retryable: false } }],
+      },
+    });
+    expect(JSON.stringify(failure)).not.toContain("dmo_test_session");
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("never accepts parseable JSON from an incomplete stream or runs its reducer", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(streamResponse(sse({ pages: [1, 2, 3, 4] })))
+      .mockResolvedValueOnce(streamResponse(`data: ${JSON.stringify({ type: "response.incomplete", response: {
+        status: "incomplete", incomplete_details: { reason: "max_output_tokens" },
+        output: [{ type: "message", content: [{ type: "output_text", text: '{"pages":[5]}' }] }],
+        usage: { input_tokens: 3, output_tokens: 800, total_tokens: 803 },
+      } })}\n\n`));
+    await expect(extractGatewayDemo({ mode: "canonical_images", images: [image, image, image, image, image], prompt: "Extract JSON." }, ctx())).rejects.toMatchObject({
+      retryable: false,
+      evidence: { json: undefined, raw: '{"pages":[5]}', providerCalls: 2, usage: { inputTokens: 5, outputTokens: 801, totalTokens: 806 } },
+    });
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it("fails closed for an unsupported reasoning override", async () => {
