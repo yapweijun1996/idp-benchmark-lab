@@ -106,4 +106,4 @@ Run `npm run build`, then `npm run test:e2e`. The local preview endpoint is 127.
 
 The deploy workflow runs on PRs, main pushes and manual dispatch. Audit and all browser projects join lint/typecheck/unit/build before deployment; PRs cannot deploy. Reports are retained as CI artifacts.
 
-Production acceptance additionally requires the user-published Pages revision, authorized real BYOK provider/CORS checks, actual browser/PWA installability and resolution of the recorded Windows WebKit offline limitation. Normal CI uses no paid credentials. See [acceptance criteria](docs/ACCEPTANCE_CRITERIA.md).
+Production acceptance additionally requires the user-published Pages revision, authorized real BYOK provider/CORS checks, actual browser/PWA installability and a successful remote rerun of the corrected WebKit offline PWA driver. Normal CI uses no paid credentials. See [acceptance criteria](docs/ACCEPTANCE_CRITERIA.md).
