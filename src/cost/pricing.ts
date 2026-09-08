@@ -15,8 +15,8 @@ export interface PricingPreset {
 export const PRICING_PRESETS: readonly PricingPreset[] = [
   { provider: "openai", model: "gpt-4o-mini", note: "Verify current official OpenAI pricing before benchmarking." },
   { provider: "openai", model: "gpt-4o", note: "Verify current official OpenAI pricing before benchmarking." },
-  { provider: "gemini", model: "gemini-3-flash-lite", note: "Verify current official Google pricing before benchmarking." },
-  { provider: "gemini", model: "gemini-3-pro", note: "Verify current official Google pricing before benchmarking." },
+  { provider: "gemini", model: "gemini-3.5-flash-lite", note: "Verify current official Google pricing before benchmarking." },
+  { provider: "gemini", model: "gemini-3.1-flash-lite", note: "Verify current official Google pricing before benchmarking." },
 ];
 
 export function presetToSnapshot(
