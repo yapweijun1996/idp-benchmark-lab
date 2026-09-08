@@ -4,6 +4,7 @@ import type { AppSettings } from "./types";
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   id: "app",
   language: "en",
+  gatewayDemoSeeded: false,
   defaultConcurrency: 1,
   defaultInputMode: "canonical_images",
   defaultRunCount: 5,

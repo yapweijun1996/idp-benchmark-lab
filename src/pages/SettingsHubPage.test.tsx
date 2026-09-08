@@ -2,6 +2,7 @@ import { act, waitFor, fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SettingsHubPage } from "./SettingsHubPage";
 import { getDb } from "../storage/db";
+import { DEFAULT_GATEWAY_DEMO_PROVIDER_ID } from "../providers/configService";
 
 vi.mock("../demo/seedDemoFixture", () => ({
   seedDemoFixture: vi.fn(async (db: ReturnType<typeof getDb>) => {
@@ -36,6 +37,14 @@ vi.mock("../demo/seedDemoFixture", () => ({
       sha256: "demo",
       schemaValid: true,
       createdAt: "2026-01-01T00:00:00.000Z",
+    });
+    await db.providerConfigs.put({
+      id: DEFAULT_GATEWAY_DEMO_PROVIDER_ID,
+      kind: "openai_compatible",
+      name: "Gateway Demo",
+      baseUrl: "https://gpt.yapweijun1996.com/demo/v1",
+      model: "demo-fast",
+      settings: { endpointProfile: "gateway_demo", apiStyle: "responses" },
     });
     return {
       documentId: "demo-document-popular-po",
@@ -109,7 +118,10 @@ describe("SettingsHubPage", () => {
       expect(await db.documents.get("demo-document-popular-po")).toBeDefined();
       expect(await db.extractionProfiles.get("demo-profile-popular-po")).toBeDefined();
       expect(await db.goldenAnswers.get("demo-golden-popular-po")).toBeDefined();
-      expect(await db.providerConfigs.get("demo-provider-gpt-gateway")).toBeUndefined();
+      expect(await db.providerConfigs.get("demo-provider-gateway")).toMatchObject({
+        name: "Gateway Demo",
+        settings: { endpointProfile: "gateway_demo" },
+      });
     });
     await waitFor(() => expect(screen.getByText(/bundled demo fixture was restored/i)).toBeInTheDocument());
   });

@@ -15,6 +15,7 @@ import {
   loadNexabyteDocumentBlob,
 } from "./fixture";
 import type { DocumentRecord, ExtractionProfile, GoldenAnswer } from "../storage/types";
+import { ensureDefaultGatewayDemoProvider } from "../providers/configService";
 
 export const DEMO_DOCUMENT_ID = "demo-document-popular-po";
 export const DEMO_PROFILE_ID = "demo-profile-popular-po";
@@ -152,10 +153,12 @@ export async function seedDemoFixture(
     loadBlob: loadNexabyteBlob,
   });
 
-  // Remove the retired built-in gateway from browsers that used an older
-  // version. Users can still configure any OpenAI-compatible endpoint in
-  // Settings, but the demo fixture no longer creates a provider for them.
+  // Remove the retired built-in gateway id from older browser profiles, then
+  // offer the current Gateway Demo configuration once for new profiles. The
+  // configuration contains no key or session token; connecting remains an
+  // explicit user action in Settings.
   await db.providerConfigs.delete("demo-provider-gpt-gateway");
+  await ensureDefaultGatewayDemoProvider(db);
 
   return {
     documentId: DEMO_DOCUMENT_ID,

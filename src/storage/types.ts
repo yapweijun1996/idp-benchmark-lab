@@ -200,6 +200,8 @@ export type AppSettings = {
   id: "app";
   language?: LanguageCode;
   defaultProviderId?: string;
+  /** Set after the first-run Gateway Demo preset has been offered. */
+  gatewayDemoSeeded?: boolean;
   defaultConcurrency: number;
   defaultInputMode: InputMode;
   defaultRunCount: number;

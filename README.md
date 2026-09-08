@@ -27,6 +27,10 @@ images, 12 MiB body) and uses sequential map calls plus a model reducer for larg
 PDFs. Gateway quota, rate/session limits, and the 800-output-token ceiling remain in
 force. A failed child call after a successful batch is retained as partial evidence
 and is not automatically replayed.
+New browser profiles receive a persisted, keyless `Gateway Demo` configuration on
+first load, so it is already selectable in the New Benchmark wizard. The user must
+still connect a short-lived demo session explicitly before making a provider call;
+removing the preset is respected and it is not recreated on later mounts.
 The gateway may route the `demo-fast` alias across healthy providers server-side; the
 browser records the public alias and each request's usage/evidence rather than claiming a
 fixed upstream provider.

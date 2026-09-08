@@ -10,6 +10,7 @@ import {
   NEXABYTE_PROFILE_ID,
   NEXABYTE_GOLDEN_ID,
 } from "./seedDemoFixture";
+import { DEFAULT_GATEWAY_DEMO_PROVIDER_ID } from "../providers/configService";
 
 let db: IdpDatabase;
 let counter = 0;
@@ -48,7 +49,15 @@ describe("seedDemoFixture", () => {
     expect((golden?.json as { footer?: { remark?: unknown } }).footer?.remark).toBe(
       "This purchase order lists items ordered. No totals are printed below.",
     );
-    expect(await db.providerConfigs.count()).toBe(0);
+    const demoProvider = await db.providerConfigs.get(DEFAULT_GATEWAY_DEMO_PROVIDER_ID);
+    expect(demoProvider).toMatchObject({
+      id: DEFAULT_GATEWAY_DEMO_PROVIDER_ID,
+      kind: "openai_compatible",
+      name: "Gateway Demo",
+      model: "demo-fast",
+      settings: { endpointProfile: "gateway_demo", apiStyle: "responses" },
+    });
+    expect(await db.appSettings.get("app")).toMatchObject({ gatewayDemoSeeded: true });
     expect(await db.documents.get(NEXABYTE_DOCUMENT_ID)).toBeDefined();
     expect(await db.extractionProfiles.get(NEXABYTE_PROFILE_ID)).toBeDefined();
     expect(await db.goldenAnswers.get(NEXABYTE_GOLDEN_ID)).toBeDefined();
@@ -72,6 +81,13 @@ describe("seedDemoFixture", () => {
     expect(await db.documents.count()).toBe(2);
     expect(await db.extractionProfiles.count()).toBe(2);
     expect(await db.goldenAnswers.count()).toBe(2);
-    expect(await db.providerConfigs.count()).toBe(0);
+    expect(await db.providerConfigs.count()).toBe(1);
+  });
+
+  it("does not recreate the default after an intentional provider removal", async () => {
+    await seedDemoFixture(db, fakeBlob, fakeBlob);
+    await db.providerConfigs.delete(DEFAULT_GATEWAY_DEMO_PROVIDER_ID);
+    await seedDemoFixture(db, fakeBlob, fakeBlob);
+    expect(await db.providerConfigs.get(DEFAULT_GATEWAY_DEMO_PROVIDER_ID)).toBeUndefined();
   });
 });

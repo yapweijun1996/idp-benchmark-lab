@@ -108,6 +108,11 @@ service worker controlling the page after reload, one Workbox app-shell cache, a
 the About `Version v0.1.0` text. This proves the published wiring and app-shell
 contract for synthetic input; it is not a real-document or billing result.
 
+The first-run provider initialization is covered by unit tests: an empty browser
+profile receives one keyless Gateway Demo configuration, the wizard can select it
+immediately, and a deliberate removal is preserved. Connecting the short-lived
+session remains an explicit Settings action.
+
 The current branch has local unit/UI coverage for session validation, four/five-page
 packing, SSE parsing, reducer invocation, partial-failure redaction, and memory-only
 session persistence. TASK-068 remains **NO-GO** until a real four-page PDF, quota and

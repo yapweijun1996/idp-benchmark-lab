@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ProviderConfig } from "../storage/types";
-import { ProviderConfigService } from "./configService";
+import { ensureDefaultGatewayDemoProvider, ProviderConfigService } from "./configService";
 
 export interface UseProviderConfigsResult {
   configs: ProviderConfig[];
@@ -26,6 +26,7 @@ export function useProviderConfigs(service?: ProviderConfigService): UseProvider
 
   const refresh = useCallback(async () => {
     try {
+      await ensureDefaultGatewayDemoProvider();
       const configs = await svc.list();
       if (!mounted.current) return;
       setConfigs(configs);
