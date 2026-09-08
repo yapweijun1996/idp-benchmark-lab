@@ -32,6 +32,9 @@ first load, so it is already selectable in the New Benchmark wizard. The first T
 or Run automatically acquires a short-lived demo session when needed; the Settings
 button remains available for an immediate connection or manual reconnect. Removing
 the preset is respected and it is not recreated on later mounts.
+Before image requests, the adapter compacts valid JSON contract/schema blocks in the
+prompt to stay within the gateway input-token safety bound while preserving their
+values. A custom prompt that still exceeds that bound fails clearly without retrying.
 The gateway may route the `demo-fast` alias across healthy providers server-side; the
 browser records the public alias and each request's usage/evidence rather than claiming a
 fixed upstream provider.

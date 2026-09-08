@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   acquireGatewayDemoSession,
+  compactGatewayPrompt,
   extractGatewayDemo,
   forgetGatewayDemoSession,
   gatewayDemoMessageKey,
@@ -14,6 +15,7 @@ import { clearAllKeys, getApiKey } from "./keys";
 import type { GatewayRequestMeta, ProviderContext } from "./types";
 import type { ProviderConfig } from "../storage/types";
 import { AttemptBudget } from "../benchmarks/budget";
+import { composePrompt } from "../profiles/composePrompt";
 
 const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=";
 const image = { mimeType: "image/png" as const, dataUrl: png };
@@ -61,6 +63,35 @@ describe("Gateway Demo contract", () => {
     const batches = planGatewayImageBatches([image, image, image, image, image], "Extract JSON.");
     expect(batches.map((batch) => batch.images.length)).toEqual([4, 1]);
     expect(batches.map((batch) => [batch.pageFrom, batch.pageTo])).toEqual([[1, 4], [5, 5]]);
+  });
+
+  it("compacts pretty JSON prompt blocks before image requests", () => {
+    const prompt = [
+      "Read only the printed page.",
+      "OUTPUT JSON SCHEMA:",
+      "```json",
+      JSON.stringify({ type: "object", properties: { total: { type: ["string", "null"] } } }, null, 2),
+      "```",
+    ].join("\n");
+    const compact = compactGatewayPrompt(prompt);
+    expect(compact).toContain('```json\n{"type":"object","properties":{"total":{"type":["string","null"]}}}\n```');
+    expect(compact.length).toBeLessThan(prompt.length);
+    expect(compactGatewayPrompt("```json\nnot JSON\n```")).toContain("not JSON");
+  });
+
+  it("sends the compacted prompt with the Gateway Demo image map request", async () => {
+    const fetchMock = vi.mocked(fetch);
+    fetchMock.mockResolvedValue(streamResponse(sse({ ok: true })));
+    const prompt = composePrompt("Extract the printed total.", ["total"], {
+      type: "object",
+      properties: { total: { type: ["string", "null"] } },
+      required: ["total"],
+      additionalProperties: false,
+    });
+    await extractGatewayDemo({ mode: "canonical_images", images: [image], prompt }, ctx());
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit | undefined;
+    const body = JSON.parse(String(init?.body)) as { input: Array<{ content: Array<{ text?: string }> }> };
+    expect(body.input[0]?.content[0]?.text).toContain('```json\n{"type":"object","properties":{"total":{"type":["string","null"]}}');
   });
 
   it("validates the short-lived session response without persisting the token", async () => {
@@ -114,6 +145,16 @@ describe("Gateway Demo contract", () => {
     vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ error: { code: "DEMO_ROUTER_DISABLED", message: "router disabled" } }), { status: 503 }));
     await expect(acquireGatewayDemoSession()).rejects.toMatchObject({ category: "unsupported", retryable: false, message: "Gateway Demo router is disabled by the gateway." });
     expect(gatewayDemoMessageKey({ status: 503, message: "Gateway Demo router is disabled by the gateway." })).toBe("Gateway Demo router is disabled by the gateway.");
+  });
+
+  it("maps the gateway token safety error to a stable localized message key", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify({ error: { code: "DEMO_INPUT_TOO_LARGE", message: "demo input exceeds the token safety bound" } }), { status: 400 }));
+    await expect(acquireGatewayDemoSession()).rejects.toMatchObject({
+      category: "invalid_request",
+      retryable: false,
+      message: "Gateway Demo prompt and image input exceed the gateway token safety bound. Shorten the prompt/schema or reduce rendered image detail.",
+    });
+    expect(gatewayDemoMessageKey({ status: 400, message: "Gateway Demo prompt and image input exceed the gateway token safety bound. Shorten the prompt/schema or reduce rendered image detail." })).toBe("Gateway Demo prompt and image input exceed the gateway token safety bound. Shorten the prompt/schema or reduce rendered image detail.");
   });
 
   it("normalizes a model-route network/CORS failure", async () => {

@@ -89,3 +89,10 @@ remain authoritative; this profile does not promise unlimited document processin
 The gateway may route the public `demo-fast` alias across eligible healthy providers;
 the browser treats that routing as gateway-owned and records the alias plus per-request
 usage/evidence.
+
+The extraction prompt normally contains readable, pretty-printed contract and schema
+JSON. Before a Gateway Demo image request, the adapter compacts only valid JSON blocks
+inside those fences, preserving the instructions and schema while staying below the
+gateway's input-token safety bound. If a custom prompt and image still exceed that
+bound, the adapter fails with a stable `DEMO_INPUT_TOO_LARGE` message instead of
+retrying the request or exposing gateway detail.

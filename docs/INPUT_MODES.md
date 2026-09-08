@@ -12,7 +12,10 @@ up to four images (4 MiB per image, 8 MiB total images, 12 MiB serialized body),
 documents larger than four pages remain selectable and use additional map requests
 plus a text-only model reducer. The gateway quota and 800-output-token limit still
 apply to every child request; local code performs no arithmetic or silent field
-inference during reduction.
+inference during reduction. The adapter compacts valid pretty-printed JSON contract
+and schema blocks before image requests because the gateway also enforces an
+input-token safety bound; it preserves all prompt instructions and fails closed when
+a custom prompt still cannot fit.
 
 ## Native PDF
 

@@ -14,6 +14,8 @@ A real-browser check of the un-deployed branch from `http://127.0.0.1:5173` was 
 
 A Chromium run against the published Pages origin exercised the deployed Gateway Demo path with a synthetic five-page PDF. The browser received session `201`, then three Responses SSE calls with status `200` and usage: map batches containing 4 and 1 images followed by one text-only reducer call. The Quick Test completed and no `dmo_`, `gw_`, or `sk_` value appeared in `sessionStorage`. This proves the published map/reducer wiring for synthetic input; a real user PDF, quota/billing reconciliation, and target-device storage evidence remain open.
 
+A follow-up Pages-origin replay using the bundled purchase-order page (1191×1684 PNG) reproduced the gateway's `400 DEMO_INPUT_TOO_LARGE` when the full pretty-printed prompt/schema was sent. The same request returned `200` streamed JSON with usage after compacting only valid JSON blocks inside the prompt fences (the instructions and schema values were unchanged). The Gateway Demo adapter now applies that compaction to map and reducer prompts and maps any remaining token-safety response to a stable localized error; it does not retry a rejected request.
+
 ## Local verification
 
 - Lint and typecheck pass; lint retains two Fast Refresh warnings for the shared i18n module (no errors).

@@ -114,6 +114,14 @@ immediately, and a deliberate removal is preserved. The first Test or Run now
 automatically obtains the short-lived session when needed; the Settings action
 remains available for an immediate connection or manual reconnect.
 
+A Pages-origin replay of the bundled purchase-order page reproduced the gateway's
+`400 DEMO_INPUT_TOO_LARGE` when the readable, pretty-printed prompt/schema was sent
+with the image. An adapter-style replay that compacted only valid JSON blocks inside
+the prompt fences returned `200` streamed JSON with usage. The adapter now performs
+this deterministic prompt compaction for Gateway Demo map/reducer requests and
+returns a localized, non-retryable token-safety error when a custom prompt still
+cannot fit. No gateway token or provider key was retained.
+
 The current branch has local unit/UI coverage for session validation, four/five-page
 packing, SSE parsing, reducer invocation, partial-failure redaction, and memory-only
 session persistence. TASK-068 remains **NO-GO** until a real four-page PDF, quota and
