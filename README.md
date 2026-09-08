@@ -34,7 +34,7 @@ If the gateway enables Turnstile for a deployment, the static preset needs a bro
 challenge integration before that project can connect; no Turnstile or provider secret is
 bundled or persisted by this app.
 
-See [current status and verification](PROJECT_STATUS.md), [tasks](TASK.md), and the [original review](docs/reviews/2026-09-08-production-readiness.md). The PWA/i18n code is on GitHub; wait for the Actions and Pages rerun before relying on new remote evidence. No provider credentials are required for CI.
+See [current status and verification](PROJECT_STATUS.md), [tasks](TASK.md), and the [original review](docs/reviews/2026-09-08-production-readiness.md). The current Gateway Demo integration is published after the required Actions and Pages gate; full real-document and billing acceptance remains open. No provider credentials are required for CI.
 
 The current shell offers English, Mandarin, Malay, Japanese, and Vietnamese. A canonical registry checks every literal UI translation call and requires an explicit value for each supported locale; provider/model names, file names, and other data-derived technical values retain their documented English fallback. The About panel shows the friendly package version (for example, `v0.1.0`) and exposes the full build identity in technical details. When a service-worker refresh is available, the update prompt shows the currently loaded version and waits for explicit user acceptance.
 

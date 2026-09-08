@@ -2,9 +2,9 @@
 
 ## Decision and scope
 
-**NO-GO for production; local remediation, PWA/i18n, and Gateway Demo integration pass local checks, while a full live-provider contract remains open.** The last published checkpoint is `a45980c`; its Actions run [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) passed the complete gate, and Pages deployment `6321054280` is successful at `https://yapweijun1996.github.io/idp-benchmark-lab/`. The current branch adds the bounded browser image contract and requires a new remote Actions/Pages rerun. A controlled demo session and connection request were made only through the user's gateway; no gateway or provider key was sent from the browser.
+**NO-GO for production; local remediation, PWA/i18n, and Gateway Demo integration pass local and remote checks, while a full live-provider contract remains open.** The current published checkpoint is `281278e`; its Actions run [34203851094](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34203851094) passed the complete gate, and Pages deployment `6323598678` is successful at `https://yapweijun1996.github.io/idp-benchmark-lab/`. A controlled demo session and connection request were made only through the user's gateway; no gateway or provider key was sent from the browser.
 
-The initial review at `26b0ae9` remains historical evidence. The published remediation series through `a45980c` includes the WebKit test fix, Actions runtime refresh, current model suggestions and synchronized evidence. This follow-up adds a build-information boundary, versioned update prompt, sub-path-safe entry-point icons, PWA policy tests, and five-locale UI coverage. Node 25.2.1, npm 11.6.2, Vitest 3.2.7 and Playwright 1.62.1 were used on Windows. Each build records its committed SHA in the run identity; the Pages deployment and remote gate identify the published revision.
+The initial review at `26b0ae9` remains historical evidence. The published remediation series through `a45980c` includes the WebKit test fix, Actions runtime refresh, current model suggestions and synchronized evidence. This follow-up adds a build-information boundary, versioned update prompt, sub-path-safe entry-point icons, PWA policy tests, five-locale UI coverage, and the bounded Gateway Demo adapter. Node 25.2.1, npm 11.6.2, Vitest 3.2.7 and Playwright 1.62.1 were used on Windows. Each build records its committed SHA in the run identity; the Pages deployment and remote gate identify the published revision.
 
 ## Remediated behavior
 
@@ -30,8 +30,8 @@ The hard-cap contract depends on an accurate, sourced provider maximum covering 
 | `npm run build` | Pass; 18 PWA precache entries including the PDF worker; main chunk 1,162.92 kB / 351.16 kB gzip remains above the advisory threshold |
 | `npm audit --json` and `npm audit --omit=dev --json` | Zero advisories |
 | `npm run test:e2e` | 55 passed, 2 skipped (non-Chromium update probes); 57 cases across Chromium, Firefox and WebKit, about 2.4 minutes |
-| GitHub Actions [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) | Complete required gate passed: lint, typecheck, unit tests, build, audit, Chromium/Firefox/WebKit browser acceptance and evidence upload |
-| GitHub Pages deployment `6321054280` | Published checkpoint `a45980c`; status success; public origin returned HTTP 200 and the current six-step wizard/update UI |
+| GitHub Actions [34203851094](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34203851094) | Complete required gate passed for `281278e`: lint, typecheck, unit tests, build, audit, Chromium/Firefox/WebKit browser acceptance and evidence upload |
+| GitHub Pages deployment `6323598678` | Published checkpoint `281278e`; status success; public origin returned HTTP 200 and the current six-step wizard/update UI |
 | `git diff --check` | Pass |
 
 Browser checks use synthetic credentials and intercepted provider responses. They traverse the wizard, retain real PDF/image payloads, exercise malformed output, cap refusal and Stop, run 100 requests at concurrency 10, restore/export/reload, and recover interruption without replay. A synthetic 100-page PDF tests page discovery and bounded lazy preview; it is not a claim about worst-case scanned-document throughput. Phone/tablet viewport navigation, all five locale selections and the current version in the explicit update prompt are included. Local Chromium update testing changes/restores only generated `dist/sw.js`; Firefox/WebKit update copies are intentionally skipped to keep one writer.
@@ -40,7 +40,7 @@ After the final pre-dispatch error-classification correction, the focused hard-b
 
 The initial concurrent browser matrix had Firefox initialization and WebKit stress navigation timeouts. Browser tests now use one worker (including locally), actual sidebar navigation after reload and a scoped 120-second allowance for the 100-run restore test. Failures were retained while investigating, rather than relabelled as application passes.
 
-Windows WebKit automation reload returned `WebKit encountered an internal error` after a service worker was ready and controlling the page. A minimal standalone HTML + cache-only service worker reproduced the same failure without application code. Playwright's page-initiated `location.reload()` path avoids the affected automation reload path; `9bbf744` applies that driver only to the offline assertion. The earlier corrected baseline was 52 passed and 2 skipped; the current Gateway Demo matrix is 55 passed and 2 skipped. Remote CI and actual Safari/Linux WebKit still require verification.
+Windows WebKit automation reload returned `WebKit encountered an internal error` after a service worker was ready and controlling the page. A minimal standalone HTML + cache-only service worker reproduced the same failure without application code. Playwright's page-initiated `location.reload()` path avoids the affected automation reload path; `9bbf744` applies that driver only to the offline assertion. The earlier corrected baseline was 52 passed and 2 skipped; the current Gateway Demo matrix is 55 passed and 2 skipped. Actual Safari/Linux WebKit still require target-device verification.
 
 ## Official contract and pricing research
 
@@ -54,12 +54,12 @@ KB-MCP was consulted with bounded relevant searches. Retrieved material concerne
 
 ## External acceptance still required
 
-1. Read-only public checks on 2026-09-08 recorded the published acceptance checkpoint through `a45980c`. Actions run [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) passed the remote browser/PWA/stress/interruption gate, and Pages deployment `6321054280` published that checkpoint. The live origin returned HTTP 200 and exposed the current wizard/update UI. Code commit `57458d7` is now on `origin/main`; the new remote evidence is pending the Actions/Pages rerun. Branch protection and Pages environment settings were not changed.
-2. A Chromium browser spike from the Pages origin obtained `/demo/session` with HTTP 201, passed `OPTIONS /demo/v1/responses` with HTTP 204 and an exact `Access-Control-Allow-Origin`, and received a 200 JSON text Responses result with usage. Sending a synthetic 1×1 PNG as Responses `input_image` and Chat Completions `image_url` returned JSON 400 `DEMO_MEDIA_DISABLED` with text-only errors. The gateway's demo policy therefore still disables images, files and structured output; this is CORS/auth/text evidence only and cannot satisfy the complete IDP extraction contract. Use an authorized endpoint that supports canonical images or native PDF plus JSON output, then record model ID, request mode, CORS/network result, schema result, redacted evidence, usage and provider billing reconciliation. No token or unredacted HAR was retained.
-3. Validate installation, subpath scope, offline browsing and explicit update on the target devices, including actual Safari or Linux WebKit, if those target-device claims are required for release. Remote Chromium/Firefox/WebKit CI and the live update prompt are recorded, but they do not replace an authorized target-device check.
+1. Public checks on 2026-09-08 recorded the published checkpoint `281278e`. Actions run [34203851094](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34203851094) passed the remote browser/PWA/stress/interruption gate, and Pages deployment `6323598678` published that checkpoint. The live origin returned HTTP 200 and exposed the current wizard/update UI. `origin/main` matches the published commit; branch protection and Pages environment settings were not changed.
+2. The pre-remediation Chromium spike that returned `DEMO_MEDIA_DISABLED` for a 1×1 PNG is historical and is superseded by the contract recheck below. The current route accepts bounded canonical images; the remaining acceptance work is a real document, quota/usage/cost reconciliation, and any required target-device evidence. No token or unredacted HAR was retained.
+3. Validate installation, subpath scope, offline browsing and explicit update on the target devices, including actual Safari or Linux WebKit, if those target-device claims are required for release. Remote Chromium/Firefox/WebKit CI, the public manifest/service-worker probe, and the live update prompt are recorded, but they do not replace an authorized target-device check.
 4. Record any remaining real-document limits and failure/recovery evidence. Do not infer actual provider accuracy, spend or network reachability from mocked CI.
 
-No production GO is claimed while the live-provider/CORS and any required target-device gates remain unverified.
+No production GO is claimed while the real-document, quota/billing, and any required target-device gates remain unverified.
 
 ## Gateway Demo contract recheck (2026-09-08)
 
@@ -98,8 +98,19 @@ local CORS/session rejection as a provider or extraction failure; the full brows
 map/reduce check must run from the registered Pages Origin (or after the gateway owner
 registers a development Origin).
 
+A Chromium run against the published Pages origin exercised the deployed Gateway Demo
+path with a synthetic five-page PDF. The browser received session `201`, then three
+Responses SSE calls with status `200` and usage: map batches containing 4 and 1 images
+followed by one text-only reducer call. The Quick Test completed and no `dmo_`, `gw_`,
+or `sk_` value appeared in `sessionStorage`. A separate public PWA probe found the
+manifest (`start_url`/`scope` `./`, standalone display, three icons), an activated
+service worker controlling the page after reload, one Workbox app-shell cache, and
+the About `Version v0.1.0` text. This proves the published wiring and app-shell
+contract for synthetic input; it is not a real-document or billing result.
+
 The current branch has local unit/UI coverage for session validation, four/five-page
 packing, SSE parsing, reducer invocation, partial-failure redaction, and memory-only
-session persistence. TASK-068 remains **NO-GO** until the deployed branch proves a
-real four-page PDF, a five-page map/reduce run, quota and billing reconciliation,
-remote Actions/Pages revision, and Chromium/Firefox/WebKit storage/cache evidence.
+session persistence. TASK-068 remains **NO-GO** until a real four-page PDF, quota and
+billing reconciliation, and any required target-device storage/cache evidence are
+recorded; the five-page synthetic map/reduce, remote Actions/Pages revision, and CI
+browser matrix are now proven.

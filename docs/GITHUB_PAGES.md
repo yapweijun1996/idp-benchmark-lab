@@ -2,7 +2,7 @@
 
 Goal: push -> CI test/build -> automatic Pages deployment.
 
-Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The last published checkpoint is `a45980c`; its remote Actions/Pages evidence is retained in the remediation report. The current branch adds the verified bounded Gateway Demo image contract, but its Actions/Pages rerun and full PDF acceptance are still pending.
+Current status: **production NO-GO**. [DEPLOYMENT.md](../DEPLOYMENT.md) describes the workflow; [PROJECT_STATUS.md](../PROJECT_STATUS.md) holds dated verification. The current published checkpoint is `281278e`; Actions run `34203851094` and Pages deployment `6323598678` passed and published the bounded Gateway Demo image contract. Full real-PDF and quota/billing acceptance remain pending.
 
 The workflow uses the current checked releases: `checkout@v7`, `setup-node@v7`, `configure-pages@v6`, `upload-pages-artifact@v4`, `upload-artifact@v7`, and `deploy-pages@v5`, with Node 24 pinned. Package resolution comes from `package-lock.json`; the reviewed versions and advisory paths are recorded in [DEPENDENCIES.md](DEPENDENCIES.md).
 
@@ -30,7 +30,7 @@ npm audit --audit-level=high
 npm run test:e2e
 ```
 
-The workflow runs this validation on pull requests and main pushes; deployment is downstream of the complete build job and is excluded from pull requests. The Windows WebKit offline reload limitation and live Pages/provider acceptance remain release blockers recorded in the remediation report. A documentation status change does not pause automatic deployment.
+The workflow runs this validation on pull requests and main pushes; deployment is downstream of the complete build job and is excluded from pull requests. The Windows WebKit offline reload limitation, target-device PWA checks, and real Pages/provider document acceptance remain release gates recorded in the remediation report. A documentation status change does not pause automatic deployment.
 
 Artifact: Vite `dist/`.
 

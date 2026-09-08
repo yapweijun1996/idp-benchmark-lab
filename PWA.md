@@ -2,7 +2,7 @@
 
 ## Verification status
 
-The current build precaches 18 app-shell assets including the PDF worker `.mjs`, with `runtimeCaching: []`. Provider traffic (including Gateway Demo map/reducer requests), PDFs, generated images, credentials, and benchmark evidence never enter Cache Storage. The local three-engine matrix covers 57 cases: 55 passed and 2 update probes skipped outside Chromium because the probe has one generated service-worker writer. Windows WebKit's automation reload limitation remains documented; the page-initiated reload path passes, while actual Safari/Linux WebKit still require target-device evidence.
+The current build precaches 18 app-shell assets including the PDF worker `.mjs`, with `runtimeCaching: []`. Provider traffic (including Gateway Demo map/reducer requests), PDFs, generated images, credentials, and benchmark evidence never enter Cache Storage. The local and remote three-engine matrix covers 57 cases: 55 passed and 2 update probes skipped outside Chromium because the probe has one generated service-worker writer. The published Pages probe confirmed the manifest, an activated service worker after reload, and one Workbox app-shell cache. Windows WebKit's automation reload limitation remains documented; actual Safari/Linux WebKit still require target-device evidence.
 
 ## Goal
 
