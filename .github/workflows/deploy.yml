@@ -1,6 +1,6 @@
 # Deploy static build to GitHub Pages (DEPLOYMENT.md).
-# Action versions follow the current official Vite/GitHub Pages guidance
-# (docs/guide/static-deploy-github-pages.yaml); no provider keys exist in CI.
+# Action versions were checked against the current official GitHub releases on
+# 2026-09-08; no provider keys exist in CI.
 name: Deploy to GitHub Pages
 
 on:
@@ -22,11 +22,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: lts/*
+          node-version: "24"
           cache: npm
           cache-dependency-path: package-lock.json
       - name: Install dependencies
@@ -47,17 +47,17 @@ jobs:
         run: npm run test:e2e
       - name: Upload browser evidence
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
       - name: Setup Pages
         if: github.event_name != 'pull_request'
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload artifact
         if: github.event_name != 'pull_request'
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: "./dist"
   deploy:
@@ -70,7 +70,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

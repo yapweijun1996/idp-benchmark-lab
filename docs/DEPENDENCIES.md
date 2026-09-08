@@ -29,7 +29,7 @@ Provider calls use browser `fetch`; there is no provider SDK or required backend
 | `eslint` / `typescript-eslint` | 9.39.5 / 8.67.0 | Static linting |
 | `sharp` | 0.35.4 | Deduplicated PWA asset tooling, including the generator override |
 
-The review machine used Node 25.2.1 and npm 11.6.2. GitHub Actions currently uses the floating `lts/*` Node channel; release evidence should record the exact CI runtime because the workflow does not yet pin a Node major.
+The review machine used Node 25.2.1 and npm 11.6.2. GitHub Actions pins Node 24 and uses the current checked `checkout@v7`, `setup-node@v7`, `configure-pages@v6`, `upload-pages-artifact@v4`, `upload-artifact@v7`, and `deploy-pages@v5` releases; remote evidence should record the exact runner/action revisions.
 
 ## Advisory status
 

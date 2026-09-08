@@ -45,11 +45,11 @@ reference fails with the Not Found error.
 7. upload Pages artifact
 8. deploy Pages
 
-The reviewed workflow uses `actions/checkout@v4`, `actions/setup-node@v4`, `actions/configure-pages@v5`, `actions/upload-pages-artifact@v3`, and `actions/deploy-pages@v4`. Node is selected through the floating `lts/*` channel, while the lockfile pins package resolution; see [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md).
+The workflow uses the current checked releases: `actions/checkout@v7`, `actions/setup-node@v7`, `actions/configure-pages@v6`, `actions/upload-pages-artifact@v4`, `actions/upload-artifact@v7`, and `actions/deploy-pages@v5`, with Node 24 pinned for reproducible CI. See [docs/DEPENDENCIES.md](docs/DEPENDENCIES.md) and the official [checkout releases](https://github.com/actions/checkout/releases), [setup-node releases](https://github.com/actions/setup-node/releases), [upload-artifact releases](https://github.com/actions/upload-artifact/releases), [configure-pages releases](https://github.com/actions/configure-pages/releases), [upload-pages-artifact releases](https://github.com/actions/upload-pages-artifact/releases), and [deploy-pages releases](https://github.com/actions/deploy-pages/releases).
 
 The workflow validates pull requests and main pushes with lint, typecheck, unit tests, build, dependency audit and all three Playwright engines. Deployment depends on the complete build job and is excluded from PRs. Repository branch protection/required checks are an external GitHub setting and were not changed or verified.
 
-At implementation time, use current official GitHub Pages Actions/versions. If a newer major of a Pages action is unavailable on your account/enterprise runner images, pin the known-good major (the workflow currently uses the v3/v4/v5 line); the failure mode of "missing" newer actions is a workflow-syntax-level error, not a Pages misconfiguration.
+If a newer major of a Pages action is unavailable on an account or enterprise runner image, pin a verified compatible release and record the reason; a missing action major is a workflow-syntax error, not a Pages misconfiguration.
 
 ## Environment
 
