@@ -2,7 +2,7 @@
 
 ## Decision and scope
 
-**NO-GO for production; local remediation, remote CI and Pages deployment are complete, while authorized live-provider evidence remains open.** The user pushed commit `90090be` to GitHub. Actions run [34188671876](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34188671876) passed the complete gate, and Pages deployment `6320937240` is successful at `https://yapweijun1996.github.io/idp-benchmark-lab/`. No application server, proxy or paid request was introduced by this task.
+**NO-GO for production; local remediation, remote CI and Pages deployment are complete, while a full live-provider contract remains open.** The user pushed commit `dc2ddc5` to GitHub. Actions run [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) passed the complete gate, and Pages deployment `6321054280` is successful at `https://yapweijun1996.github.io/idp-benchmark-lab/`. A controlled demo session and connection request were made only through the user's gateway; no gateway or provider key was sent from the browser.
 
 The initial review at `26b0ae9` remains historical evidence. The accepted remediation revision is `90090be`; it includes the WebKit test fix, Actions runtime refresh, current model suggestions and synchronized evidence. Node 25.2.1, npm 11.6.2, Vitest 3.2.7 and Playwright 1.62.1 were used on Windows. Each build records its committed SHA in the run identity; the Pages deployment and remote gate identify the published revision.
 
@@ -30,8 +30,8 @@ The hard-cap contract depends on an accurate, sourced provider maximum covering 
 | `npm run build` | Pass; 18 PWA precache entries including the PDF worker; main chunk 1,114.04 kB / 337.47 kB gzip remains above the advisory threshold |
 | `npm audit --json` and `npm audit --omit=dev --json` | Zero advisories |
 | `npm run test:e2e` | 46 passed, 2 skipped (non-Chromium update probes); 48 cases, 2.2 minutes after `9bbf744` |
-| GitHub Actions [34188671876](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34188671876) | Complete required gate passed: lint, typecheck, unit tests, build, audit, Chromium/Firefox/WebKit browser acceptance and evidence upload |
-| GitHub Pages deployment `6320937240` | Published SHA `90090be0c123c9044bbe3e8b2dc16f6b358672b5`; status success; public origin returned HTTP 200 and the current six-step wizard/update UI |
+| GitHub Actions [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) | Complete required gate passed: lint, typecheck, unit tests, build, audit, Chromium/Firefox/WebKit browser acceptance and evidence upload |
+| GitHub Pages deployment `6321054280` | Published SHA `dc2ddc527097aafe5625da2d4e10ab273ee8217b`; status success; public origin returned HTTP 200 and the current six-step wizard/update UI |
 | `git diff --check` | Pass |
 
 Browser checks use synthetic credentials and intercepted provider responses. They traverse the wizard, retain real PDF/image payloads, exercise malformed output, cap refusal and Stop, run 100 requests at concurrency 10, restore/export/reload, and recover interruption without replay. A synthetic 100-page PDF tests page discovery and bounded lazy preview; it is not a claim about worst-case scanned-document throughput. Phone/tablet viewport navigation is included. Local Chromium update testing changes/restores only generated `dist/sw.js`; Firefox/WebKit update copies are intentionally skipped to keep one writer.
@@ -54,8 +54,8 @@ KB-MCP was consulted with bounded relevant searches. Retrieved material concerne
 
 ## External acceptance still required
 
-1. Read-only public checks on 2026-09-08 found `origin/main` at `90090be0c123c9044bbe3e8b2dc16f6b358672b5`. Actions run [34188671876](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34188671876) passed the remote browser/PWA/stress/interruption gate, and Pages deployment `6320937240` published that SHA. The live origin returned HTTP 200 and exposed the current wizard/update UI. Branch protection and Pages environment settings were not changed.
-2. From that Pages origin, use end-user BYOK and a user-selected spend limit to exercise OpenAI canonical images, Gemini native PDF/images, and the intended Custom endpoint. Record model ID, request mode, CORS/network result, schema result, redacted evidence, usage and provider billing reconciliation. Do not attach keys or unredacted HAR files.
+1. Read-only public checks on 2026-09-08 recorded acceptance checkpoint `dc2ddc527097aafe5625da2d4e10ab273ee8217b`. Actions run [34189377220](https://github.com/yapweijun1996/idp-benchmark-lab/actions/runs/34189377220) passed the remote browser/PWA/stress/interruption gate, and Pages deployment `6321054280` published that checkpoint. The live origin returned HTTP 200 and exposed the current wizard/update UI. Branch protection and Pages environment settings were not changed.
+2. An origin-checked `/demo/session` request for the Pages origin returned HTTP 201; the live Pages app's Custom Responses connection test then reported the user's `https://gpt.yapweijun1996.com/demo/v1` endpoint reachable. The gateway's documented demo policy disables images, files and structured output, so this is CORS/auth/text evidence only; it cannot satisfy the complete IDP extraction contract. Use an authorized endpoint that supports canonical images or native PDF plus JSON output, then record model ID, request mode, CORS/network result, schema result, redacted evidence, usage and provider billing reconciliation. Do not attach keys or unredacted HAR files.
 3. Validate installation, subpath scope, offline browsing and explicit update on the target devices, including actual Safari or Linux WebKit, if those target-device claims are required for release. Remote Chromium/Firefox/WebKit CI and the live update prompt are recorded, but they do not replace an authorized target-device check.
 4. Record any remaining real-document limits and failure/recovery evidence. Do not infer actual provider accuracy, spend or network reachability from mocked CI.
 
