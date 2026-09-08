@@ -9,7 +9,11 @@ test("PWA shell and saved PDF preview work offline without caching evidence or p
   await expect(page.locator(".pdf-page canvas").first()).toBeVisible();
   await expect.poll(() => page.evaluate(() => !!navigator.serviceWorker.controller)).toBe(true);
   await context.setOffline(true);
-  await page.reload();
+  // WebKit's automation Page.reload path can fail with a CacheStorage-backed service worker offline.
+  await Promise.all([
+    page.waitForLoadState("load"),
+    page.evaluate(() => location.reload()),
+  ]);
   await expect(page.getByRole("heading", { name: "New Benchmark", exact: true })).toBeVisible();
   await expect(page.locator(".pdf-page canvas").first()).toBeVisible();
   const urls = await page.evaluate(async () => (await Promise.all((await caches.keys()).map(async (key) => (await (await caches.open(key)).keys()).map((r) => r.url)))).flat());
