@@ -2,7 +2,7 @@
 
 ## Decision
 
-**NO-GO for production; local remediation and the WebKit acceptance fix are committed.** The remaining gates require a passing remote browser matrix, a deployed Pages revision, real browser BYOK/provider/CORS evidence and confirmation of WebKit/Safari offline behavior. The user pushed `8b532e4`; follow-up commit `9bbf744` contains the tested WebKit fix and `ddbec9e` refreshes the Actions runtime versions. These follow-up commits are not yet pushed. No deployment or paid request was made.
+**NO-GO for production; local remediation and the WebKit acceptance fix are committed.** The remaining gates require a passing remote browser matrix, a deployed Pages revision, real browser BYOK/provider/CORS evidence and confirmation of WebKit/Safari offline behavior. The user pushed `8b532e4`; the local follow-up series contains the tested WebKit fix, refreshed Actions runtime versions, current Gemini model suggestions and synchronized evidence. The follow-up series is not yet pushed. No deployment or paid request was made.
 
 The app remains a static Pages/PWA with direct provider adapters and no server. Home → New Benchmark is the active six-step flow. Dedicated keys and custom headers are ephemeral; suite evidence freezes effective inputs, versions, pricing and build identity. Strict/normalized metrics remain separate. All retained history is visible; translation fallback remains explicit.
 
@@ -18,4 +18,4 @@ Read-only external check on 2026-09-08: `origin/main` is `8b532e42c1577ce7c0d102
 
 Detailed changes, exact limitations, official sources and the user-push acceptance checklist are in the [remediation report](docs/reviews/2026-09-08-production-remediation.md). The [original review](docs/reviews/2026-09-08-production-readiness.md) remains an unchanged historical baseline. [TASK.md](TASK.md) owns task status.
 
-The work is committed on `main`; prior user work was preserved. The latest local commit `ddbec9e` includes the tested WebKit fix and current Actions runtime versions, and awaits the user's push and remote CI rerun. KB-MCP was consulted but returned no repository-specific acceptance evidence. No backend addition or architectural rewrite is needed to complete the external checks.
+The work is committed on `main`; prior user work was preserved. The local follow-up series awaits the user's push and remote CI rerun. KB-MCP was consulted but returned no repository-specific acceptance evidence. No backend addition or architectural rewrite is needed to complete the external checks.
